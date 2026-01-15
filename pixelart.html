@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Pixel Art Editor</title>
+    <style>
+        body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; }
+        
+        .toolbar { width: 60px; background: #252526; border-right: 1px solid #3e3e42; display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 10px; z-index: 10; }
+        .tool-btn { width: 40px; height: 40px; border: 1px solid #3e3e42; background: #333; color: #fff; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+        .tool-btn.active { background: #007acc; border-color: #007acc; }
+        .tool-btn:hover { background: #444; }
+
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
+        
+        .top-bar { height: 40px; background: #252526; border-bottom: 1px solid #3e3e42; display: flex; align-items: center; padding: 0 15px; gap: 15px; font-size: 13px; }
+        .canvas-container { flex-grow: 1; background: #1e1e1e; display: flex; justify-content: center; align-items: center; overflow: auto; 
+            background-image: linear-gradient(45deg, #2a2a2a 25%, transparent 25%), linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #2a2a2a 75%), linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 20px 20px;
+        }
+        
+        canvas { background: white; box-shadow: 0 0 20px rgba(0,0,0,0.5); image-rendering: pixelated; cursor: crosshair; }
+        
+        .panels { width: 250px; background: #252526; border-left: 1px solid #3e3e42; display: flex; flex-direction: column; }
+        .panel { padding: 15px; border-bottom: 1px solid #3e3e42; }
+        .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; }
+        
+        .palette { display: grid; grid-template-columns: repeat(5, 1fr); gap: 5px; }
+        .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 3px; cursor: pointer; border: 1px solid #3e3e42; }
+        .color-swatch.active { border: 2px solid white; box-shadow: 0 0 5px rgba(0,0,0,0.5); }
+        
+        input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; width: 100%; box-sizing: border-box; }
+        button.action { background: #007acc; color: white; border: none; padding: 8px; width: 100%; border-radius: 3px; cursor: pointer; margin-top: 5px; }
+        button.action:hover { background: #0062a3; }
+        
+        a.back-link { text-decoration: none; color: #888; font-size: 20px; margin-right: 10px; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="index.html" class="back-link" title="Назад в меню">🏠</a>
+        <div class="tool-btn active" onclick="setTool('pencil')" title="Карандаш (P)">✏️</div>
+        <div class="tool-btn" onclick="setTool('eraser')" title="Ластик (E)">🧼</div>
+        <div class="tool-btn" onclick="setTool('fill')" title="Заливка (F)">🪣</div>
+        <div class="tool-btn" onclick="setTool('picker')" title="Пипетка (I)">💉</div>
+    </div>
+
+    <div class="workspace">
+        <div class="top-bar">
+            <span>Размер: <input type="number" id="sizeX" value="32" style="width:50px"> x <input type="number" id="sizeY" value="32" style="width:50px"></span>
+            <button onclick="resizeCanvas()">Сброс</button>
+            <label><input type="checkbox" id="showGrid" onchange="drawGrid()"> Сетка</label>
+        </div>
+        <div class="canvas-container">
+            <canvas id="canvas"></canvas>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="panel">
+            <h3>Цвет</h3>
+            <input type="color" id="colorPicker" value="#000000" style="height: 40px;">
+        </div>
+        <div class="panel">
+            <h3>Палитра</h3>
+            <div class="palette" id="paletteBox"></div>
+        </div>
+        <div class="panel">
+            <h3>Действия</h3>
+            <button class="action" onclick="downloadImage()">Скачать PNG</button>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const defaultPalette = ['#000000', '#1d2b53', '#7e2553', '#008751', '#ab5236', '#5f574f', '#c2c3c7', '#fff1e8', '#ff004d', '#ffa300', '#ffec27', '#00e436', '#29adff', '#83769c', '#ff77a8', '#ffccaa'];
+        
+        let size = { w: 32, h: 32 };
+        let pixelSize = 1; // Zoom level logic handles via CSS transform usually, but here we draw 1:1 and let browser zoom
+        let currentTool = 'pencil';
+        let isDrawing = false;
+        let currentColor = '#000000';
+        let pixels = []; // 2D array [y][x]
+
+        // Init
+        function init() {
+            const palBox = document.getElementById('paletteBox');
+            defaultPalette.forEach(c => {
+                const d = document.createElement('div');
+                d.className = 'color-swatch';
+                d.style.backgroundColor = c;
+                d.onclick = () => setColor(c);
+                palBox.appendChild(d);
+            });
+            resizeCanvas();
+        }
+
+        function resizeCanvas() {
+            size.w = parseInt(document.getElementById('sizeX').value);
+            size.h = parseInt(document.getElementById('sizeY').value);
+            
+            // Масштабируем канвас визуально
+            const scale = Math.min(600/size.w, 600/size.h); 
+            canvas.width = size.w;
+            canvas.height = size.h;
+            canvas.style.width = (size.w * 20) + 'px'; // Zoom x20 for CSS
+            canvas.style.height = (size.h * 20) + 'px';
+            canvas.style.imageRendering = 'pixelated';
+
+            // Clear data
+            pixels = Array(size.h).fill().map(() => Array(size.w).fill(null)); // null = transparent
+            redraw();
+        }
+
+        function redraw() {
+            ctx.clearRect(0, 0, size.w, size.h);
+            for(let y=0; y<size.h; y++) {
+                for(let x=0; x<size.w; x++) {
+                    if(pixels[y][x]) {
+                        ctx.fillStyle = pixels[y][x];
+                        ctx.fillRect(x, y, 1, 1);
+                    }
+                }
+            }
+        }
+
+        function setTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[onclick="setTool('${t}')"]`).classList.add('active');
+        }
+
+        function setColor(c) {
+            currentColor = c;
+            document.getElementById('colorPicker').value = c;
+        }
+        document.getElementById('colorPicker').addEventListener('input', (e) => setColor(e.target.value));
+
+        // Drawing Logic
+        function getCoords(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / (rect.width / size.w));
+            const y = Math.floor((e.clientY - rect.top) / (rect.height / size.h));
+            return {x, y};
+        }
+
+        function drawPixel(x, y) {
+            if(x<0 || y<0 || x>=size.w || y>=size.h) return;
+            
+            if(currentTool === 'pencil') pixels[y][x] = currentColor;
+            else if(currentTool === 'eraser') pixels[y][x] = null;
+            
+            redraw();
+        }
+
+        function floodFill(startX, startY, newColor) {
+            const targetColor = pixels[startY][startX];
+            if (targetColor === newColor) return;
+            
+            const stack = [[startX, startY]];
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                if (x < 0 || x >= size.w || y < 0 || y >= size.h) continue;
+                if (pixels[y][x] !== targetColor) continue;
+
+                pixels[y][x] = newColor;
+                stack.push([x + 1, y], [x - 1, y], [x, y + 1], [x, y - 1]);
+            }
+            redraw();
+        }
+
+        // Mouse Events
+        canvas.addEventListener('mousedown', e => {
+            const p = getCoords(e);
+            if(currentTool === 'fill') {
+                floodFill(p.x, p.y, currentColor);
+            } else if (currentTool === 'picker') {
+                const c = pixels[p.y][p.x];
+                if(c) setColor(c);
+            } else {
+                isDrawing = true;
+                drawPixel(p.x, p.y);
+            }
+        });
+        
+        window.addEventListener('mouseup', () => isDrawing = false);
+        canvas.addEventListener('mousemove', e => {
+            if(isDrawing) {
+                const p = getCoords(e);
+                drawPixel(p.x, p.y);
+            }
+        });
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = 'pixelart.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
