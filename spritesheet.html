@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sprite Sheet Packer Pro</title>
+    <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --panel-bg: #252526;
+            --text-color: #d4d4d4;
+            --accent: #007acc;
+            --border: #3e3e42;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: var(--panel-bg);
+            border-right: 1px solid var(--border);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        h2, h3 { margin: 0 0 10px 0; font-weight: 500; }
+        h3 { font-size: 14px; text-transform: uppercase; color: #888; margin-top: 10px; }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            background: rgba(0,0,0,0.1);
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        label { font-size: 13px; display: flex; align-items: center; gap: 8px; }
+        
+        input[type="number"], input[type="color"], select {
+            background: #3c3c3c;
+            border: 1px solid #3c3c3c;
+            color: white;
+            padding: 5px;
+            border-radius: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        
+        /* Скрываем спиннеры у number input */
+        input[type=number]::-webkit-inner-spin-button, 
+        input[type=number]::-webkit-outer-spin-button { 
+            -webkit-appearance: none; margin: 0; 
+        }
+
+        input[type="file"] { display: none; }
+
+        .btn {
+            background-color: var(--accent);
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 3px;
+            font-size: 14px;
+            text-align: center;
+            transition: background 0.2s;
+            width: 100%;
+        }
+        .btn:hover { background-color: #0062a3; }
+        .btn-secondary { background-color: #3e3e42; }
+        .btn-secondary:hover { background-color: #4e4e52; }
+        
+        .file-drop-area {
+            border: 2px dashed var(--border);
+            border-radius: 5px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .file-drop-area:hover { border-color: var(--accent); background: rgba(0,122,204,0.1); }
+
+        .main-content {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            background-image: 
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 20px 20px;
+        }
+
+        .canvas-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: auto;
+            border: 1px solid var(--border);
+            background: rgba(0,0,0,0.3);
+            position: relative;
+        }
+
+        canvas {
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            max-width: none;
+        }
+
+        .pixelated {
+            image-rendering: pixelated; 
+            image-rendering: crisp-edges;
+        }
+
+        .file-list {
+            font-size: 12px;
+            color: #aaa;
+            max-height: 80px;
+            overflow-y: auto;
+        }
+        .info-row { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
+        
+        .mode-switch {
+            display: flex;
+            background: #3e3e42;
+            border-radius: 4px;
+            padding: 2px;
+            margin-bottom: 10px;
+        }
+        .mode-btn {
+            flex: 1;
+            padding: 5px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            border-radius: 3px;
+        }
+        .mode-btn.active {
+            background: var(--accent);
+            color: white;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <h2>Sprite Packer Pro</h2>
+        
+        <div class="control-group">
+            <input type="file" id="fileInput" multiple accept="image/*">
+            <div class="file-drop-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+                Перетащите файлы сюда
+            </div>
+            <div class="file-list" id="fileList"></div>
+            <button class="btn btn-secondary" onclick="clearImages()" style="margin-top:5px; padding: 5px;">Очистить</button>
+        </div>
+
+        <h3>Режим упаковки</h3>
+        <div class="mode-switch">
+            <div class="mode-btn active" onclick="setMode('grid')" id="btn-grid">Сетка (Grid)</div>
+            <div class="mode-btn" onclick="setMode('bin')" id="btn-bin">Умный (Bin)</div>
+        </div>
+
+        <!-- Настройки Сетки (видны только в Grid режиме) -->
+        <div id="grid-settings" class="control-group">
+            <div class="info-row"><span>Настройки ячеек</span></div>
+            <label>
+                <input type="checkbox" id="autoSize" checked onchange="toggleGridInputs()"> 
+                Размер по макс. спрайту
+            </label>
+            <div id="manualGridInputs" style="display:none; gap: 5px;">
+                <input type="number" id="cellWidth" placeholder="W" value="64">
+                <input type="number" id="cellHeight" placeholder="H" value="64">
+            </div>
+            <label>Колонок (0 = Авто):</label>
+            <input type="number" id="colCount" value="0" min="0">
+        </div>
+
+        <!-- Настройки Умной упаковки (видны только в Bin режиме) -->
+        <div id="bin-settings" class="control-group" style="display:none;">
+            <div class="info-row"><span>Алгоритм MaxRects</span></div>
+            <label>Сортировка:</label>
+            <select id="sortMethod">
+                <option value="maxSide">По макс. стороне</option>
+                <option value="area">По площади</option>
+                <option value="width">По ширине</option>
+                <option value="height">По высоте</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label>Отступ (Padding):</label>
+            <input type="number" id="padding" value="2" min="0">
+        </div>
+
+        <h3>Экспорт</h3>
+        <div class="control-group">
+            <label><input type="checkbox" id="pixelArtMode" checked> Pixel Art (без сглаживания)</label>
+            <label><input type="checkbox" id="showBorders"> Показать границы</label>
+            <label>
+                <input type="checkbox" id="useBgColor"> 
+                Фон: <input type="color" id="bgColor" value="#00ff00" disabled style="width:50px; height:20px; padding:0;">
+            </label>
+        </div>
+        
+        <div style="margin-top: auto;">
+            <div id="status" style="margin-bottom: 10px; font-size: 12px; text-align: center; color: #888;"></div>
+            <button class="btn" onclick="downloadSprite()">Скачать PNG</button>
+            <button class="btn btn-secondary" onclick="downloadJSON()" style="margin-top: 5px;">Скачать JSON (Координаты)</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="canvas-container">
+            <canvas id="previewCanvas"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // --- Глобальные переменные ---
+        let imagesData = []; 
+        let currentMode = 'grid'; // 'grid' или 'bin'
+        const canvas = document.getElementById('previewCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // --- Инициализация ---
+        document.addEventListener('DOMContentLoaded', () => {
+            setupEvents();
+            toggleGridInputs();
+        });
+
+        // --- Управление режимами ---
+        function setMode(mode) {
+            currentMode = mode;
+            document.getElementById('btn-grid').classList.toggle('active', mode === 'grid');
+            document.getElementById('btn-bin').classList.toggle('active', mode === 'bin');
+            
+            document.getElementById('grid-settings').style.display = mode === 'grid' ? 'flex' : 'none';
+            document.getElementById('bin-settings').style.display = mode === 'bin' ? 'flex' : 'none';
+            
+            render();
+        }
+
+        function toggleGridInputs() {
+            const isAuto = document.getElementById('autoSize').checked;
+            document.getElementById('manualGridInputs').style.display = isAuto ? 'none' : 'flex';
+            render();
+        }
+
+        // --- Drag & Drop и Файлы ---
+        function setupEvents() {
+            const dropArea = document.getElementById('dropArea');
+            const fileInput = document.getElementById('fileInput');
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
+            });
+
+            dropArea.addEventListener('dragenter', () => dropArea.style.borderColor = '#007acc');
+            dropArea.addEventListener('dragleave', () => dropArea.style.borderColor = '#3e3e42');
+            
+            dropArea.addEventListener('drop', e => {
+                dropArea.style.borderColor = '#3e3e42';
+                handleFiles(e.dataTransfer.files);
+            });
+            
+            fileInput.addEventListener('change', e => handleFiles(e.target.files));
+
+            // Обновление рендера при любом изменении input
+            document.querySelectorAll('input, select').forEach(el => {
+                if(el.type !== 'file') el.addEventListener('input', render);
+            });
+
+            document.getElementById('useBgColor').addEventListener('change', e => {
+                document.getElementById('bgColor').disabled = !e.target.checked;
+                render();
+            });
+
+            document.getElementById('pixelArtMode').addEventListener('change', e => {
+                canvas.className = e.target.checked ? 'pixelated' : '';
+            });
+        }
+
+        function handleFiles(files) {
+            let loaded = 0;
+            const fileArr = Array.from(files).sort((a,b) => 
+                a.name.localeCompare(b.name, undefined, {numeric: true, sensitivity: 'base'})
+            );
+
+            fileArr.forEach(file => {
+                if (!file.type.startsWith('image/')) return;
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        imagesData.push({ name: file.name, img: img, w: img.width, h: img.height });
+                        loaded++;
+                        if (loaded === fileArr.length) {
+                            updateFileList();
+                            render();
+                        }
+                    };
+                    img.src = e.target.result;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function updateFileList() {
+            const list = document.getElementById('fileList');
+            list.innerHTML = imagesData.map(d => 
+                `<div class="file-item" style="display:flex; justify-content:space-between; padding:2px 0;">
+                    <span>${d.name}</span> <span style="color:#666">${d.w}x${d.h}</span>
+                </div>`
+            ).join('');
+        }
+
+        function clearImages() {
+            imagesData = [];
+            updateFileList();
+            render();
+        }
+
+        // --- ГЛАВНАЯ ЛОГИКА РЕНДЕРА ---
+        function render() {
+            if (imagesData.length === 0) {
+                canvas.width = 0; canvas.height = 0;
+                return;
+            }
+
+            const padding = parseInt(document.getElementById('padding').value) || 0;
+            let layout = []; // Массив { img, x, y, w, h }
+            let finalW = 0, finalH = 0;
+
+            if (currentMode === 'grid') {
+                // --- РЕЖИМ СЕТКИ ---
+                let cellW, cellH;
+                
+                // Определяем размер ячейки
+                if (document.getElementById('autoSize').checked) {
+                    // Ищем максимальные размеры среди всех картинок
+                    cellW = Math.max(...imagesData.map(d => d.w));
+                    cellH = Math.max(...imagesData.map(d => d.h));
+                } else {
+                    cellW = parseInt(document.getElementById('cellWidth').value) || 32;
+                    cellH = parseInt(document.getElementById('cellHeight').value) || 32;
+                }
+
+                const count = imagesData.length;
+                let cols = parseInt(document.getElementById('colCount').value) || 0;
+                if (cols === 0) cols = Math.ceil(Math.sqrt(count));
+                
+                const rows = Math.ceil(count / cols);
+
+                finalW = cols * cellW + (cols + 1) * padding;
+                finalH = rows * cellH + (rows + 1) * padding;
+
+                layout = imagesData.map((d, i) => {
+                    const col = i % cols;
+                    const row = Math.floor(i / cols);
+                    
+                    // Центрируем картинку внутри ячейки
+                    const x = padding + col * (cellW + padding) + (cellW - d.w) / 2;
+                    const y = padding + row * (cellH + padding) + (cellH - d.h) / 2;
+
+                    return { img: d.img, x, y, w: d.w, h: d.h, name: d.name };
+                });
+
+            } else {
+                // --- РЕЖИМ УМНОЙ УПАКОВКИ (Simple Shelf Algorithm) ---
+                // Сортируем копию массива
+                const sortMethod = document.getElementById('sortMethod').value;
+                const sorted = [...imagesData].sort((a, b) => {
+                    if (sortMethod === 'maxSide') return Math.max(b.w, b.h) - Math.max(a.w, a.h);
+                    if (sortMethod === 'area') return (b.w * b.h) - (a.w * a.h);
+                    if (sortMethod === 'width') return b.w - a.w;
+                    return b.h - a.h;
+                });
+
+                let x = padding, y = padding, currentRowH = 0;
+                // Грубая оценка ширины канваса (квадратный корень из площади всех картинок)
+                const totalArea = sorted.reduce((sum, img) => sum + (img.w + padding)*(img.h + padding), 0);
+                const maxWidth = Math.max(Math.sqrt(totalArea) * 1.5, Math.max(...sorted.map(i => i.w))) + padding * 2;
+                
+                // Простейший алгоритм "Полка" (Shelf)
+                sorted.forEach(d => {
+                    if (x + d.w + padding > maxWidth) {
+                        // Перенос строки
+                        x = padding;
+                        y += currentRowH + padding;
+                        currentRowH = 0;
+                    }
+                    layout.push({ img: d.img, x, y, w: d.w, h: d.h, name: d.name });
+                    currentRowH = Math.max(currentRowH, d.h);
+                    x += d.w + padding;
+                    
+                    finalW = Math.max(finalW, x);
+                    finalH = Math.max(finalH, y + currentRowH);
+                });
+                finalH += padding; 
+            }
+
+            // --- ОТРИСОВКА ---
+            canvas.width = finalW;
+            canvas.height = finalH;
+            
+            ctx.imageSmoothingEnabled = !document.getElementById('pixelArtMode').checked;
+
+            // Фон
+            if (document.getElementById('useBgColor').checked) {
+                ctx.fillStyle = document.getElementById('bgColor').value;
+                ctx.fillRect(0, 0, finalW, finalH);
+            } else {
+                ctx.clearRect(0, 0, finalW, finalH);
+            }
+
+            // Границы отладки
+            const showBorders = document.getElementById('showBorders').checked;
+            if (showBorders) {
+                ctx.strokeStyle = '#ff00ff';
+                ctx.lineWidth = 1;
+            }
+
+            // Рисуем
+            window.lastLayout = layout; // Сохраняем для JSON экспорта
+            layout.forEach(item => {
+                ctx.drawImage(item.img, Math.floor(item.x), Math.floor(item.y));
+                if (showBorders) ctx.strokeRect(Math.floor(item.x), Math.floor(item.y), item.w, item.h);
+            });
+
+            document.getElementById('status').innerText = `${finalW}x${finalH}px | Спрайтов: ${layout.length}`;
+        }
+
+        function downloadSprite() {
+            if (!canvas.width) return;
+            const link = document.createElement('a');
+            link.download = `spritesheet_${new Date().getTime()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function downloadJSON() {
+            if (!window.lastLayout) return;
+            const data = {};
+            window.lastLayout.forEach(l => {
+                data[l.name] = { x: Math.floor(l.x), y: Math.floor(l.y), w: l.w, h: l.h };
+            });
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+            const link = document.createElement('a');
+            link.download = `spritesheet_${new Date().getTime()}.json`;
+            link.href = URL.createObjectURL(blob);
+            link.click();
+        }
+    </script>
+</body>
+</html>
