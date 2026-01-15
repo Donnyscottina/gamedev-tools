@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pixel Art Editor Pro</title>
+    <title>Pixel Art Editor Pro (Fixed)</title>
     <style>
         :root {
             --bg: #1e1e1e;
@@ -13,16 +13,15 @@
         }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
         
-        /* Тулбар слева */
+        /* Тулбар */
         .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; }
-        .tool-btn { width: 36px; height: 36px; border: 1px solid transparent; background: transparent; color: #fff; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; transition: 0.1s; position: relative;}
+        .tool-btn { width: 36px; height: 36px; background: transparent; color: #fff; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative;}
         .tool-btn:hover { background: #3e3e42; }
         .tool-btn.active { background: var(--accent); border-color: #0098ff; }
         .tool-btn .key { position: absolute; bottom: 2px; right: 2px; font-size: 8px; color: rgba(255,255,255,0.7); }
 
         /* Рабочая область */
-        .workspace { flex-grow: 1; display: flex; flex-direction: column; position: relative; }
-        
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; }
         .top-bar { height: 40px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 13px; }
         
         .canvas-viewport { 
@@ -32,14 +31,14 @@
             justify-content: center; 
             align-items: center; 
             overflow: auto; 
-            position: relative;
         }
 
-        /* Контейнер для слоев */
+        /* Доска для рисования */
         .drawing-board {
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            /* Шахматный фон для прозрачности */
+            /* Шахматный фон (прозрачность) */
+            background-color: #222;
             background-image: 
                 linear-gradient(45deg, #333 25%, transparent 25%), 
                 linear-gradient(-45deg, #333 25%, transparent 25%), 
@@ -47,7 +46,6 @@
                 linear-gradient(-45deg, transparent 75%, #333 75%);
             background-size: 20px 20px;
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
-            background-color: #222;
         }
 
         canvas { 
@@ -56,59 +54,58 @@
             image-rendering: pixelated; 
         }
         
-        #artCanvas { z-index: 1; }
-        #gridCanvas { z-index: 2; pointer-events: none; opacity: 0.5; }
+        /* СЛОИ: Art внизу (принимает клики), Grid сверху (пропускает клики) */
+        #artCanvas { z-index: 10; cursor: crosshair; }
+        #gridCanvas { z-index: 20; pointer-events: none; opacity: 0.5; }
 
         /* Правая панель */
         .panels { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
         .panel { padding: 15px; border-bottom: 1px solid var(--border); }
-        .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; letter-spacing: 1px; }
+        .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; }
         
         .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
         .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #000; box-sizing: border-box;}
-        .color-swatch:hover { transform: scale(1.1); z-index: 2; border: 1px solid white; }
+        .color-swatch:hover { transform: scale(1.1); z-index: 50; border: 1px solid white; box-shadow: 0 0 5px black; }
         
         input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; border-radius: 2px; }
-        
         button.action { background: var(--accent); color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600; }
         button.action:hover { background: #0062a3; }
         
         .preview-box {
             width: 100%; height: 100px; 
-            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII='); /* Мелкая шахматка */
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII=');
             display: flex; justify-content: center; align-items: center;
             border: 1px solid var(--border);
             margin-bottom: 10px;
         }
-        #previewImg { image-rendering: pixelated; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
-
+        #previewCanvas { image-rendering: pixelated; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
         a.back-link { text-decoration: none; color: #888; font-size: 20px; }
     </style>
 </head>
 <body>
     <div class="toolbar">
-        <a href="index.html" class="back-link" title="Назад">🏠</a>
-        <div class="tool-btn active" onclick="setTool('pencil')" title="Карандаш (B)">✏️<span class="key">B</span></div>
-        <div class="tool-btn" onclick="setTool('eraser')" title="Ластик (E)">🧼<span class="key">E</span></div>
-        <div class="tool-btn" onclick="setTool('fill')" title="Заливка (F)">🪣<span class="key">F</span></div>
-        <div class="tool-btn" onclick="setTool('picker')" title="Пипетка (I)">💉<span class="key">I</span></div>
+        <a href="index.html" class="back-link" title="Меню">🏠</a>
+        <div class="tool-btn active" onclick="setTool('pencil')" title="B">✏️<span class="key">B</span></div>
+        <div class="tool-btn" onclick="setTool('eraser')" title="E">🧼<span class="key">E</span></div>
+        <div class="tool-btn" onclick="setTool('fill')" title="F">🪣<span class="key">F</span></div>
+        <div class="tool-btn" onclick="setTool('picker')" title="I">💉<span class="key">I</span></div>
         <div style="flex-grow:1"></div>
-        <div class="tool-btn" onclick="clearCanvas()" title="Очистить (Del)">🗑️</div>
+        <div class="tool-btn" onclick="clearCanvas()" title="Del">🗑️</div>
     </div>
 
     <div class="workspace">
         <div class="top-bar">
-            <span>Размер: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="128"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="128"></span>
-            <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer;">Применить</button>
+            <span>Размер: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="64"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="64"></span>
+            <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer;">OK</button>
             <div style="width:1px; height:20px; background:#444; margin:0 10px;"></div>
             <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> 
-                Сетка
+                <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> Сетка
             </label>
         </div>
         
         <div class="canvas-viewport">
             <div class="drawing-board" id="board">
+                <!-- Важно: artCanvas принимает клики, gridCanvas пропускает их -->
                 <canvas id="artCanvas"></canvas>
                 <canvas id="gridCanvas"></canvas>
             </div>
@@ -117,62 +114,60 @@
 
     <div class="panels">
         <div class="panel">
-            <h3>Предпросмотр (1x)</h3>
+            <h3>Превью (1x)</h3>
             <div class="preview-box">
                 <canvas id="previewCanvas"></canvas>
             </div>
         </div>
 
         <div class="panel">
-            <h3>Активный цвет</h3>
+            <h3>Цвет</h3>
             <div style="display: flex; gap: 10px; align-items: center;">
                 <input type="color" id="colorPicker" value="#000000" style="height: 30px; flex-grow:1; cursor:pointer;">
-                <div id="hexValue" style="font-family: monospace; font-size: 12px; color:#888;">#000000</div>
             </div>
         </div>
         
         <div class="panel">
-            <h3>Палитра (Pico-8)</h3>
+            <h3>Палитра</h3>
             <div class="palette" id="paletteBox"></div>
         </div>
         
         <div class="panel">
-            <button class="action" onclick="downloadImage()">💾 Скачать PNG</button>
+            <button class="action" onclick="downloadImage()">💾 PNG</button>
         </div>
     </div>
 
     <script>
-        // --- Конфиг ---
-        const ZOOM = 20; // Визуальное увеличение в редакторе
+        // --- Настройки ---
+        const ZOOM = 20; // 1 пиксель = 20 экранных пикселей
         const defaultPalette = [
             '#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
             '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'
         ];
 
-        // --- Элементы ---
+        // --- DOM ---
         const artCanvas = document.getElementById('artCanvas');
         const gridCanvas = document.getElementById('gridCanvas');
         const previewCanvas = document.getElementById('previewCanvas');
         const board = document.getElementById('board');
-        const artCtx = artCanvas.getContext('2d');
+        const artCtx = artCanvas.getContext('2d', { willReadFrequently: true });
         const gridCtx = gridCanvas.getContext('2d');
         const prevCtx = previewCanvas.getContext('2d');
 
-        // --- Состояние ---
+        // --- State ---
         let width = 32, height = 32;
         let currentTool = 'pencil';
         let currentColor = '#000000';
         let isDrawing = false;
         
-        // --- Инициализация ---
+        // --- Init ---
         function init() {
-            // Создание палитры
+            // Палитра
             const palBox = document.getElementById('paletteBox');
             defaultPalette.forEach(c => {
                 const d = document.createElement('div');
                 d.className = 'color-swatch';
                 d.style.backgroundColor = c;
-                d.title = c;
                 d.onclick = () => selectColor(c);
                 palBox.appendChild(d);
             });
@@ -193,63 +188,59 @@
         }
 
         function resizeCanvas() {
-            width = parseInt(document.getElementById('sizeX').value);
-            height = parseInt(document.getElementById('sizeY').value);
+            width = parseInt(document.getElementById('sizeX').value) || 32;
+            height = parseInt(document.getElementById('sizeY').value) || 32;
             
-            // Установка размеров реальных данных
+            // CSS размеры (Zoom)
+            const cssW = width * ZOOM;
+            const cssH = height * ZOOM;
+
             [artCanvas, gridCanvas].forEach(c => {
                 c.width = width;
                 c.height = height;
-                // Растягиваем через CSS для зума
-                c.style.width = (width * ZOOM) + 'px';
-                c.style.height = (height * ZOOM) + 'px';
+                c.style.width = cssW + 'px';
+                c.style.height = cssH + 'px';
             });
             
-            board.style.width = (width * ZOOM) + 'px';
-            board.style.height = (height * ZOOM) + 'px';
+            board.style.width = cssW + 'px';
+            board.style.height = cssH + 'px';
 
             // Превью
             previewCanvas.width = width;
             previewCanvas.height = height;
-            // Превью показываем чуть крупнее если картинка совсем мелкая
-            const prevZoom = width < 32 ? 2 : 1;
-            previewCanvas.style.width = (width * prevZoom) + 'px';
-            previewCanvas.style.height = (height * prevZoom) + 'px';
+            // Увеличим превью если картинка очень мелкая
+            const prevScale = width < 16 ? 4 : (width < 32 ? 2 : 1);
+            previewCanvas.style.width = (width * prevScale) + 'px';
+            previewCanvas.style.height = (height * prevScale) + 'px';
 
             drawGrid();
             updatePreview();
         }
 
-        // --- Рисование Сетки ---
+        // --- Grid ---
         function drawGrid() {
             gridCtx.clearRect(0, 0, width, height);
             if (!document.getElementById('showGrid').checked) return;
 
-            gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-            gridCtx.lineWidth = 0.05; // Тонкая линия при зуме
+            gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            gridCtx.lineWidth = 0.05; 
 
             gridCtx.beginPath();
             for (let x = 0; x <= width; x++) {
-                gridCtx.moveTo(x, 0);
-                gridCtx.lineTo(x, height);
+                gridCtx.moveTo(x, 0); gridCtx.lineTo(x, height);
             }
             for (let y = 0; y <= height; y++) {
-                gridCtx.moveTo(0, y);
-                gridCtx.lineTo(width, height); // fix
-                gridCtx.moveTo(0, y);
-                gridCtx.lineTo(width, y);
+                gridCtx.moveTo(0, y); gridCtx.lineTo(width, y);
             }
             gridCtx.stroke();
         }
 
-        // --- Логика инструментов ---
+        // --- Tools ---
         function selectColor(hex) {
             currentColor = hex;
             document.getElementById('colorPicker').value = hex;
-            document.getElementById('hexValue').innerText = hex;
             if (currentTool === 'eraser') setTool('pencil');
         }
-
         document.getElementById('colorPicker').addEventListener('input', e => selectColor(e.target.value));
 
         function setTool(t) {
@@ -258,13 +249,13 @@
             const btn = document.querySelector(`[onclick="setTool('${t}')"]`);
             if(btn) btn.classList.add('active');
             
-            // Курсор
-            board.style.cursor = t === 'picker' ? 'alias' : (t === 'fill' ? 'cell' : 'crosshair');
+            // Меняем курсор на artCanvas
+            artCanvas.style.cursor = t === 'picker' ? 'alias' : (t === 'fill' ? 'cell' : 'crosshair');
         }
 
+        // --- Drawing Logic ---
         function getCoords(e) {
             const rect = artCanvas.getBoundingClientRect();
-            // Вычисляем координату относительно CSS размера, делим на ZOOM
             const x = Math.floor((e.clientX - rect.left) / ZOOM);
             const y = Math.floor((e.clientY - rect.top) / ZOOM);
             return {x, y};
@@ -272,81 +263,88 @@
 
         function drawPixel(x, y) {
             if (x < 0 || y < 0 || x >= width || y >= height) return;
-
-            if (currentTool === 'pencil') {
+            
+            // Если ластик - очищаем (прозрачность), иначе рисуем цвет
+            if (currentTool === 'eraser') {
+                artCtx.clearRect(x, y, 1, 1);
+            } else {
                 artCtx.fillStyle = currentColor;
                 artCtx.fillRect(x, y, 1, 1);
-            } else if (currentTool === 'eraser') {
-                artCtx.clearRect(x, y, 1, 1);
             }
         }
 
         function pickColor(x, y) {
-            if (x < 0 || x >= width || y < 0 || y >= height) return;
-            const p = artCtx.getImageData(x, y, 1, 1).data;
-            if (p[3] === 0) return; // Прозрачный
-            // RGB to Hex
-            const hex = "#" + ((1 << 24) + (p[0] << 16) + (p[1] << 8) + p[2]).toString(16).slice(1);
+            const data = artCtx.getImageData(x, y, 1, 1).data;
+            if (data[3] === 0) return; // Не пикаем прозрачный
+            
+            const hex = "#" + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + data[2]).toString(16).slice(1);
             selectColor(hex);
             setTool('pencil');
         }
 
         function floodFill(startX, startY) {
-            // Получаем текущий цвет пикселя
-            const startData = artCtx.getImageData(startX, startY, 1, 1).data;
-            const startHex = startData[3] === 0 ? null : 
-                "#" + ((1 << 24) + (startData[0] << 16) + (startData[1] << 8) + startData[2]).toString(16).slice(1);
-            
-            // Если цвет совпадает с текущим выбранным - выходим
-            if (startHex === currentColor && currentTool !== 'eraser') return;
-            if (startHex === null && currentTool === 'eraser') return;
-
-            // Используем стек для заливки (не рекурсию, чтобы не переполнить стек)
-            const stack = [[startX, startY]];
-            const w = width;
-            const h = height;
-
-            // Подготовка данных для быстрой проверки
-            const imgData = artCtx.getImageData(0, 0, w, h);
+            // Оптимизированная заливка
+            const imgData = artCtx.getImageData(0, 0, width, height);
             const data = imgData.data;
+            
+            // Цвет старта
+            const startPos = (startY * width + startX) * 4;
+            const sr = data[startPos], sg = data[startPos+1], sb = data[startPos+2], sa = data[startPos+3];
 
-            // Конвертируем currentColor в RGBA
-            let r, g, b, a;
+            // Цвет заливки (парсим hex)
+            let tr, tg, tb, ta;
             if (currentTool === 'eraser') {
-                r=0; g=0; b=0; a=0;
+                tr=0; tg=0; tb=0; ta=0;
             } else {
                 const bigint = parseInt(currentColor.slice(1), 16);
-                r = (bigint >> 16) & 255;
-                g = (bigint >> 8) & 255;
-                b = bigint & 255;
-                a = 255;
+                tr = (bigint >> 16) & 255;
+                tg = (bigint >> 8) & 255;
+                tb = bigint & 255;
+                ta = 255;
             }
 
-            const matchStartColor = (pos) => {
-                return data[pos] === startData[0] && 
-                       data[pos+1] === startData[1] && 
-                       data[pos+2] === startData[2] && 
-                       data[pos+3] === startData[3];
-            };
+            // Если цвета совпадают, выходим
+            if (sr===tr && sg===tg && sb===tb && sa===ta) return;
 
-            const colorPixel = (pos) => {
-                data[pos] = r; data[pos+1] = g; data[pos+2] = b; data[pos+3] = a;
-            };
-
+            const stack = [[startX, startY]];
+            
             while (stack.length) {
                 const [x, y] = stack.pop();
-                const pos = (y * w + x) * 4;
+                const pos = (y * width + x) * 4;
 
-                if (matchStartColor(pos)) {
-                    colorPixel(pos);
-                    if (x > 0) stack.push([x - 1, y]);
-                    if (x < w - 1) stack.push([x + 1, y]);
-                    if (y > 0) stack.push([x, y - 1]);
-                    if (y < h - 1) stack.push([x, y + 1]);
-                }
+                // Проверка границ и цвета
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                if (data[pos] !== sr || data[pos+1] !== sg || data[pos+2] !== sb || data[pos+3] !== sa) continue;
+
+                // Красим
+                data[pos] = tr; data[pos+1] = tg; data[pos+2] = tb; data[pos+3] = ta;
+
+                stack.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
             }
             artCtx.putImageData(imgData, 0, 0);
         }
+
+        // --- Mouse Events (Слушаем только artCanvas!) ---
+        artCanvas.addEventListener('mousedown', e => {
+            if (e.button !== 0) return;
+            const p = getCoords(e);
+            
+            if (currentTool === 'picker') pickColor(p.x, p.y);
+            else if (currentTool === 'fill') { floodFill(p.x, p.y); updatePreview(); }
+            else { isDrawing = true; drawPixel(p.x, p.y); updatePreview(); }
+        });
+
+        window.addEventListener('mouseup', () => isDrawing = false);
+        
+        artCanvas.addEventListener('mousemove', e => {
+            if (!isDrawing) return;
+            const p = getCoords(e);
+            // Проверка, что мы все еще в пределах того же пикселя, чтобы не спамить (опционально)
+            drawPixel(p.x, p.y);
+            // updatePreview(); // Для производительности можно обновлять только при mouseup
+        });
+        
+        artCanvas.addEventListener('mouseup', updatePreview); // Обновляем превью только когда отпустили мышь
 
         function updatePreview() {
             prevCtx.clearRect(0, 0, width, height);
@@ -354,45 +352,15 @@
         }
 
         function clearCanvas() {
-            if(confirm('Очистить все?')) {
+            if(confirm('Стереть всё?')) {
                 artCtx.clearRect(0, 0, width, height);
                 updatePreview();
             }
         }
 
-        // --- События мыши ---
-        const getHandler = (e) => {
-            const p = getCoords(e);
-            
-            if (currentTool === 'picker') {
-                pickColor(p.x, p.y);
-            } else if (currentTool === 'fill') {
-                floodFill(p.x, p.y);
-                updatePreview();
-            } else {
-                isDrawing = true;
-                drawPixel(p.x, p.y);
-                updatePreview();
-            }
-        };
-
-        gridCanvas.addEventListener('mousedown', e => {
-            if(e.button !== 0) return; // Только левый клик
-            getHandler(e);
-        });
-
-        window.addEventListener('mouseup', () => isDrawing = false);
-        
-        gridCanvas.addEventListener('mousemove', e => {
-            if (!isDrawing) return;
-            const p = getCoords(e);
-            drawPixel(p.x, p.y);
-            updatePreview(); // Можно оптимизировать, вызывая реже
-        });
-
         function downloadImage() {
             const link = document.createElement('a');
-            link.download = `pixelart_${width}x${height}_${Date.now()}.png`;
+            link.download = `sprite_${Date.now()}.png`;
             link.href = artCanvas.toDataURL('image/png');
             link.click();
         }
