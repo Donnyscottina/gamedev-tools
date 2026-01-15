@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>8-Bit SFX Generator</title>
+    <style>
+        body { background: #1e1e1e; color: #d4d4d4; font-family: 'Segoe UI', sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; margin: 0; }
+        .container { background: #252526; padding: 30px; border-radius: 10px; border: 1px solid #3e3e42; text-align: center; width: 400px; }
+        h1 { margin-top: 0; color: #fff; }
+        .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
+        .btn { background: #333; color: white; border: 1px solid #444; padding: 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.2s; }
+        .btn:hover { background: #444; border-color: #007acc; }
+        .btn.play { background: #007acc; border: none; width: 100%; margin-bottom: 10px; padding: 10px; font-size: 16px; }
+        .wave-view { width: 100%; height: 80px; background: #000; margin-bottom: 20px; border-radius: 4px; position: relative; overflow: hidden; }
+        canvas { width: 100%; height: 100%; }
+        .control-row { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 12px; color: #888; }
+        a { color: #888; text-decoration: none; position: absolute; top: 20px; left: 20px; font-size: 24px; }
+    </style>
+</head>
+<body>
+    <a href="index.html">←</a>
+    <div class="container">
+        <h1>🔊 Retro SFX</h1>
+        
+        <div class="wave-view">
+            <canvas id="scope"></canvas>
+        </div>
+
+        <button class="btn play" onclick="playCurrent()">▶ Повторить</button>
+
+        <div class="categories">
+            <button class="btn" onclick="generate('coin')">🪙 Монетка</button>
+            <button class="btn" onclick="generate('shoot')">🔫 Выстрел</button>
+            <button class="btn" onclick="generate('jump')">🦘 Прыжок</button>
+            <button class="btn" onclick="generate('explosion')">💥 Взрыв</button>
+            <button class="btn" onclick="generate('powerup')">⚡ Power Up</button>
+            <button class="btn" onclick="generate('hit')">🤕 Удар</button>
+        </div>
+        
+        <p style="font-size: 12px; color: #666;">Пока без экспорта в WAV (браузеры блокируют энкодеры без библиотек), но можно записать системный звук.</p>
+    </div>
+
+    <script>
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const canvas = document.getElementById('scope');
+        const cCtx = canvas.getContext('2d');
+        let analyser = ctx.createAnalyser();
+        analyser.fftSize = 2048;
+        
+        // Визуализация
+        function draw() {
+            requestAnimationFrame(draw);
+            const bufferLength = analyser.frequencyBinCount;
+            const dataArray = new Uint8Array(bufferLength);
+            analyser.getByteTimeDomainData(dataArray);
+            
+            cCtx.fillStyle = 'rgb(0, 0, 0)';
+            cCtx.fillRect(0, 0, canvas.width, canvas.height);
+            cCtx.lineWidth = 2;
+            cCtx.strokeStyle = 'rgb(0, 255, 0)';
+            cCtx.beginPath();
+            
+            const sliceWidth = canvas.width * 1.0 / bufferLength;
+            let x = 0;
+            for(let i = 0; i < bufferLength; i++) {
+                const v = dataArray[i] / 128.0;
+                const y = v * canvas.height/2;
+                if(i === 0) cCtx.moveTo(x, y); else cCtx.lineTo(x, y);
+                x += sliceWidth;
+            }
+            cCtx.lineTo(canvas.width, canvas.height/2);
+            cCtx.stroke();
+        }
+        draw();
+
+        let lastParams = null;
+
+        function playSound(type) {
+            if (ctx.state === 'suspended') ctx.resume();
+            
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            
+            osc.connect(gain);
+            gain.connect(analyser);
+            analyser.connect(ctx.destination);
+
+            const now = ctx.currentTime;
+            
+            if (type === 'coin') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
+                osc.start(now);
+                osc.stop(now + 0.3);
+            } 
+            else if (type === 'shoot') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(1200, now);
+                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
+                // Noise emulation via rapid freq modulation
+                for(let i=0; i<10; i++) {
+                    osc.frequency.setValueAtTime(Math.random()*1000 + 200, now + i*0.02);
+                }
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
+                osc.start(now);
+                osc.stop(now + 0.2);
+            }
+            else if (type === 'jump') {
+                osc.type = 'square';
+                osc.frequency.setValueAtTime(200, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
+                osc.start(now);
+                osc.stop(now + 0.15);
+            }
+            else if (type === 'explosion') {
+                osc.type = 'sawtooth';
+                osc.frequency.setValueAtTime(100, now);
+                osc.frequency.exponentialRampToValueAtTime(10, now + 0.4);
+                 for(let i=0; i<20; i++) {
+                    osc.frequency.setValueAtTime(Math.random()*200, now + i*0.02);
+                }
+                gain.gain.setValueAtTime(1, now);
+                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+            else {
+                // Fallback / Powerup
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(300, now);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
+                osc.frequency.linearRampToValueAtTime(300, now + 0.2);
+                osc.frequency.linearRampToValueAtTime(600, now + 0.3);
+                gain.gain.setValueAtTime(0.5, now);
+                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
+                osc.start(now);
+                osc.stop(now + 0.4);
+            }
+            
+            lastParams = type;
+        }
+
+        function generate(type) {
+            playSound(type);
+        }
+
+        function playCurrent() {
+            if(lastParams) playSound(lastParams);
+        }
+    </script>
+</body>
+</html>
