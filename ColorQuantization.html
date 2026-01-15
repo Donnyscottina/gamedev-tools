@@ -2,15 +2,9 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Sprite Palette Remapper Pro</title>
+    <title>Sprite Palette Remapper Ultimate</title>
     <style>
-        :root {
-            --bg: #1e1e1e;
-            --panel: #252526;
-            --border: #3e3e42;
-            --accent: #007acc;
-            --text: #d4d4d4;
-        }
+        :root { --bg: #1e1e1e; --panel: #252526; --border: #3e3e42; --accent: #007acc; --text: #d4d4d4; }
         body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
         
         header { background: var(--panel); padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
@@ -18,8 +12,6 @@
         a.back { color: #888; text-decoration: none; font-size: 20px; margin-right: 10px; }
 
         .main-container { display: flex; flex-grow: 1; overflow: hidden; }
-        
-        /* Колонки */
         .column { padding: 20px; display: flex; flex-direction: column; border-right: 1px solid var(--border); overflow-y: auto; }
         .col-left { width: 250px; flex-shrink: 0; }
         .col-center { width: 320px; background: var(--panel); flex-shrink: 0; }
@@ -27,182 +19,159 @@
 
         h2 { font-size: 13px; text-transform: uppercase; color: #888; margin-top: 0; border-bottom: 1px solid #333; padding-bottom: 5px; margin-bottom: 15px; }
         
-        /* Drag & Drop */
-        .drop-zone {
-            border: 2px dashed var(--border);
-            border-radius: 6px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: 0.2s;
-            background: rgba(0,0,0,0.2);
-            margin-bottom: 15px;
-            font-size: 13px; color: #aaa;
-        }
+        .drop-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 20px; text-align: center; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); margin-bottom: 15px; font-size: 13px; color: #aaa; }
         .drop-zone:hover { border-color: var(--accent); background: rgba(0,122,204,0.1); }
         
-        /* Карточки */
-        .sprite-list { display: flex; flex-direction: column; gap: 5px; }
-        .source-item { font-size: 12px; padding: 5px; background: #333; border-radius: 3px; display: flex; justify-content: space-between; }
+        .source-item { font-size: 12px; padding: 5px; background: #333; border-radius: 3px; display: flex; justify-content: space-between; margin-bottom: 5px; }
 
         .result-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 15px; padding-bottom: 50px; }
-        .result-card { 
-            background: #252526; border: 1px solid #3e3e42; border-radius: 6px; overflow: hidden; 
-            transition: transform 0.1s; position: relative;
-        }
+        .result-card { background: #252526; border: 1px solid #3e3e42; border-radius: 6px; overflow: hidden; transition: transform 0.1s; }
         .result-card:hover { transform: translateY(-2px); border-color: #666; }
         
-        .card-img-wrap { 
-            height: 100px; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII='); 
-            display: flex; justify-content: center; align-items: center; cursor: zoom-in;
-        }
+        .card-img-wrap { height: 100px; background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII='); display: flex; justify-content: center; align-items: center; cursor: zoom-in; }
         .card-img-wrap img { max-width: 100%; max-height: 100%; image-rendering: pixelated; }
-        
         .card-footer { padding: 8px; display: flex; justify-content: space-between; align-items: center; background: #2d2d30; }
         .card-name { font-size: 11px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 70px; }
         .mini-btn { background: #444; color: white; border: none; border-radius: 3px; cursor: pointer; padding: 2px 6px; font-size: 12px; }
         .mini-btn:hover { background: var(--accent); }
 
-        /* Палитра и Контролы */
         .palette-preview { display: flex; flex-wrap: wrap; gap: 1px; margin-bottom: 20px; background: #000; padding: 2px; }
         .color-dot { width: 12px; height: 12px; }
-        
         .control-group { margin-bottom: 20px; }
         .control-group label { display: block; margin-bottom: 5px; font-size: 13px; }
         input[type="range"] { width: 100%; }
-        
-        button.btn-primary { 
-            background: var(--accent); color: white; border: none; padding: 12px; 
-            border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; 
-        }
+        button.btn-primary { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; }
         button.btn-primary:hover { background: #0062a3; }
         button.btn-primary:disabled { background: #444; cursor: not-allowed; opacity: 0.5; }
 
-        /* МОДАЛКА (Lightbox) */
+        /* --- НОВОЕ МОДАЛЬНОЕ ОКНО --- */
         .modal-overlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.85); z-index: 1000;
+            background: rgba(0,0,0,0.9); z-index: 1000;
             display: none; justify-content: center; align-items: center;
         }
         .modal-content {
-            background: #252526; padding: 20px; border-radius: 8px;
-            max-width: 90%; max-height: 90%; display: flex; flex-direction: column; gap: 15px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            background: #252526; padding: 0; border-radius: 8px;
+            width: 90vw; height: 85vh; display: flex; flex-direction: column;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.8); border: 1px solid #444;
         }
-        .compare-container {
-            display: flex; gap: 20px; justify-content: center; align-items: center;
+        .modal-header {
+            padding: 15px 20px; border-bottom: 1px solid #444; display: flex; justify-content: space-between; align-items: center; background: #2d2d30; border-radius: 8px 8px 0 0;
+        }
+        .modal-body {
+            flex-grow: 1; display: flex; overflow: hidden; position: relative;
+        }
+        .compare-pane {
+            flex: 1; display: flex; flex-direction: column; border-right: 1px solid #444; position: relative;
+        }
+        .pane-label {
+            position: absolute; top: 10px; left: 10px; background: rgba(0,0,0,0.7); 
+            color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 12px; z-index: 10; pointer-events: none;
+        }
+        .image-container {
+            flex-grow: 1; overflow: hidden; position: relative;
             background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII=');
-            padding: 20px; border-radius: 4px;
+            cursor: grab;
+            display: flex; justify-content: center; align-items: center;
         }
-        .compare-box { text-align: center; }
-        .compare-box img { 
-            max-width: 400px; max-height: 500px; 
-            image-rendering: pixelated; 
-            border: 1px solid #555; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        .image-container img {
+            image-rendering: pixelated;
+            transform-origin: center;
+            /* Важно: размеры зададим через JS */
+            max-width: none; max-height: none; 
         }
-        .compare-label { display: block; margin-bottom: 5px; color: #888; font-size: 12px; }
-        .close-modal { position: absolute; top: 20px; right: 20px; font-size: 30px; color: white; cursor: pointer; }
+        .image-container:active { cursor: grabbing; }
+
+        .modal-footer {
+            padding: 15px 20px; background: #2d2d30; border-top: 1px solid #444; display: flex; justify-content: space-between; align-items: center; border-radius: 0 0 8px 8px;
+        }
+        .zoom-controls { display: flex; align-items: center; gap: 10px; font-size: 13px; color: #aaa; }
+        .close-btn { background: none; border: none; color: #fff; font-size: 24px; cursor: pointer; }
     </style>
 </head>
 <body>
     <header>
         <a href="index.html" class="back">←</a>
-        <h1>Sprite Palette Remapper</h1>
+        <h1>Sprite Palette Remapper Ultimate</h1>
     </header>
 
     <div class="main-container">
-        <!-- Левая: Исходники -->
         <div class="column col-left">
             <h2>1. Спрайты</h2>
-            <div class="drop-zone" id="spriteDrop">
-                + Добавить спрайты
-                <input type="file" id="spriteInput" multiple accept="image/*" style="display:none">
-            </div>
-            <div class="sprite-list" id="sourceList">
-                <div style="font-size:12px; color:#666; text-align:center">Список пуст</div>
-            </div>
+            <div class="drop-zone" id="spriteDrop">+ Спрайты<input type="file" id="spriteInput" multiple accept="image/*" style="display:none"></div>
+            <div class="sprite-list" id="sourceList"></div>
         </div>
-
-        <!-- Центр: Настройки -->
         <div class="column col-center">
             <h2>2. Палитра</h2>
-            <div class="drop-zone" id="paletteDrop" style="padding:10px;">
-                + Загрузить Палитру (PNG/JPG)
-                <input type="file" id="paletteInput" accept="image/*" style="display:none">
-            </div>
+            <div class="drop-zone" id="paletteDrop" style="padding:10px;">+ Палитра<input type="file" id="paletteInput" accept="image/*" style="display:none"></div>
             <div id="paletteInfo" style="display:none">
                 <div class="palette-preview" id="palettePreview"></div>
-                <div style="font-size:11px; color:#888; margin-bottom:10px;">Цветов: <span id="colorCount">0</span></div>
+                <div style="font-size:11px; color:#888;">Цветов: <span id="colorCount">0</span></div>
             </div>
-
             <h2>3. Настройки</h2>
             <div class="control-group">
-                <label>Сила эффекта: <span id="strengthVal">100%</span></label>
+                <label>Сила: <span id="strengthVal">100%</span></label>
                 <input type="range" id="strength" min="0" max="1" step="0.05" value="1" oninput="updateLabel()">
-                <div style="font-size:10px; color:#666; margin-top:3px;">
-                    ⚠️ Меньше 100% создает новые цвета (смесь)
-                </div>
             </div>
-
             <div class="control-group">
-                <label style="cursor:pointer; display:flex; align-items:center;">
-                    <input type="checkbox" id="dithering" style="width:auto; margin-right:8px;"> 
-                    Дизеринг (Шум)
-                </label>
+                <label style="cursor:pointer; display:flex; align-items:center;"><input type="checkbox" id="dithering" style="margin-right:8px;"> Дизеринг</label>
+                <label style="cursor:pointer; display:flex; align-items:center; margin-top:5px;"><input type="checkbox" id="ignoreAlpha" style="margin-right:8px;"> Игнорировать Alpha</label>
             </div>
-
             <button class="btn-primary" id="processBtn" onclick="processAll()" disabled>ОБРАБОТАТЬ</button>
-            <button onclick="downloadAll()" id="downloadAllBtn" style="width:100%; margin-top:10px; padding:10px; background:#333; border:1px solid #555; color:#ddd; border-radius:4px; cursor:pointer; display:none;">Скачать всё (ZIP)</button>
+            <button onclick="downloadAll()" id="downloadAllBtn" style="width:100%; margin-top:10px; padding:10px; background:#333; border:1px solid #555; color:#ddd; border-radius:4px; cursor:pointer; display:none;">Скачать ZIP</button>
         </div>
-
-        <!-- Правая: Результат -->
         <div class="column col-right">
-            <h2>Результат (Клик для зума)</h2>
+            <h2>Результат</h2>
             <div class="result-grid" id="resultGrid"></div>
         </div>
     </div>
 
-    <!-- Модальное окно -->
-    <div class="modal-overlay" id="previewModal" onclick="closeModal(event)">
-        <div class="close-modal" onclick="closeModal(event)">×</div>
+    <!-- Обновленное модальное окно -->
+    <div class="modal-overlay" id="previewModal">
         <div class="modal-content">
-            <h3 style="margin:0; color:#fff">Предпросмотр</h3>
-            <div class="compare-container">
-                <div class="compare-box">
-                    <span class="compare-label">Оригинал</span>
-                    <img id="modalOriginal">
+            <div class="modal-header">
+                <h3 style="margin:0; font-size:16px" id="modalTitle">Просмотр</h3>
+                <button class="close-btn" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="compare-pane">
+                    <div class="pane-label">Оригинал</div>
+                    <div class="image-container" id="containerOrig">
+                        <img id="modalOriginal" draggable="false">
+                    </div>
                 </div>
-                <div class="compare-box">
-                    <span class="compare-label">Результат</span>
-                    <img id="modalResult">
+                <div class="compare-pane">
+                    <div class="pane-label">Результат</div>
+                    <div class="image-container" id="containerRes">
+                        <img id="modalResult" draggable="false">
+                    </div>
                 </div>
             </div>
-            <div style="text-align:center">
-                <button class="btn-primary" style="width:auto; padding: 10px 30px;" onclick="downloadFromModal()">Скачать этот файл</button>
+            <div class="modal-footer">
+                <div class="zoom-controls">
+                    Зум: <input type="range" id="zoomRange" min="0.1" max="10" step="0.1" value="1" style="width:150px">
+                    <span id="zoomLabel">100%</span>
+                    <button class="mini-btn" onclick="fitZoom()">Auto Fit</button>
+                </div>
+                <button class="btn-primary" style="width:auto; padding: 8px 30px;" onclick="downloadFromModal()">Скачать файл</button>
             </div>
         </div>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
     <script>
-        let sourceImages = []; 
-        let paletteColors = []; 
-        let processedData = {}; // map filename -> blob
-
-        // UI Refs
+        let sourceImages = [], paletteColors = [], processedData = {};
         const strengthInput = document.getElementById('strength');
-        
-        // --- Drag & Drop ---
+
+        // Setup UI
         function setupDrop(elem, input, callback) {
             elem.addEventListener('click', () => input.click());
             input.addEventListener('change', e => handleFiles(e.target.files, callback));
             ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(e => {
-                elem.addEventListener(e, ev => { ev.preventDefault(); ev.stopPropagation(); });
+                elem.addEventListener(e, ev => ev.preventDefault());
             });
-            elem.addEventListener('drop', e => handleFiles(e.dataTransfer.files, callback));
+            elem.addEventListener('drop', e => { e.preventDefault(); handleFiles(e.dataTransfer.files, callback); });
         }
-
         setupDrop(document.getElementById('spriteDrop'), document.getElementById('spriteInput'), loadSprites);
         setupDrop(document.getElementById('paletteDrop'), document.getElementById('paletteInput'), loadPalette);
 
@@ -223,186 +192,176 @@
             sourceImages.push({ img, name });
             const list = document.getElementById('sourceList');
             if(sourceImages.length === 1) list.innerHTML = '';
-            
-            const item = document.createElement('div');
-            item.className = 'source-item';
-            item.innerHTML = `<span>${name}</span> <span style="color:#666">${img.width}x${img.height}</span>`;
-            list.appendChild(item);
+            list.innerHTML += `<div class="source-item"><span>${name}</span> <span style="color:#666">${img.width}x${img.height}</span></div>`;
             checkReady();
         }
 
         function loadPalette(img) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            canvas.width = img.width; canvas.height = img.height;
-            ctx.drawImage(img, 0, 0);
-            const data = ctx.getImageData(0,0, canvas.width, canvas.height).data;
-            
-            const unique = new Set();
-            paletteColors = [];
-            
+            const c = document.createElement('canvas'); const ctx = c.getContext('2d');
+            c.width = img.width; c.height = img.height; ctx.drawImage(img, 0, 0);
+            const data = ctx.getImageData(0,0,c.width,c.height).data;
+            const unique = new Set(); paletteColors = [];
             for(let i=0; i<data.length; i+=4) {
-                if(data[i+3] < 128) continue;
-                const k = `${data[i]},${data[i+1]},${data[i+2]}`;
-                if(!unique.has(k)) {
-                    unique.add(k);
-                    paletteColors.push({r:data[i], g:data[i+1], b:data[i+2]});
-                }
+                if(data[i+3]<10) continue;
+                const k = `${data[i]},${data[i+1]},${data[i+2]},${data[i+3]}`;
+                if(!unique.has(k)) { unique.add(k); paletteColors.push({r:data[i], g:data[i+1], b:data[i+2], a:data[i+3]}); }
             }
-
-            // Render Preview
-            const palPreview = document.getElementById('palettePreview');
-            palPreview.innerHTML = paletteColors.slice(0, 150).map(c => 
-                `<div class="color-dot" style="background:rgb(${c.r},${c.g},${c.b})"></div>`
-            ).join('');
+            document.getElementById('palettePreview').innerHTML = paletteColors.slice(0,150).map(c=>`<div class="color-dot" style="background:rgba(${c.r},${c.g},${c.b},${c.a/255})"></div>`).join('');
             document.getElementById('colorCount').innerText = paletteColors.length;
             document.getElementById('paletteInfo').style.display = 'block';
             checkReady();
         }
 
-        function checkReady() {
-            document.getElementById('processBtn').disabled = !(sourceImages.length && paletteColors.length);
-        }
+        function checkReady() { document.getElementById('processBtn').disabled = !(sourceImages.length && paletteColors.length); }
+        function updateLabel() { document.getElementById('strengthVal').innerText = Math.round(strengthInput.value * 100) + '%'; }
 
-        function updateLabel() {
-            document.getElementById('strengthVal').innerText = Math.round(strengthInput.value * 100) + '%';
-        }
-
-        // --- PROCESSING ---
+        // --- Processing Logic ---
         function processAll() {
             const grid = document.getElementById('resultGrid');
             grid.innerHTML = '<div style="color:#888; padding:20px;">Обработка...</div>';
             processedData = {};
-            
             const strength = parseFloat(strengthInput.value);
             const useDither = document.getElementById('dithering').checked;
+            const ignoreAlpha = document.getElementById('ignoreAlpha').checked;
 
             setTimeout(() => {
                 grid.innerHTML = '';
-                
                 sourceImages.forEach(src => {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = src.img.width; canvas.height = src.img.height;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(src.img, 0, 0);
-                    
-                    const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                    const data = imgData.data;
+                    const c = document.createElement('canvas'); c.width = src.img.width; c.height = src.img.height;
+                    const ctx = c.getContext('2d'); ctx.drawImage(src.img, 0, 0);
+                    const data = ctx.getImageData(0,0,c.width,c.height).data;
 
                     for(let i=0; i<data.length; i+=4) {
-                        if(data[i+3] < 10) continue;
-
-                        const r = data[i], g = data[i+1], b = data[i+2];
-                        
-                        // Find nearest palette color
+                        if(data[i+3]<10) continue;
+                        const cur = {r:data[i], g:data[i+1], b:data[i+2], a:data[i+3]};
                         let best = paletteColors[0], minDist = Infinity;
+
                         for(const p of paletteColors) {
-                            const dist = (r-p.r)**2 + (g-p.g)**2 + (b-p.b)**2;
+                            const dist = ignoreAlpha ? (cur.r-p.r)**2+(cur.g-p.g)**2+(cur.b-p.b)**2 : (cur.r-p.r)**2+(cur.g-p.g)**2+(cur.b-p.b)**2+(cur.a-p.a)**2;
                             if(dist < minDist) { minDist = dist; best = p; }
                         }
+                        const tA = ignoreAlpha ? cur.a : best.a;
+                        data[i] = cur.r*(1-strength)+best.r*strength;
+                        data[i+1] = cur.g*(1-strength)+best.g*strength;
+                        data[i+2] = cur.b*(1-strength)+best.b*strength;
+                        data[i+3] = cur.a*(1-strength)+tA*strength;
 
-                        // Apply Strength Mixing
-                        // Result = Original * (1-S) + Target * S
-                        const resR = r * (1-strength) + best.r * strength;
-                        const resG = g * (1-strength) + best.g * strength;
-                        const resB = b * (1-strength) + best.b * strength;
-
-                        data[i] = resR;
-                        data[i+1] = resG;
-                        data[i+2] = resB;
-
-                        // Dithering (Only makes sense if we stick to palette, but applied here for texture)
-                        if(useDither && strength > 0.8) {
-                            const errR = (r - best.r) * strength; // Scale error by strength
-                            const errG = (g - best.g) * strength;
-                            const errB = (b - best.b) * strength;
-                            distributeError(data, i, errR, errG, errB, canvas.width);
+                        if(useDither && strength>0.8) {
+                            const er = (cur.r-best.r)*strength, eg = (cur.g-best.g)*strength, eb = (cur.b-best.b)*strength;
+                            const add=(idx,f)=>{ if(idx<data.length){ data[idx]+=er*f; data[idx+1]+=eg*f; data[idx+2]+=eb*f; }};
+                            add(i+4,7/16); add(i+c.width*4-4,3/16); add(i+c.width*4,5/16); add(i+c.width*4+4,1/16);
                         }
                     }
-                    ctx.putImageData(imgData, 0, 0);
-
-                    // Create Blob and UI
-                    canvas.toBlob(blob => {
+                    ctx.putImageData(new ImageData(data, c.width, c.height), 0, 0);
+                    c.toBlob(blob => {
                         processedData[src.name] = blob;
                         const url = URL.createObjectURL(blob);
-                        
-                        // Card
-                        const card = document.createElement('div');
-                        card.className = 'result-card';
-                        card.innerHTML = `
-                            <div class="card-img-wrap" onclick="openModal('${src.name}', '${src.img.src}', '${url}')">
-                                <img src="${url}">
-                            </div>
-                            <div class="card-footer">
-                                <div class="card-name" title="${src.name}">${src.name}</div>
-                                <button class="mini-btn" onclick="downloadSingle('${src.name}')">⬇</button>
-                            </div>
-                        `;
-                        grid.appendChild(card);
+                        grid.innerHTML += `
+                            <div class="result-card">
+                                <div class="card-img-wrap" onclick="openModal('${src.name}', '${src.img.src}', '${url}', ${src.img.width}, ${src.img.height})"><img src="${url}"></div>
+                                <div class="card-footer"><div class="card-name">${src.name}</div><button class="mini-btn" onclick="downloadSingle('${src.name}')">⬇</button></div>
+                            </div>`;
                     }, 'image/png');
                 });
-                
                 document.getElementById('downloadAllBtn').style.display = 'block';
             }, 50);
         }
 
-        function distributeError(data, idx, er, eg, eb, w) {
-            const add = (i, f) => {
-                if(i < data.length) {
-                    data[i] = Math.max(0, Math.min(255, data[i] + er*f));
-                    data[i+1] = Math.max(0, Math.min(255, data[i+1] + eg*f));
-                    data[i+2] = Math.max(0, Math.min(255, data[i+2] + eb*f));
-                }
-            }
-            add(idx + 4, 7/16);
-            add(idx + w*4 - 4, 3/16);
-            add(idx + w*4, 5/16);
-            add(idx + w*4 + 4, 1/16);
-        }
-
         // --- Download ---
         function downloadSingle(name) {
-            const blob = processedData[name];
-            if(!blob) return;
-            const link = document.createElement('a');
-            link.href = URL.createObjectURL(blob);
-            link.download = "remap_" + name;
-            link.click();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(processedData[name]); a.download = "remap_"+name; a.click();
         }
-
         function downloadAll() {
             const zip = new JSZip();
-            for(const [name, blob] of Object.entries(processedData)) {
-                zip.file("remap_" + name, blob);
-            }
-            zip.generateAsync({type:"blob"}).then(c => {
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(c);
-                link.download = "remapped_sprites.zip";
-                link.click();
-            });
+            for(const [n, b] of Object.entries(processedData)) zip.file("remap_"+n, b);
+            zip.generateAsync({type:"blob"}).then(c=>{const a=document.createElement('a'); a.href=URL.createObjectURL(c); a.download="remapped.zip"; a.click();});
         }
 
-        // --- Modal ---
-        let currentModalName = '';
+        // --- Improved Modal with Zoom ---
+        let currentModalName='', currentScale=1;
         const modal = document.getElementById('previewModal');
+        const imgOrig = document.getElementById('modalOriginal');
+        const imgRes = document.getElementById('modalResult');
+        const zoomRange = document.getElementById('zoomRange');
+        
+        let isDragging=false, startX=0, startY=0, transX=0, transY=0;
 
-        function openModal(name, originalSrc, resultSrc) {
+        function openModal(name, srcOrig, srcRes, w, h) {
             currentModalName = name;
-            document.getElementById('modalOriginal').src = originalSrc;
-            document.getElementById('modalResult').src = resultSrc;
+            document.getElementById('modalTitle').innerText = name + ` (${w}x${h})`;
+            imgOrig.src = srcOrig;
+            imgRes.src = srcRes;
+            
+            // Auto Fit Logic
+            const containerW = document.querySelector('.image-container').clientWidth;
+            const containerH = document.querySelector('.image-container').clientHeight;
+            
+            // Если картинка мелкая (пиксель арт), увеличиваем кратно
+            if (w < 128) {
+                currentScale = Math.floor(Math.min(containerW, containerH) / Math.max(w, h)) - 1;
+                if(currentScale < 1) currentScale = 1;
+            } else {
+                // Если большая - подгоняем
+                currentScale = Math.min(1, Math.min(containerW/w, containerH/h));
+            }
+
+            // Ограничиваем
+            zoomRange.value = currentScale;
+            updateTransform();
+            
             modal.style.display = 'flex';
         }
 
-        function closeModal(e) {
-            if(e.target === modal || e.target.classList.contains('close-modal')) {
-                modal.style.display = 'none';
+        function closeModal(e) { 
+            if(!e || e.target === modal || e.target.classList.contains('close-btn')) modal.style.display = 'none'; 
+            transX=0; transY=0; // Reset pan
+        }
+        function downloadFromModal() { if(currentModalName) downloadSingle(currentModalName); }
+
+        function fitZoom() {
+            // Re-run auto fit logic
+            const w = imgOrig.naturalWidth;
+            const h = imgOrig.naturalHeight;
+            const containerW = document.querySelector('.image-container').clientWidth;
+            if (w < 128) {
+                currentScale = Math.floor(Math.min(containerW, 500) / Math.max(w, h));
+            } else {
+                currentScale = 1;
             }
+            zoomRange.value = currentScale;
+            transX=0; transY=0;
+            updateTransform();
         }
 
-        function downloadFromModal() {
-            if(currentModalName) downloadSingle(currentModalName);
+        zoomRange.addEventListener('input', e => {
+            currentScale = parseFloat(e.target.value);
+            updateTransform();
+        });
+
+        function updateTransform() {
+            const t = `translate(${transX}px, ${transY}px) scale(${currentScale})`;
+            imgOrig.style.transform = t;
+            imgRes.style.transform = t;
+            document.getElementById('zoomLabel').innerText = Math.round(currentScale * 100) + '%';
         }
+
+        // Pan Logic for images
+        [document.getElementById('containerOrig'), document.getElementById('containerRes')].forEach(el => {
+            el.addEventListener('mousedown', e => {
+                isDragging = true;
+                startX = e.clientX - transX;
+                startY = e.clientY - transY;
+            });
+            window.addEventListener('mousemove', e => {
+                if(!isDragging) return;
+                e.preventDefault();
+                transX = e.clientX - startX;
+                transY = e.clientY - startY;
+                updateTransform();
+            });
+            window.addEventListener('mouseup', () => isDragging = false);
+        });
+
     </script>
 </body>
 </html>
