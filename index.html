@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GameDev Tools Hub</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #fff; margin-bottom: 40px; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            width: 80%;
+            max-width: 900px;
+        }
+        .card {
+            background: #252526;
+            border: 1px solid #3e3e42;
+            border-radius: 8px;
+            padding: 25px;
+            text-decoration: none;
+            color: inherit;
+            transition: transform 0.2s, border-color 0.2s;
+            text-align: center;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #007acc;
+            background: #2d2d30;
+        }
+        .icon { font-size: 40px; margin-bottom: 15px; display: block; }
+        .title { font-size: 18px; font-weight: bold; margin-bottom: 10px; display: block; color: #fff; }
+        .desc { font-size: 14px; color: #888; }
+    </style>
+</head>
+<body>
+    <h1>🛠️ GameDev Tools</h1>
+    <div class="grid">
+        <a href="spritesheet.html" class="card">
+            <span class="icon">🍱</span>
+            <span class="title">Sprite Packer</span>
+            <span class="desc">Создание спрайтшитов и атласов из отдельных картинок.</span>
+        </a>
+        <a href="palette.html" class="card">
+            <span class="icon">🎨</span>
+            <span class="title">Palette Extractor</span>
+            <span class="desc">Извлечение цветовой палитры из любого изображения.</span>
+        </a>
+        <a href="converter.html" class="card">
+            <span class="icon">🔄</span>
+            <span class="title">Image Converter</span>
+            <span class="desc">Пакетная конвертация PNG ↔ WebP ↔ JPG.</span>
+        </a>
+    </div>
+</body>
+</html>
