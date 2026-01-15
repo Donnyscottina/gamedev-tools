@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Color Quantization</title>
+    <style>
+        :root {
+            --bg: #1e1e1e;
+            --panel: #252526;
+            --border: #3e3e42;
+            --accent: #007acc;
+            --text: #d4d4d4;
+        }
+        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
+        
+        /* Тулбар */
+        .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; }
+        .tool-btn { width: 36px; height: 36px; background: transparent; color: #fff; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative;}
+        .tool-btn:hover { background: #3e3e42; }
+        .tool-btn.active { background: var(--accent); border-color: #0098ff; }
+        .tool-btn .key { position: absolute; bottom: 2px; right: 2px; font-size: 8px; color: rgba(255,255,255,0.7); }
+
+        /* Рабочая область */
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; }
+        .top-bar { height: 40px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 13px; }
+        
+        .canvas-viewport { 
+            flex-grow: 1; 
+            background: #151515; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            overflow: auto; 
+        }
+
+        /* Доска для рисования */
+        .drawing-board {
+            position: relative;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            background-color: #222;
+            background-image: 
+                linear-gradient(45deg, #333 25%, transparent 25%), 
+                linear-gradient(-45deg, #333 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #333 75%), 
+                linear-gradient(-45deg, transparent 75%, #333 75%);
+            background-size: 20px 20px;
+            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+        }
+
+        canvas { position: absolute; top: 0; left: 0; image-rendering: pixelated; }
+        #artCanvas { z-index: 10; cursor: crosshair; }
+        #gridCanvas { z-index: 20; pointer-events: none; opacity: 0.5; }
+
+        /* Правая панель */
+        .panels { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; overflow-y: auto; }
+        .panel { padding: 15px; border-bottom: 1px solid var(--border); }
+        .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; }
+        
+        .palette { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
+        .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #000; box-sizing: border-box;}
+        .color-swatch:hover { transform: scale(1.1); z-index: 50; border: 1px solid white; box-shadow: 0 0 5px black; }
+        
+        input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; border-radius: 2px; }
+        
+        button.action { background: var(--accent); color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600; font-size: 13px; }
+        button.action:hover { background: #0062a3; }
+        button.secondary { background: #3e3e42; margin-top: 5px; }
+        button.secondary:hover { background: #4e4e52; }
+        
+        .preview-box {
+            width: 100%; height: 100px; 
+            background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII=');
+            display: flex; justify-content: center; align-items: center;
+            border: 1px solid var(--border);
+            margin-bottom: 10px;
+        }
+        #previewCanvas { image-rendering: pixelated; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
+        a.back-link { text-decoration: none; color: #888; font-size: 20px; }
+    </style>
+</head>
+<body>
+    <div class="toolbar">
+        <a href="index.html" class="back-link" title="Меню">🏠</a>
+        <div class="tool-btn active" onclick="setTool('pencil')" title="B">✏️<span class="key">B</span></div>
+        <div class="tool-btn" onclick="setTool('eraser')" title="E">🧼<span class="key">E</span></div>
+        <div class="tool-btn" onclick="setTool('fill')" title="F">🪣<span class="key">F</span></div>
+        <div class="tool-btn" onclick="setTool('picker')" title="I">💉<span class="key">I</span></div>
+        <div style="flex-grow:1"></div>
+        <div class="tool-btn" onclick="clearCanvas()" title="Del">🗑️</div>
+    </div>
+
+    <div class="workspace">
+        <div class="top-bar">
+            <span>Размер: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="128"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="128"></span>
+            <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer;">OK</button>
+            <div style="width:1px; height:20px; background:#444; margin:0 10px;"></div>
+            <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
+                <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> Сетка
+            </label>
+        </div>
+        
+        <div class="canvas-viewport" id="dropZone">
+            <div class="drawing-board" id="board">
+                <canvas id="artCanvas"></canvas>
+                <canvas id="gridCanvas"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <div class="panels">
+        <div class="panel">
+            <h3>Превью</h3>
+            <div class="preview-box">
+                <canvas id="previewCanvas"></canvas>
+            </div>
+        </div>
+
+        <div class="panel">
+            <h3>Активный цвет</h3>
+            <div style="display: flex; gap: 10px; align-items: center;">
+                <input type="color" id="colorPicker" value="#000000" style="height: 30px; flex-grow:1; cursor:pointer;">
+            </div>
+        </div>
+        
+        <div class="panel">
+            <h3>Палитра (Pico-8)</h3>
+            <div class="palette" id="paletteBox"></div>
+            <button class="action secondary" onclick="remapToPalette()" title="Заменить все цвета на ближайшие из палитры">🎨 Привести к палитре</button>
+        </div>
+        
+        <div class="panel">
+            <h3>Экспорт</h3>
+            <button class="action" onclick="downloadImage()">💾 Скачать PNG</button>
+        </div>
+        
+        <div class="panel" style="font-size: 11px; color:#666;">
+            💡 Перетащи любую картинку на холст, чтобы открыть её. Затем нажми "Привести к палитре".
+        </div>
+    </div>
+
+    <script>
+        // --- Настройки ---
+        const ZOOM = 20; 
+        // Pico-8 palette
+        const defaultPalette = [
+            '#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
+            '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'
+        ];
+
+        // --- DOM ---
+        const artCanvas = document.getElementById('artCanvas');
+        const gridCanvas = document.getElementById('gridCanvas');
+        const previewCanvas = document.getElementById('previewCanvas');
+        const board = document.getElementById('board');
+        const dropZone = document.getElementById('dropZone');
+        const artCtx = artCanvas.getContext('2d', { willReadFrequently: true });
+        const gridCtx = gridCanvas.getContext('2d');
+        const prevCtx = previewCanvas.getContext('2d');
+
+        // --- State ---
+        let width = 32, height = 32;
+        let currentTool = 'pencil';
+        let currentColor = '#000000';
+        let isDrawing = false;
+        
+        // --- Init ---
+        function init() {
+            const palBox = document.getElementById('paletteBox');
+            defaultPalette.forEach(c => {
+                const d = document.createElement('div');
+                d.className = 'color-swatch';
+                d.style.backgroundColor = c;
+                d.onclick = () => selectColor(c);
+                palBox.appendChild(d);
+            });
+            
+            document.addEventListener('keydown', e => {
+                if (e.target.tagName === 'INPUT') return;
+                switch(e.key.toLowerCase()) {
+                    case 'b': setTool('pencil'); break;
+                    case 'e': setTool('eraser'); break;
+                    case 'f': setTool('fill'); break;
+                    case 'i': setTool('picker'); break;
+                    case 'delete': clearCanvas(); break;
+                }
+            });
+
+            // Drag & Drop Handling
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+            dropZone.addEventListener('drop', handleDrop, false);
+
+            resizeCanvas();
+        }
+
+        function preventDefaults(e) { e.preventDefault(); e.stopPropagation(); }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if(files.length > 0 && files[0].type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.readAsDataURL(files[0]);
+                reader.onloadend = () => {
+                    const img = new Image();
+                    img.src = reader.result;
+                    img.onload = () => {
+                        // Resize canvas to fit image (limit to 128x128 for pixel art sanity)
+                        let newW = img.width;
+                        let newH = img.height;
+                        if(newW > 128 || newH > 128) {
+                            if(confirm(`Картинка большая (${newW}x${newH}). Ужать до 64x64?`)) {
+                                newW = 64; newH = 64;
+                            }
+                        }
+                        
+                        document.getElementById('sizeX').value = newW;
+                        document.getElementById('sizeY').value = newH;
+                        resizeCanvas();
+                        
+                        artCtx.drawImage(img, 0, 0, newW, newH);
+                        updatePreview();
+                    }
+                }
+            }
+        }
+
+        // --- Core Functions ---
+        function resizeCanvas() {
+            width = parseInt(document.getElementById('sizeX').value) || 32;
+            height = parseInt(document.getElementById('sizeY').value) || 32;
+            const cssW = width * ZOOM;
+            const cssH = height * ZOOM;
+
+            // Сохраняем текущий рисунок при ресайзе
+            const savedData = artCanvas.width > 0 ? artCtx.getImageData(0,0, artCanvas.width, artCanvas.height) : null;
+
+            [artCanvas, gridCanvas].forEach(c => {
+                c.width = width; c.height = height;
+                c.style.width = cssW + 'px'; c.style.height = cssH + 'px';
+            });
+            board.style.width = cssW + 'px'; board.style.height = cssH + 'px';
+
+            if(savedData) artCtx.putImageData(savedData, 0, 0);
+
+            // Preview
+            previewCanvas.width = width; previewCanvas.height = height;
+            const prevScale = width < 16 ? 4 : (width < 32 ? 2 : 1);
+            previewCanvas.style.width = (width * prevScale) + 'px';
+            previewCanvas.style.height = (height * prevScale) + 'px';
+
+            drawGrid();
+            updatePreview();
+        }
+
+        function drawGrid() {
+            gridCtx.clearRect(0, 0, width, height);
+            if (!document.getElementById('showGrid').checked) return;
+            gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+            gridCtx.lineWidth = 0.05; 
+            gridCtx.beginPath();
+            for (let x = 0; x <= width; x++) { gridCtx.moveTo(x, 0); gridCtx.lineTo(x, height); }
+            for (let y = 0; y <= height; y++) { gridCtx.moveTo(0, y); gridCtx.lineTo(width, y); }
+            gridCtx.stroke();
+        }
+
+        // --- Palette Remapping Logic ---
+        function hexToRgb(hex) {
+            const bigint = parseInt(hex.slice(1), 16);
+            return { r: (bigint >> 16) & 255, g: (bigint >> 8) & 255, b: bigint & 255 };
+        }
+
+        function getColorDistance(c1, c2) {
+            return Math.sqrt(Math.pow(c1.r - c2.r, 2) + Math.pow(c1.g - c2.g, 2) + Math.pow(c1.b - c2.b, 2));
+        }
+
+        function remapToPalette() {
+            const imgData = artCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            
+            // Преобразуем палитру в RGB один раз
+            const paletteRGB = defaultPalette.map(hexToRgb);
+
+            for (let i = 0; i < data.length; i += 4) {
+                // Если полностью прозрачный - пропускаем
+                if (data[i+3] === 0) continue;
+
+                const currentPixel = { r: data[i], g: data[i+1], b: data[i+2] };
+                
+                let minDist = Infinity;
+                let bestColor = paletteRGB[0];
+
+                for (let j = 0; j < paletteRGB.length; j++) {
+                    const dist = getColorDistance(currentPixel, paletteRGB[j]);
+                    if (dist < minDist) {
+                        minDist = dist;
+                        bestColor = paletteRGB[j];
+                    }
+                }
+
+                data[i] = bestColor.r;
+                data[i+1] = bestColor.g;
+                data[i+2] = bestColor.b;
+                // Alpha оставляем как есть, либо делаем 255 (тут оставляем)
+            }
+            artCtx.putImageData(imgData, 0, 0);
+            updatePreview();
+        }
+
+        // --- Tools & Events ---
+        function selectColor(hex) {
+            currentColor = hex;
+            document.getElementById('colorPicker').value = hex;
+            if (currentTool === 'eraser') setTool('pencil');
+        }
+        document.getElementById('colorPicker').addEventListener('input', e => selectColor(e.target.value));
+
+        function setTool(t) {
+            currentTool = t;
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            const btn = document.querySelector(`[onclick="setTool('${t}')"]`);
+            if(btn) btn.classList.add('active');
+            artCanvas.style.cursor = t === 'picker' ? 'alias' : (t === 'fill' ? 'cell' : 'crosshair');
+        }
+
+        function getCoords(e) {
+            const rect = artCanvas.getBoundingClientRect();
+            return {
+                x: Math.floor((e.clientX - rect.left) / ZOOM),
+                y: Math.floor((e.clientY - rect.top) / ZOOM)
+            };
+        }
+
+        function drawPixel(x, y) {
+            if (x < 0 || y < 0 || x >= width || y >= height) return;
+            if (currentTool === 'eraser') {
+                artCtx.clearRect(x, y, 1, 1);
+            } else {
+                artCtx.fillStyle = currentColor;
+                artCtx.fillRect(x, y, 1, 1);
+            }
+        }
+
+        function pickColor(x, y) {
+            const data = artCtx.getImageData(x, y, 1, 1).data;
+            if (data[3] === 0) return;
+            const hex = "#" + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + data[2]).toString(16).slice(1);
+            selectColor(hex);
+            setTool('pencil');
+        }
+
+        function floodFill(startX, startY) {
+            const imgData = artCtx.getImageData(0, 0, width, height);
+            const data = imgData.data;
+            const startPos = (startY * width + startX) * 4;
+            const sr = data[startPos], sg = data[startPos+1], sb = data[startPos+2], sa = data[startPos+3];
+
+            let tr, tg, tb, ta;
+            if (currentTool === 'eraser') { tr=0; tg=0; tb=0; ta=0; } 
+            else {
+                const bigint = parseInt(currentColor.slice(1), 16);
+                tr = (bigint >> 16) & 255; tg = (bigint >> 8) & 255; tb = bigint & 255; ta = 255;
+            }
+
+            if (sr===tr && sg===tg && sb===tb && sa===ta) return;
+
+            const stack = [[startX, startY]];
+            while (stack.length) {
+                const [x, y] = stack.pop();
+                const pos = (y * width + x) * 4;
+                if (x < 0 || x >= width || y < 0 || y >= height) continue;
+                if (data[pos] !== sr || data[pos+1] !== sg || data[pos+2] !== sb || data[pos+3] !== sa) continue;
+                data[pos] = tr; data[pos+1] = tg; data[pos+2] = tb; data[pos+3] = ta;
+                stack.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
+            }
+            artCtx.putImageData(imgData, 0, 0);
+        }
+
+        artCanvas.addEventListener('mousedown', e => {
+            if (e.button !== 0) return;
+            const p = getCoords(e);
+            if (currentTool === 'picker') pickColor(p.x, p.y);
+            else if (currentTool === 'fill') { floodFill(p.x, p.y); updatePreview(); }
+            else { isDrawing = true; drawPixel(p.x, p.y); updatePreview(); }
+        });
+
+        window.addEventListener('mouseup', () => isDrawing = false);
+        artCanvas.addEventListener('mousemove', e => {
+            if (!isDrawing) return;
+            const p = getCoords(e);
+            drawPixel(p.x, p.y);
+        });
+        artCanvas.addEventListener('mouseup', updatePreview);
+
+        function updatePreview() {
+            prevCtx.clearRect(0, 0, width, height);
+            prevCtx.drawImage(artCanvas, 0, 0);
+        }
+
+        function clearCanvas() {
+            if(confirm('Стереть всё?')) {
+                artCtx.clearRect(0, 0, width, height);
+                updatePreview();
+            }
+        }
+
+        function downloadImage() {
+            const link = document.createElement('a');
+            link.download = `pixelart_${Date.now()}.png`;
+            link.href = artCanvas.toDataURL('image/png');
+            link.click();
+        }
+
+        init();
+    </script>
+</body>
+</html>
