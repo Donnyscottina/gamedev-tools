@@ -19,7 +19,7 @@
 
 * {
     box-sizing: border-box;
-    image-rendering: pixelated;
+    image-rendering: pixelated; /* Важно для пиксель-арта */
 }
 
 body {
@@ -38,27 +38,20 @@ body {
     font-family: 'Press Start 2P', monospace;
 }
 
-/* ===== Header ===== */
 header {
     text-align: center;
     padding: 60px 16px 40px;
 }
-
 header h1 {
     font-size: 20px;
     margin-bottom: 20px;
     text-shadow: 2px 2px 0 #000;
 }
-
 header p {
     font-size: 10px;
-    line-height: 1.8;
     color: var(--muted);
-    max-width: 680px;
-    margin: 0 auto;
 }
 
-/* ===== Grid ===== */
 main {
     max-width: 980px;
     margin: 0 auto;
@@ -71,7 +64,6 @@ main {
     gap: 24px;
 }
 
-/* ===== Cards ===== */
 .card {
     background: var(--panel);
     border: 2px solid var(--border);
@@ -87,86 +79,25 @@ main {
 
 .card:hover {
     border-color: var(--accent);
-    transform: translateY(-2px);
+    transform: translateY(-4px);
     box-shadow: 0 4px 0 rgba(0,0,0,0.5);
     background: #1a201a;
 }
 
-.card:active {
-    transform: translateY(0);
-    box-shadow: none;
+/* СТИЛИ ДЛЯ ИКОНОК-КАРТИНОК */
+.card-icon {
+    width: 64px;       /* Размер иконки */
+    height: 64px;      /* Квадрат */
+    object-fit: cover; /* Если картинка не квадратная, обрезаем */
+    object-position: center;
+    margin-bottom: 20px;
+    border: 2px solid var(--border); /* Рамка вокруг иконки */
+    background: #000;
+    border-radius: 4px;
 }
 
-/* --- PIXEL ART CSS ICONS --- */
-.pixel-icon {
-    width: 4px; height: 4px;
-    display: inline-block;
-    margin-bottom: 24px;
-    position: relative;
-    top: 4px; left: 4px; /* Center adjustment */
-}
-
-/* Icon 1: Sprite Packer (Box) */
-.icon-box {
-    box-shadow: 
-        4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent),
-        0 4px var(--accent), 16px 4px var(--accent),
-        0 8px var(--accent), 4px 8px var(--accent), 12px 8px var(--accent), 16px 8px var(--accent),
-        0 12px var(--accent), 16px 12px var(--accent),
-        4px 16px var(--accent), 8px 16px var(--accent), 12px 16px var(--accent);
-    width: 1px; height: 1px;
-}
-
-/* Icon 2: Palette (Palette) */
-.icon-palette {
-    box-shadow: 
-        4px 0 #fff, 8px 0 #fff, 
-        0 4px #fff, 12px 4px #fff,
-        0 8px #fff, 4px 8px var(--accent), 8px 8px #fff, 12px 8px #fff,
-        4px 12px #fff, 8px 12px #fff;
-    width: 1px; height: 1px; color: var(--accent);
-}
-
-/* Icon 3: Brush (Pencil) */
-.icon-brush {
-    box-shadow: 
-        12px 0 var(--accent), 
-        8px 4px var(--accent), 12px 4px var(--muted),
-        4px 8px var(--accent), 8px 8px var(--muted),
-        0 12px var(--accent), 4px 12px var(--accent), 
-        0 16px var(--accent);
-    width: 1px; height: 1px;
-}
-
-/* Icon 4: Sound (Note) */
-.icon-sound {
-    box-shadow: 
-        4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent),
-        4px 4px var(--accent), 12px 4px var(--accent),
-        4px 8px var(--accent), 12px 8px var(--accent),
-        0 12px var(--accent), 4px 12px var(--accent), 8px 12px var(--accent), 12px 12px var(--accent);
-    width: 1px; height: 1px;
-}
-
-/* Icon 5: Brain (Quantization) */
-.icon-brain {
-    box-shadow: 
-        4px 0 var(--accent), 8px 0 var(--accent), 
-        0 4px var(--accent), 12px 4px var(--accent),
-        0 8px var(--accent), 8px 8px var(--accent), 12px 8px var(--accent),
-        4px 12px var(--accent), 8px 12px var(--accent);
-    width: 1px; height: 1px;
-}
-
-/* Icon 6: Reducer (Filter) */
-.icon-filter {
-    box-shadow: 
-        0 0 var(--accent), 4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent), 16px 0 var(--accent),
-        4px 4px var(--accent), 8px 4px var(--accent), 12px 4px var(--accent),
-        8px 8px var(--accent),
-        8px 12px var(--accent),
-        8px 16px var(--accent);
-    width: 1px; height: 1px;
+.card:hover .card-icon {
+    border-color: var(--accent);
 }
 
 .title {
@@ -183,7 +114,6 @@ main {
     color: var(--muted);
 }
 
-/* ===== Footer ===== */
 footer {
     text-align: center;
     padding: 40px 16px;
@@ -200,57 +130,59 @@ footer {
 
 <header>
     <h1>GAMEDEV TOOLS</h1>
-    <p>
-       // DONNYSCOTTINA HUB v1.0 <br>
-       [SYSTEM READY]
-    </p>
+    <p>DONNYSCOTTINA HUB v2.0</p>
 </header>
 
 <main>
      <div class="grid">
 
         <a href="spritesheet.html" class="card">
-            <div class="pixel-icon icon-box"></div>
+            <img src="girl.png" class="card-icon" alt="Sprite Packer">
             <div class="title">Sprite Packer</div>
             <div class="desc">
                 Сборка спрайтшитов и атласов из отдельных изображений.
             </div>
         </a>
 
+
         <a href="palette.html" class="card">
-            <div class="pixel-icon icon-palette"></div>
+            <img src="palletextractor.png" class="card-icon" alt="Palette Extractor">
             <div class="title">Palette Extractor</div>
             <div class="desc">
                 Быстрое извлечение цветовой палитры из любых изображений.
             </div>
         </a>
 
+     
         <a href="pixelart.html" class="card">
-            <div class="pixel-icon icon-brush"></div>
+            <img src="paint.png" class="card-icon" alt="Pixel Art">
             <div class="title">Pixel Art Editor</div>
             <div class="desc">
                 Рисование пиксель-арта прямо в браузере.
             </div>
         </a>
 
+
         <a href="sfx.html" class="card">
-            <div class="pixel-icon icon-sound"></div>
+            <img src="sound.png" class="card-icon" alt="SFX">
             <div class="title">8-Bit SFX</div>
             <div class="desc">
                 Генерация ретро-звуков для игр (Bfxr style).
             </div>
         </a>
 
-        <a href="palette-remap.html" class="card">
-            <div class="pixel-icon icon-brain"></div>
+      
+        <a href="ColorQuantization.html" class="card">
+            <img src="remaper.png" class="card-icon" alt="Remapper">
             <div class="title">Palette Remapper</div>
             <div class="desc">
                 Умное упрощение цветов и замена палитры спрайтов.
             </div>
         </a>
         
+    
         <a href="palette-reducer.html" class="card">
-            <div class="pixel-icon icon-filter"></div>
+            <img src="PalletCleaner.png" class="card-icon" alt="Reducer">
             <div class="title">Palette Reducer</div>
             <div class="desc">
                 Сжатие количества цветов (Median Cut Algorithm).
@@ -260,8 +192,7 @@ footer {
 </main>
 
 <footer>
-    © 2026 DONNYSCOTTINA INC. ALL RIGHTS RESERVED. <br>
-    POWERED BY COFFEE AND PIXELS.
+    © 2026 DONNYSCOTTINA INC. ALL RIGHTS RESERVED.
 </footer>
 
 </body>
