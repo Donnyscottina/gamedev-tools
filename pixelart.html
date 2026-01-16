@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pixel Art Editor Pro</title>
+    <title>Pixel Art Editor Pro (Aseprite Style)</title>
     <link href="style.css" rel="stylesheet">
     <style>
         body {
@@ -13,23 +13,31 @@
 
         .app-container {
             display: flex;
+            flex-direction: column;
             flex: 1;
             height: 100%;
             overflow: hidden;
             border-top: 1px solid var(--border);
             border-bottom: 1px solid var(--border);
         }
+
+        .main-row {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            overflow: hidden;
+        }
         
-        /* Тулбар */
-        .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; flex-shrink: 0; }
-        .tool-btn { width: 36px; height: 36px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative;}
+        /* Toolbar (Left) */
+        .toolbar { width: 40px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; flex-shrink: 0; }
+        .tool-btn { width: 32px; height: 32px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; position: relative;}
         .tool-btn:hover { background: var(--highlight); }
         .tool-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-        .tool-btn .key { position: absolute; bottom: 2px; right: 2px; font-size: 6px; color: rgba(255,255,255,0.7); }
+        .tool-btn .key { position: absolute; bottom: 1px; right: 1px; font-size: 6px; color: rgba(255,255,255,0.7); }
 
-        /* Рабочая область */
-        .workspace { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
-        .top-bar { height: 40px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 10px; }
+        /* Workspace (Center) */
+        .workspace-col { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 32px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 15px; font-size: 10px; flex-shrink: 0; }
         
         .canvas-viewport { 
             flex-grow: 1; 
@@ -38,9 +46,10 @@
             justify-content: center; 
             align-items: center; 
             overflow: auto; 
+            position: relative;
         }
 
-        /* Доска для рисования */
+        /* Drawing Board */
         .drawing-board {
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
@@ -54,37 +63,60 @@
             background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
         }
 
-        canvas { 
+        canvas.layer-canvas { 
             position: absolute; 
             top: 0; left: 0; 
             image-rendering: pixelated; 
         }
-        
-        #artCanvas { z-index: 10; cursor: crosshair; }
-        #gridCanvas { z-index: 20; pointer-events: none; opacity: 0.5; }
+        #cursorCanvas { z-index: 100; pointer-events: none; }
+        #gridCanvas { z-index: 101; pointer-events: none; opacity: 0.5; }
 
-        /* Правая панель */
-        .panels { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;}
-        .panel { padding: 15px; border-bottom: 1px solid var(--border); }
-        .panel h3 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--muted); }
+        /* Panels (Right) */
+        .right-sidebar { width: 220px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;}
+        .panel { padding: 10px; border-bottom: 1px solid var(--border); }
+        .panel h3 { margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: var(--muted); display:flex; justify-content:space-between;}
         
-        .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
+        .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
         .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #000; box-sizing: border-box;}
         .color-swatch:hover { transform: scale(1.1); z-index: 50; border: 1px solid white; box-shadow: 0 0 5px black; }
         
-        input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; border-radius: 2px; height: auto; }
-        button.action { background: var(--accent); color: var(--bg); border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600; font-size: 10px; font-family: 'Press Start 2P', monospace; }
-        button.action:hover { background: var(--text); }
+        /* Timeline (Bottom) */
+        .timeline-panel { height: 120px; background: var(--panel); border-top: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
+        .timeline-controls { height: 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 5px; gap: 5px; }
+        .timeline-scroll { flex: 1; overflow: auto; display: flex; }
         
+        .timeline-header-col { width: 100px; background: var(--highlight); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
+        .layer-header { height: 24px; border-bottom: 1px solid var(--border); font-size: 9px; display: flex; align-items: center; padding-left: 5px; cursor: pointer; background: var(--panel); color: var(--text); }
+        .layer-header.active { background: var(--accent); color: var(--bg); }
+        .layer-header .vis-btn { margin-right: 4px; cursor: pointer; font-size: 10px; opacity: 0.5; }
+        .layer-header .vis-btn.visible { opacity: 1; }
+
+        .timeline-frames-area { flex: 1; display: flex; flex-direction: column; background: #0f0f0f; }
+        .frames-header { height: 20px; display: flex; border-bottom: 1px solid var(--border); }
+        .frame-num { width: 24px; text-align: center; border-right: 1px solid #333; font-size: 8px; line-height: 20px; color: var(--muted); cursor: pointer; }
+        .frame-num.active { background: rgba(156, 255, 138, 0.2); color: var(--accent); }
+
+        .layers-grid { flex: 1; position: relative; }
+        .layer-row { height: 24px; display: flex; border-bottom: 1px solid #222; }
+        .cel { width: 24px; border-right: 1px solid #222; background: #1a1a1a; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .cel:hover { background: #2a2a2a; }
+        .cel.active { border: 1px solid var(--accent); }
+        .cel.has-content::after { content: ''; width: 6px; height: 6px; background: var(--text); border-radius: 50%; }
+
+        /* Preview */
         .preview-box {
             width: 100%; height: 100px; 
             background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII=');
             display: flex; justify-content: center; align-items: center;
             border: 1px solid var(--border);
-            margin-bottom: 10px;
+            margin-bottom: 5px;
         }
-        #previewCanvas { image-rendering: pixelated; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
-        a.back-link { display: none; } /* Handled by global header */
+        #previewCanvas { image-rendering: pixelated; background: transparent; max-width: 100%; max-height: 100%; }
+
+        input, button { font-family: inherit; }
+        .mini-btn { padding: 2px 6px; font-size: 10px; min-width: 20px; }
+        .icon-btn { background: none; border: none; padding: 2px; color: var(--text); cursor: pointer; font-size: 14px; }
+        .icon-btn:hover { color: var(--accent); }
     </style>
 </head>
 <body>
@@ -92,56 +124,82 @@
     <!-- Header injected -->
 
     <div class="app-container">
-        <div class="toolbar">
-            <div class="tool-btn active" onclick="setTool('pencil')" title="B">✏️<span class="key">B</span></div>
-            <div class="tool-btn" onclick="setTool('eraser')" title="E">🧼<span class="key">E</span></div>
-            <div class="tool-btn" onclick="setTool('fill')" title="F">🪣<span class="key">F</span></div>
-            <div class="tool-btn" onclick="setTool('picker')" title="I">💉<span class="key">I</span></div>
-            <div style="flex-grow:1"></div>
-            <div class="tool-btn" onclick="clearCanvas()" title="Del">🗑️</div>
-        </div>
-
-        <div class="workspace">
-            <div class="top-bar">
-                <span>Size: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="64"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="64"></span>
-                <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer; font-family: inherit; font-size: 10px;">OK</button>
-                <div style="width:1px; height:20px; background:var(--border); margin:0 10px;"></div>
-                <label style="cursor:pointer; display:flex; align-items:center; gap:5px; margin-bottom: 0;">
-                    <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> Grid
-                </label>
+        <!-- Main Area: Toolbar + Workspace + Right Sidebar -->
+        <div class="main-row">
+            <div class="toolbar">
+                <div class="tool-btn active" onclick="setTool('pencil')" title="Pencil (B)">✏️<span class="key">B</span></div>
+                <div class="tool-btn" onclick="setTool('eraser')" title="Eraser (E)">🧼<span class="key">E</span></div>
+                <div class="tool-btn" onclick="setTool('fill')" title="Fill Bucket (F)">🪣<span class="key">F</span></div>
+                <div class="tool-btn" onclick="setTool('picker')" title="Color Picker (I)">💉<span class="key">I</span></div>
+                <div style="width: 20px; height: 1px; background: var(--border); margin: 5px 0;"></div>
+                <div class="tool-btn" onclick="clearActiveCel()" title="Clear Cell (Del)">🗑️</div>
             </div>
-            
-            <div class="canvas-viewport">
-                <div class="drawing-board" id="board">
-                    <!-- Важно: artCanvas принимает клики, gridCanvas пропускает их -->
-                    <canvas id="artCanvas"></canvas>
-                    <canvas id="gridCanvas"></canvas>
+
+            <div class="workspace-col">
+                <div class="top-bar">
+                    <span><input type="number" id="sizeX" value="32" style="width:40px"> x <input type="number" id="sizeY" value="32" style="width:40px"></span>
+                    <button onclick="resizeProject()" class="mini-btn">Resize</button>
+                    <div style="width:1px; height:20px; background:var(--border);"></div>
+                    <label style="margin:0; display:flex; align-items:center; cursor:pointer;"><input type="checkbox" id="showGrid" checked onchange="renderGrid()"> Grid</label>
+                    <label style="margin:0; display:flex; align-items:center; cursor:pointer;"><input type="checkbox" id="onionSkin" onchange="renderCanvas()"> Onion</label>
+                </div>
+                
+                <div class="canvas-viewport" id="viewport">
+                    <div class="drawing-board" id="board">
+                        <div id="layersContainer"></div>
+                        <canvas id="gridCanvas"></canvas>
+                        <canvas id="cursorCanvas"></canvas> <!-- For brush preview -->
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-sidebar">
+                <div class="panel">
+                    <h3>Preview <button class="icon-btn" onclick="togglePlay()">⏯</button></h3>
+                    <div class="preview-box">
+                        <canvas id="previewCanvas"></canvas>
+                    </div>
+                    <div style="font-size: 10px;">FPS: <input type="number" id="fpsInput" value="8" min="1" max="60" style="width: 40px;" onchange="updateFPS()"></div>
+                </div>
+
+                <div class="panel">
+                    <h3>Color</h3>
+                    <input type="color" id="colorPicker" value="#000000" style="width:100%; height:30px; cursor:pointer;">
+                </div>
+                
+                <div class="panel">
+                    <h3>Palette</h3>
+                    <div class="palette" id="paletteBox"></div>
+                </div>
+
+                <div class="panel">
+                    <button class="action" onclick="downloadSpriteSheet()" style="width:100%; padding:10px; background:var(--accent); color:var(--bg); border:none; cursor:pointer; font-weight:bold; font-size:10px;">SAVE SHEET</button>
                 </div>
             </div>
         </div>
 
-        <div class="panels">
-            <div class="panel">
-                <h3>Preview (1x)</h3>
-                <div class="preview-box">
-                    <canvas id="previewCanvas"></canvas>
+        <!-- Timeline -->
+        <div class="timeline-panel">
+            <div class="timeline-controls">
+                <button class="mini-btn" onclick="addFrame()">+ Frame</button>
+                <button class="mini-btn" onclick="addLayer()">+ Layer</button>
+                <button class="mini-btn" onclick="deleteFrame()">- Frame</button>
+                <button class="mini-btn" onclick="deleteLayer()">- Layer</button>
+                <div style="flex:1"></div>
+                <button class="mini-btn" onclick="duplicateFrame()">Dup Frame</button>
+            </div>
+            <div class="timeline-scroll">
+                <div class="timeline-header-col" id="layerHeaders">
+                    <!-- Layer headers generated here -->
                 </div>
-            </div>
-
-            <div class="panel">
-                <h3>Color</h3>
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <input type="color" id="colorPicker" value="#000000" style="height: 30px; flex-grow:1; cursor:pointer;">
+                <div class="timeline-frames-area">
+                    <div class="frames-header" id="frameNumbers">
+                        <!-- Frame numbers generated here -->
+                    </div>
+                    <div class="layers-grid" id="timelineGrid">
+                        <!-- Cels generated here -->
+                    </div>
                 </div>
-            </div>
-            
-            <div class="panel">
-                <h3>Palette</h3>
-                <div class="palette" id="paletteBox"></div>
-            </div>
-            
-            <div class="panel">
-                <button class="action" onclick="downloadImage()">💾 PNG</button>
             </div>
         </div>
     </div>
@@ -150,230 +208,494 @@
     <script src="global.js"></script>
 
     <script>
-        // --- Настройки ---
-        const ZOOM = 20; // 1 пиксель = 20 экранных пикселей
-        const defaultPalette = [
-            '#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
-            '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'
-        ];
+        // --- CONSTANTS & CONFIG ---
+        const ZOOM = 15;
+        const DEFAULT_W = 32;
+        const DEFAULT_H = 32;
+        
+        // --- STATE ---
+        let project = {
+            width: DEFAULT_W,
+            height: DEFAULT_H,
+            frames: [], // Array of Frame objects. Frame = { cels: {} } where key is layerId
+            layers: [], // Array of Layer objects. Layer = { id, name, visible }
+            nextLayerId: 1
+        };
+        
+        let activeFrameIdx = 0;
+        let activeLayerId = 0; // ID of the currently selected layer
+        
+        let isPlaying = false;
+        let playInterval = null;
+        let fps = 8;
 
-        // --- DOM ---
-        const artCanvas = document.getElementById('artCanvas');
-        const gridCanvas = document.getElementById('gridCanvas');
-        const previewCanvas = document.getElementById('previewCanvas');
-        const board = document.getElementById('board');
-        const artCtx = artCanvas.getContext('2d', { willReadFrequently: true });
-        const gridCtx = gridCanvas.getContext('2d');
-        const prevCtx = previewCanvas.getContext('2d');
-
-        // --- State ---
-        let width = 32, height = 32;
         let currentTool = 'pencil';
         let currentColor = '#000000';
         let isDrawing = false;
+
+        // --- DOM ELEMENTS ---
+        const board = document.getElementById('board');
+        const layersContainer = document.getElementById('layersContainer');
+        const gridCanvas = document.getElementById('gridCanvas');
+        const cursorCanvas = document.getElementById('cursorCanvas');
+        const previewCanvas = document.getElementById('previewCanvas');
         
-        // --- Init ---
+        const layerHeaders = document.getElementById('layerHeaders');
+        const frameNumbers = document.getElementById('frameNumbers');
+        const timelineGrid = document.getElementById('timelineGrid');
+
+        // --- INITIALIZATION ---
         function init() {
-            // Палитра
-            const palBox = document.getElementById('paletteBox');
-            defaultPalette.forEach(c => {
+            // Setup Palette
+            const pal = ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
+            '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'];
+            const pBox = document.getElementById('paletteBox');
+            pal.forEach(c => {
                 const d = document.createElement('div');
                 d.className = 'color-swatch';
                 d.style.backgroundColor = c;
                 d.onclick = () => selectColor(c);
-                palBox.appendChild(d);
+                pBox.appendChild(d);
+            });
+
+            // Initialize Project
+            addLayer(true); // Create Layer 1
+            addFrame(true); // Create Frame 1
+
+            // Setup Resize
+            resizeProject(true);
+
+            // Events
+            setupInput();
+        }
+
+        // --- CORE DATA OPERATIONS ---
+        
+        function createLayer(name) {
+            return { id: project.nextLayerId++, name: name || ('Layer ' + project.nextLayerId), visible: true };
+        }
+
+        function createCel() {
+            // A Cel is basically ImageData, but we'll store it as a canvas for easy drawing
+            const c = document.createElement('canvas');
+            c.width = project.width;
+            c.height = project.height;
+            return c;
+        }
+
+        function addLayer(silent) {
+            const layer = createLayer();
+            project.layers.unshift(layer); // Add to top
+            // Add empty cels for this layer to all existing frames
+            project.frames.forEach(f => {
+                f.cels[layer.id] = createCel();
+            });
+            activeLayerId = layer.id;
+            if(!silent) updateUI();
+        }
+
+        function deleteLayer() {
+            if (project.layers.length <= 1) return alert('Cannot delete last layer');
+            const idx = project.layers.findIndex(l => l.id === activeLayerId);
+            project.layers.splice(idx, 1);
+            activeLayerId = project.layers[Math.min(idx, project.layers.length-1)].id;
+            updateUI();
+        }
+
+        function addFrame(silent) {
+            const newFrame = { cels: {} };
+            project.layers.forEach(l => {
+                newFrame.cels[l.id] = createCel();
+            });
+            project.frames.push(newFrame);
+            activeFrameIdx = project.frames.length - 1;
+            if(!silent) updateUI();
+        }
+        
+        function duplicateFrame() {
+            const srcFrame = project.frames[activeFrameIdx];
+            const newFrame = { cels: {} };
+            project.layers.forEach(l => {
+                const srcCanvas = srcFrame.cels[l.id];
+                const destCanvas = createCel();
+                destCanvas.getContext('2d').drawImage(srcCanvas, 0, 0);
+                newFrame.cels[l.id] = destCanvas;
+            });
+            project.frames.splice(activeFrameIdx + 1, 0, newFrame);
+            activeFrameIdx++;
+            updateUI();
+        }
+
+        function deleteFrame() {
+            if (project.frames.length <= 1) return alert('Cannot delete last frame');
+            project.frames.splice(activeFrameIdx, 1);
+            if (activeFrameIdx >= project.frames.length) activeFrameIdx = project.frames.length - 1;
+            updateUI();
+        }
+
+        // --- RENDERING ---
+        
+        function resizeProject(silent) {
+            if (!silent) {
+                const w = parseInt(document.getElementById('sizeX').value);
+                const h = parseInt(document.getElementById('sizeY').value);
+                if (w === project.width && h === project.height) return;
+                // Ideally we would resize content, but for this simple tool we might just clip or clear? 
+                // Let's reset for simplicity or just change dims (cropping)
+                if(!confirm("Resizing will crop/expand canvas. Continue?")) return;
+                project.width = w;
+                project.height = h;
+            }
+            
+            // Update UI dimensions
+            const cssW = project.width * ZOOM;
+            const cssH = project.height * ZOOM;
+            board.style.width = cssW + 'px';
+            board.style.height = cssH + 'px';
+            
+            [gridCanvas, cursorCanvas].forEach(c => {
+                c.width = project.width;
+                c.height = project.height;
             });
             
-            // Хоткеи
+            renderGrid();
+            // We need to resize all existing cels if we changed size (complex), 
+            // but for now let's assume this is mostly done at start.
+            // If done mid-work, we should create new canvases and copy data. 
+            // This implementation is a "crop" resize.
+            project.frames.forEach(f => {
+                Object.values(f.cels).forEach(c => {
+                    const old = c;
+                    const nc = document.createElement('canvas');
+                    nc.width = project.width;
+                    nc.height = project.height;
+                    nc.getContext('2d').drawImage(old, 0, 0);
+                    // Update ref? tricky since we store by ID. 
+                    // Actually we can just update the object properties if we kept ref, 
+                    // but we replaced the object. 
+                    // Let's rely on updateUI to refresh everything.
+                });
+            });
+            // Re-render everything
+             updateUI();
+        }
+
+        function renderGrid() {
+            const ctx = gridCanvas.getContext('2d');
+            ctx.clearRect(0, 0, project.width, project.height);
+            if (!document.getElementById('showGrid').checked) return;
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 0.5; // Will be scaled up by CSS but 0.5 logical pixels
+            ctx.beginPath();
+            for(let x=0; x<=project.width; x++) { ctx.moveTo(x,0); ctx.lineTo(x,project.height); }
+            for(let y=0; y<=project.height; y++) { ctx.moveTo(0,y); ctx.lineTo(project.width,y); }
+            ctx.stroke();
+        }
+
+        function renderCanvas() {
+            // This function syncs the visual DOM layers with the current frame's data
+            layersContainer.innerHTML = '';
+            
+            // Onion Skin (Previous Frame)
+            if(document.getElementById('onionSkin').checked && activeFrameIdx > 0) {
+                const prevFrame = project.frames[activeFrameIdx - 1];
+                // Flatten prev frame
+                const osc = document.createElement('canvas');
+                osc.width = project.width; osc.height = project.height;
+                osc.className = 'layer-canvas';
+                osc.style.opacity = 0.3;
+                osc.style.pointerEvents = 'none'; // Click through
+                const ctx = osc.getContext('2d');
+                
+                // Draw layers bottom up
+                [...project.layers].reverse().forEach(l => {
+                    if(l.visible) ctx.drawImage(prevFrame.cels[l.id], 0, 0);
+                });
+                layersContainer.appendChild(osc);
+            }
+
+            // Current Frame Layers
+            // We iterate normally (top to bottom in array) but for Z-index we need bottom-up or just append order.
+            // Project.layers[0] is Top. So we should append them in reverse order so DOM order is correct (last is on top)
+            // OR use z-index. Let's just append in reverse order.
+            
+            const frame = project.frames[activeFrameIdx];
+            
+            [...project.layers].reverse().forEach(layer => {
+                if (!layer.visible) return;
+                const cel = frame.cels[layer.id];
+                // We don't append the cel canvas directly because we might need to scale it or handle events.
+                // But actually, appending the cel canvas directly is the most efficient way.
+                cel.className = 'layer-canvas';
+                cel.style.zIndex = layer.id; // Just use ID as pseudo z-index or relying on DOM order
+                layersContainer.appendChild(cel);
+            });
+            
+            updatePreview();
+        }
+
+        function updatePreview() {
+            // Render current frame to preview canvas
+            const ctx = previewCanvas.getContext('2d');
+            previewCanvas.width = project.width;
+            previewCanvas.height = project.height;
+            ctx.clearRect(0, 0, project.width, project.height);
+            
+            const frame = project.frames[activeFrameIdx];
+            [...project.layers].reverse().forEach(l => {
+                if(l.visible) ctx.drawImage(frame.cels[l.id], 0, 0);
+            });
+            
+            // Scale up preview via CSS
+            const scale = project.width < 16 ? 4 : (project.width < 32 ? 2 : 1);
+            previewCanvas.style.width = (project.width * scale * 2) + 'px'; // Double size
+            previewCanvas.style.height = (project.height * scale * 2) + 'px';
+        }
+
+        // --- TIMELINE UI ---
+        function updateUI() {
+            renderCanvas();
+            renderTimeline();
+        }
+
+        function renderTimeline() {
+            // Headers
+            layerHeaders.innerHTML = project.layers.map(l => `
+                <div class="layer-header ${l.id === activeLayerId ? 'active' : ''}" onclick="setActiveLayer(${l.id})">
+                    <span class="vis-btn ${l.visible ? 'visible' : ''}" onclick="toggleVis(event, ${l.id})">👁</span>
+                    ${l.name}
+                </div>
+            `).join('');
+
+            // Frame Numbers
+            frameNumbers.innerHTML = project.frames.map((_, i) => `
+                <div class="frame-num ${i === activeFrameIdx ? 'active' : ''}" onclick="setActiveFrame(${i})">${i+1}</div>
+            `).join('');
+
+            // Grid
+            timelineGrid.innerHTML = '';
+            project.layers.forEach(l => {
+                const row = document.createElement('div');
+                row.className = 'layer-row';
+                
+                project.frames.forEach((f, fIdx) => {
+                    const cel = document.createElement('div');
+                    cel.className = `cel ${l.id === activeLayerId && fIdx === activeFrameIdx ? 'active' : ''}`;
+                    cel.onclick = () => { setActiveFrame(fIdx); setActiveLayer(l.id); };
+                    
+                    // Check if cel has content
+                    const ctx = f.cels[l.id].getContext('2d');
+                    // This is expensive to check every render, but ok for small sprites
+                    const data = ctx.getImageData(0,0,project.width, project.height).data;
+                    let hasContent = false;
+                    for(let i=3; i<data.length; i+=4) { if(data[i]>0) { hasContent=true; break; } }
+                    
+                    if(hasContent) cel.classList.add('has-content');
+                    
+                    row.appendChild(cel);
+                });
+                timelineGrid.appendChild(row);
+            });
+        }
+
+        function setActiveLayer(id) {
+            activeLayerId = id;
+            updateUI();
+        }
+
+        function setActiveFrame(idx) {
+            activeFrameIdx = idx;
+            updateUI();
+        }
+
+        function toggleVis(e, id) {
+            e.stopPropagation();
+            const l = project.layers.find(l => l.id === id);
+            l.visible = !l.visible;
+            updateUI();
+        }
+
+        // --- DRAWING LOGIC ---
+        function getActiveCtx() {
+            const frame = project.frames[activeFrameIdx];
+            const layer = project.layers.find(l => l.id === activeLayerId);
+            if (!layer || !layer.visible) return null; // Cannot draw on hidden layer
+            return frame.cels[activeLayerId].getContext('2d');
+        }
+
+        function getCoords(e) {
+            const rect = board.getBoundingClientRect();
+            const x = Math.floor((e.clientX - rect.left) / ZOOM);
+            const y = Math.floor((e.clientY - rect.top) / ZOOM);
+            return {x, y};
+        }
+
+        function useTool(x, y, isDrag) {
+            const ctx = getActiveCtx();
+            if(!ctx) return;
+
+            if (currentTool === 'pencil') {
+                ctx.fillStyle = currentColor;
+                ctx.fillRect(x, y, 1, 1);
+            } else if (currentTool === 'eraser') {
+                ctx.clearRect(x, y, 1, 1);
+            } else if (currentTool === 'fill' && !isDrag) {
+                floodFill(ctx, x, y, currentColor);
+            } else if (currentTool === 'picker' && !isDrag) {
+                // Pick visible color from all layers
+                const frame = project.frames[activeFrameIdx];
+                // Create temp canvas to combine
+                const temp = document.createElement('canvas');
+                temp.width=1; temp.height=1;
+                const tctx = temp.getContext('2d');
+                [...project.layers].reverse().forEach(l => {
+                    if(l.visible) tctx.drawImage(frame.cels[l.id], -x, -y);
+                });
+                const p = tctx.getImageData(0,0,1,1).data;
+                if(p[3]>0) {
+                    const hex = "#" + ((1 << 24) + (p[0] << 16) + (p[1] << 8) + p[2]).toString(16).slice(1);
+                    selectColor(hex);
+                    setTool('pencil');
+                }
+            }
+        }
+
+        function floodFill(ctx, startX, startY, color) {
+            // Standard flood fill
+            const w = project.width; const h = project.height;
+            const imgData = ctx.getImageData(0,0,w,h);
+            const d = imgData.data;
+            const startPos = (startY*w + startX)*4;
+            const startR=d[startPos], startG=d[startPos+1], startB=d[startPos+2], startA=d[startPos+3];
+            
+            // Target color
+            const bigint = parseInt(color.slice(1), 16);
+            const tr = (bigint >> 16) & 255;
+            const tg = (bigint >> 8) & 255;
+            const tb = bigint & 255;
+            
+            if (startR===tr && startG===tg && startB===tb && startA===255) return;
+
+            const stack = [[startX, startY]];
+            while(stack.length) {
+                const [x,y] = stack.pop();
+                const pos = (y*w + x)*4;
+                if(x<0||x>=w||y<0||y>=h) continue;
+                if(d[pos]===startR && d[pos+1]===startG && d[pos+2]===startB && d[pos+3]===startA) {
+                    d[pos]=tr; d[pos+1]=tg; d[pos+2]=tb; d[pos+3]=255;
+                    stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+                }
+            }
+            ctx.putImageData(imgData, 0, 0);
+        }
+
+        function clearActiveCel() {
+            const ctx = getActiveCtx();
+            if(ctx) {
+                ctx.clearRect(0,0,project.width, project.height);
+                updateUI(); // To refresh timeline dots
+            }
+        }
+
+        // --- INPUT HANDLING ---
+        function setupInput() {
+            // We attach events to the board wrapper to catch all
+            board.addEventListener('mousedown', e => {
+                if(e.button !== 0) return;
+                isDrawing = true;
+                const p = getCoords(e);
+                useTool(p.x, p.y, false);
+                updatePreview();
+            });
+            window.addEventListener('mouseup', () => {
+                if(isDrawing) { isDrawing = false; updateUI(); /* Refresh timeline for dots */ }
+            });
+            board.addEventListener('mousemove', e => {
+                const p = getCoords(e);
+                
+                // Cursor preview
+                const cx = cursorCanvas.getContext('2d');
+                cx.clearRect(0,0,project.width, project.height);
+                cx.strokeStyle = '#fff';
+                cx.strokeRect(p.x, p.y, 1, 1);
+
+                if(isDrawing) {
+                    useTool(p.x, p.y, true);
+                    updatePreview(); // Live update
+                }
+            });
+
+            document.getElementById('colorPicker').addEventListener('input', e => selectColor(e.target.value));
+
+            // Hotkeys
             document.addEventListener('keydown', e => {
-                if (e.target.tagName === 'INPUT') return;
+                if(e.target.tagName === 'INPUT') return;
                 switch(e.key.toLowerCase()) {
                     case 'b': setTool('pencil'); break;
                     case 'e': setTool('eraser'); break;
                     case 'f': setTool('fill'); break;
                     case 'i': setTool('picker'); break;
-                    case 'delete': clearCanvas(); break;
+                    case 'delete': clearActiveCel(); break;
+                    case ' ': togglePlay(); e.preventDefault(); break;
                 }
             });
-
-            resizeCanvas();
         }
 
-        function resizeCanvas() {
-            width = parseInt(document.getElementById('sizeX').value) || 32;
-            height = parseInt(document.getElementById('sizeY').value) || 32;
-            
-            // CSS размеры (Zoom)
-            const cssW = width * ZOOM;
-            const cssH = height * ZOOM;
-
-            [artCanvas, gridCanvas].forEach(c => {
-                c.width = width;
-                c.height = height;
-                c.style.width = cssW + 'px';
-                c.style.height = cssH + 'px';
-            });
-            
-            board.style.width = cssW + 'px';
-            board.style.height = cssH + 'px';
-
-            // Превью
-            previewCanvas.width = width;
-            previewCanvas.height = height;
-            // Увеличим превью если картинка очень мелкая
-            const prevScale = width < 16 ? 4 : (width < 32 ? 2 : 1);
-            previewCanvas.style.width = (width * prevScale) + 'px';
-            previewCanvas.style.height = (height * prevScale) + 'px';
-
-            drawGrid();
-            updatePreview();
-        }
-
-        // --- Grid ---
-        function drawGrid() {
-            gridCtx.clearRect(0, 0, width, height);
-            if (!document.getElementById('showGrid').checked) return;
-
-            gridCtx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
-            gridCtx.lineWidth = 0.05; 
-
-            gridCtx.beginPath();
-            for (let x = 0; x <= width; x++) {
-                gridCtx.moveTo(x, 0); gridCtx.lineTo(x, height);
-            }
-            for (let y = 0; y <= height; y++) {
-                gridCtx.moveTo(0, y); gridCtx.lineTo(width, y);
-            }
-            gridCtx.stroke();
-        }
-
-        // --- Tools ---
         function selectColor(hex) {
             currentColor = hex;
             document.getElementById('colorPicker').value = hex;
-            if (currentTool === 'eraser') setTool('pencil');
+            if(currentTool === 'eraser' || currentTool === 'picker') setTool('pencil');
         }
-        document.getElementById('colorPicker').addEventListener('input', e => selectColor(e.target.value));
 
         function setTool(t) {
             currentTool = t;
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             const btn = document.querySelector(`[onclick="setTool('${t}')"]`);
             if(btn) btn.classList.add('active');
-            
-            // Меняем курсор на artCanvas
-            artCanvas.style.cursor = t === 'picker' ? 'alias' : (t === 'fill' ? 'cell' : 'crosshair');
         }
 
-        // --- Drawing Logic ---
-        function getCoords(e) {
-            const rect = artCanvas.getBoundingClientRect();
-            const x = Math.floor((e.clientX - rect.left) / ZOOM);
-            const y = Math.floor((e.clientY - rect.top) / ZOOM);
-            return {x, y};
-        }
-
-        function drawPixel(x, y) {
-            if (x < 0 || y < 0 || x >= width || y >= height) return;
-            
-            // Если ластик - очищаем (прозрачность), иначе рисуем цвет
-            if (currentTool === 'eraser') {
-                artCtx.clearRect(x, y, 1, 1);
+        // --- ANIMATION ---
+        function togglePlay() {
+            if(isPlaying) {
+                clearInterval(playInterval);
+                isPlaying = false;
             } else {
-                artCtx.fillStyle = currentColor;
-                artCtx.fillRect(x, y, 1, 1);
+                isPlaying = true;
+                playInterval = setInterval(() => {
+                    activeFrameIdx = (activeFrameIdx + 1) % project.frames.length;
+                    updateUI();
+                }, 1000 / fps);
             }
         }
 
-        function pickColor(x, y) {
-            const data = artCtx.getImageData(x, y, 1, 1).data;
-            if (data[3] === 0) return; // Не пикаем прозрачный
-            
-            const hex = "#" + ((1 << 24) + (data[0] << 16) + (data[1] << 8) + data[2]).toString(16).slice(1);
-            selectColor(hex);
-            setTool('pencil');
+        function updateFPS() {
+            fps = parseInt(document.getElementById('fpsInput').value);
+            if(isPlaying) { togglePlay(); togglePlay(); }
         }
 
-        function floodFill(startX, startY) {
-            // Оптимизированная заливка
-            const imgData = artCtx.getImageData(0, 0, width, height);
-            const data = imgData.data;
+        // --- EXPORT ---
+        function downloadSpriteSheet() {
+            // Create a long strip
+            const c = document.createElement('canvas');
+            c.width = project.width * project.frames.length;
+            c.height = project.height;
+            const ctx = c.getContext('2d');
             
-            // Цвет старта
-            const startPos = (startY * width + startX) * 4;
-            const sr = data[startPos], sg = data[startPos+1], sb = data[startPos+2], sa = data[startPos+3];
-
-            // Цвет заливки (парсим hex)
-            let tr, tg, tb, ta;
-            if (currentTool === 'eraser') {
-                tr=0; tg=0; tb=0; ta=0;
-            } else {
-                const bigint = parseInt(currentColor.slice(1), 16);
-                tr = (bigint >> 16) & 255;
-                tg = (bigint >> 8) & 255;
-                tb = bigint & 255;
-                ta = 255;
-            }
-
-            // Если цвета совпадают, выходим
-            if (sr===tr && sg===tg && sb===tb && sa===ta) return;
-
-            const stack = [[startX, startY]];
+            project.frames.forEach((f, i) => {
+                // Flatten frame
+                const temp = document.createElement('canvas');
+                temp.width = project.width; temp.height = project.height;
+                const tctx = temp.getContext('2d');
+                [...project.layers].reverse().forEach(l => {
+                    if(l.visible) tctx.drawImage(f.cels[l.id], 0, 0);
+                });
+                
+                ctx.drawImage(temp, i * project.width, 0);
+            });
             
-            while (stack.length) {
-                const [x, y] = stack.pop();
-                const pos = (y * width + x) * 4;
-
-                // Проверка границ и цвета
-                if (x < 0 || x >= width || y < 0 || y >= height) continue;
-                if (data[pos] !== sr || data[pos+1] !== sg || data[pos+2] !== sb || data[pos+3] !== sa) continue;
-
-                // Красим
-                data[pos] = tr; data[pos+1] = tg; data[pos+2] = tb; data[pos+3] = ta;
-
-                stack.push([x+1, y], [x-1, y], [x, y+1], [x, y-1]);
-            }
-            artCtx.putImageData(imgData, 0, 0);
-        }
-
-        // --- Mouse Events (Слушаем только artCanvas!) ---
-        artCanvas.addEventListener('mousedown', e => {
-            if (e.button !== 0) return;
-            const p = getCoords(e);
-            
-            if (currentTool === 'picker') pickColor(p.x, p.y);
-            else if (currentTool === 'fill') { floodFill(p.x, p.y); updatePreview(); }
-            else { isDrawing = true; drawPixel(p.x, p.y); updatePreview(); }
-        });
-
-        window.addEventListener('mouseup', () => isDrawing = false);
-        
-        artCanvas.addEventListener('mousemove', e => {
-            if (!isDrawing) return;
-            const p = getCoords(e);
-            // Проверка, что мы все еще в пределах того же пикселя, чтобы не спамить (опционально)
-            drawPixel(p.x, p.y);
-            // updatePreview(); // Для производительности можно обновлять только при mouseup
-        });
-        
-        artCanvas.addEventListener('mouseup', updatePreview); // Обновляем превью только когда отпустили мышь
-
-        function updatePreview() {
-            prevCtx.clearRect(0, 0, width, height);
-            prevCtx.drawImage(artCanvas, 0, 0);
-        }
-
-        function clearCanvas() {
-            if(confirm('Стереть всё?')) {
-                artCtx.clearRect(0, 0, width, height);
-                updatePreview();
-            }
-        }
-
-        function downloadImage() {
             const link = document.createElement('a');
             link.download = `sprite_${Date.now()}.png`;
-            link.href = artCanvas.toDataURL('image/png');
+            link.href = c.toDataURL('image/png');
             link.click();
         }
 
