@@ -2,27 +2,34 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pixel Art Editor Pro (Fixed)</title>
+    <title>Pixel Art Editor Pro</title>
+    <link href="style.css" rel="stylesheet">
     <style>
-        :root {
-            --bg: #1e1e1e;
-            --panel: #252526;
-            --border: #3e3e42;
-            --accent: #007acc;
-            --text: #d4d4d4;
+        body {
+            height: 100vh;
+            overflow: hidden;
+            user-select: none;
         }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; display: flex; height: 100vh; margin: 0; overflow: hidden; user-select: none; }
+
+        .app-container {
+            display: flex;
+            flex: 1;
+            height: 100%;
+            overflow: hidden;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
         
         /* Тулбар */
-        .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; }
-        .tool-btn { width: 36px; height: 36px; background: transparent; color: #fff; border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative;}
-        .tool-btn:hover { background: #3e3e42; }
-        .tool-btn.active { background: var(--accent); border-color: #0098ff; }
-        .tool-btn .key { position: absolute; bottom: 2px; right: 2px; font-size: 8px; color: rgba(255,255,255,0.7); }
+        .toolbar { width: 50px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; flex-shrink: 0; }
+        .tool-btn { width: 36px; height: 36px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 18px; display: flex; align-items: center; justify-content: center; position: relative;}
+        .tool-btn:hover { background: var(--highlight); }
+        .tool-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
+        .tool-btn .key { position: absolute; bottom: 2px; right: 2px; font-size: 6px; color: rgba(255,255,255,0.7); }
 
         /* Рабочая область */
-        .workspace { flex-grow: 1; display: flex; flex-direction: column; }
-        .top-bar { height: 40px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 13px; }
+        .workspace { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
+        .top-bar { height: 40px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 15px; gap: 20px; font-size: 10px; }
         
         .canvas-viewport { 
             flex-grow: 1; 
@@ -37,7 +44,6 @@
         .drawing-board {
             position: relative;
             box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            /* Шахматный фон (прозрачность) */
             background-color: #222;
             background-image: 
                 linear-gradient(45deg, #333 25%, transparent 25%), 
@@ -54,22 +60,21 @@
             image-rendering: pixelated; 
         }
         
-        /* СЛОИ: Art внизу (принимает клики), Grid сверху (пропускает клики) */
         #artCanvas { z-index: 10; cursor: crosshair; }
         #gridCanvas { z-index: 20; pointer-events: none; opacity: 0.5; }
 
         /* Правая панель */
-        .panels { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; }
+        .panels { width: 260px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;}
         .panel { padding: 15px; border-bottom: 1px solid var(--border); }
-        .panel h3 { margin: 0 0 10px 0; font-size: 12px; text-transform: uppercase; color: #888; }
+        .panel h3 { margin: 0 0 10px 0; font-size: 10px; text-transform: uppercase; color: var(--muted); }
         
         .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; }
         .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #000; box-sizing: border-box;}
         .color-swatch:hover { transform: scale(1.1); z-index: 50; border: 1px solid white; box-shadow: 0 0 5px black; }
         
-        input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; border-radius: 2px; }
-        button.action { background: var(--accent); color: white; border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600; }
-        button.action:hover { background: #0062a3; }
+        input[type="number"], input[type="color"] { background: #3c3c3c; border: 1px solid #555; color: white; padding: 4px; border-radius: 2px; height: auto; }
+        button.action { background: var(--accent); color: var(--bg); border: none; padding: 10px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 5px; font-weight: 600; font-size: 10px; font-family: 'Press Start 2P', monospace; }
+        button.action:hover { background: var(--text); }
         
         .preview-box {
             width: 100%; height: 100px; 
@@ -79,63 +84,70 @@
             margin-bottom: 10px;
         }
         #previewCanvas { image-rendering: pixelated; background: transparent; border: 1px solid rgba(255,255,255,0.2); }
-        a.back-link { text-decoration: none; color: #888; font-size: 20px; }
+        a.back-link { display: none; } /* Handled by global header */
     </style>
 </head>
 <body>
-    <div class="toolbar">
-        <a href="index.html" class="back-link" title="Меню">🏠</a>
-        <div class="tool-btn active" onclick="setTool('pencil')" title="B">✏️<span class="key">B</span></div>
-        <div class="tool-btn" onclick="setTool('eraser')" title="E">🧼<span class="key">E</span></div>
-        <div class="tool-btn" onclick="setTool('fill')" title="F">🪣<span class="key">F</span></div>
-        <div class="tool-btn" onclick="setTool('picker')" title="I">💉<span class="key">I</span></div>
-        <div style="flex-grow:1"></div>
-        <div class="tool-btn" onclick="clearCanvas()" title="Del">🗑️</div>
-    </div>
+    
+    <!-- Header injected -->
 
-    <div class="workspace">
-        <div class="top-bar">
-            <span>Размер: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="64"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="64"></span>
-            <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer;">OK</button>
-            <div style="width:1px; height:20px; background:#444; margin:0 10px;"></div>
-            <label style="cursor:pointer; display:flex; align-items:center; gap:5px;">
-                <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> Сетка
-            </label>
+    <div class="app-container">
+        <div class="toolbar">
+            <div class="tool-btn active" onclick="setTool('pencil')" title="B">✏️<span class="key">B</span></div>
+            <div class="tool-btn" onclick="setTool('eraser')" title="E">🧼<span class="key">E</span></div>
+            <div class="tool-btn" onclick="setTool('fill')" title="F">🪣<span class="key">F</span></div>
+            <div class="tool-btn" onclick="setTool('picker')" title="I">💉<span class="key">I</span></div>
+            <div style="flex-grow:1"></div>
+            <div class="tool-btn" onclick="clearCanvas()" title="Del">🗑️</div>
         </div>
-        
-        <div class="canvas-viewport">
-            <div class="drawing-board" id="board">
-                <!-- Важно: artCanvas принимает клики, gridCanvas пропускает их -->
-                <canvas id="artCanvas"></canvas>
-                <canvas id="gridCanvas"></canvas>
+
+        <div class="workspace">
+            <div class="top-bar">
+                <span>Size: <input type="number" id="sizeX" value="32" style="width:50px" min="1" max="64"> x <input type="number" id="sizeY" value="32" style="width:50px" min="1" max="64"></span>
+                <button onclick="resizeCanvas()" style="padding: 4px 10px; cursor:pointer; font-family: inherit; font-size: 10px;">OK</button>
+                <div style="width:1px; height:20px; background:var(--border); margin:0 10px;"></div>
+                <label style="cursor:pointer; display:flex; align-items:center; gap:5px; margin-bottom: 0;">
+                    <input type="checkbox" id="showGrid" checked onchange="drawGrid()"> Grid
+                </label>
+            </div>
+            
+            <div class="canvas-viewport">
+                <div class="drawing-board" id="board">
+                    <!-- Важно: artCanvas принимает клики, gridCanvas пропускает их -->
+                    <canvas id="artCanvas"></canvas>
+                    <canvas id="gridCanvas"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <div class="panels">
+            <div class="panel">
+                <h3>Preview (1x)</h3>
+                <div class="preview-box">
+                    <canvas id="previewCanvas"></canvas>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h3>Color</h3>
+                <div style="display: flex; gap: 10px; align-items: center;">
+                    <input type="color" id="colorPicker" value="#000000" style="height: 30px; flex-grow:1; cursor:pointer;">
+                </div>
+            </div>
+            
+            <div class="panel">
+                <h3>Palette</h3>
+                <div class="palette" id="paletteBox"></div>
+            </div>
+            
+            <div class="panel">
+                <button class="action" onclick="downloadImage()">💾 PNG</button>
             </div>
         </div>
     </div>
 
-    <div class="panels">
-        <div class="panel">
-            <h3>Превью (1x)</h3>
-            <div class="preview-box">
-                <canvas id="previewCanvas"></canvas>
-            </div>
-        </div>
-
-        <div class="panel">
-            <h3>Цвет</h3>
-            <div style="display: flex; gap: 10px; align-items: center;">
-                <input type="color" id="colorPicker" value="#000000" style="height: 30px; flex-grow:1; cursor:pointer;">
-            </div>
-        </div>
-        
-        <div class="panel">
-            <h3>Палитра</h3>
-            <div class="palette" id="paletteBox"></div>
-        </div>
-        
-        <div class="panel">
-            <button class="action" onclick="downloadImage()">💾 PNG</button>
-        </div>
-    </div>
+    <!-- Footer injected -->
+    <script src="global.js"></script>
 
     <script>
         // --- Настройки ---
