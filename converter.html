@@ -3,25 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <title>Image Converter</title>
-    <style>
-        body { background: #1e1e1e; color: #d4d4d4; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; padding: 20px; }
-        .container { width: 100%; max-width: 600px; }
-        .control-panel { background: #252526; padding: 20px; border-radius: 8px; margin-bottom: 20px; border: 1px solid #3e3e42; }
-        label { display: block; margin-bottom: 10px; }
-        select, input[type="range"] { background: #3c3c3c; color: white; border: 1px solid #555; padding: 5px; border-radius: 3px; width: 100%; box-sizing: border-box; }
-        .btn { background: #007acc; color: white; border: none; padding: 12px; width: 100%; border-radius: 4px; cursor: pointer; margin-top: 10px; font-size: 16px; }
-        .btn:hover { background: #0062a3; }
-        .list { margin-top: 20px; }
-        .item { background: #252526; padding: 10px; margin-bottom: 5px; display: flex; justify-content: space-between; align-items: center; border-radius: 4px; }
-        .download-link { color: #007acc; text-decoration: none; border: 1px solid #007acc; padding: 2px 8px; border-radius: 3px; }
-        h1 a { text-decoration: none; color: #888; margin-right: 10px; }
-    </style>
+    <link href="style.css" rel="stylesheet">
 </head>
 <body>
     <div class="container">
-        <h1><a href="index.html">←</a> Batch Converter</h1>
+        <!-- Header will be injected by global.js, but back link inside container is useful too -->
         
-        <div class="control-panel">
+        <div class="control-panel" style="margin-top: 20px;">
             <label>1. Выбери формат выхода:
                 <select id="format">
                     <option value="image/webp">WebP (Для веба / Игр)</option>
@@ -39,6 +27,8 @@
 
         <div class="list" id="resultList"></div>
     </div>
+
+    <script src="global.js"></script>
 
     <script>
         document.getElementById('files').addEventListener('change', async (e) => {
