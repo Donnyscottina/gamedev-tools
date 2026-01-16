@@ -19,7 +19,7 @@
 
 * {
     box-sizing: border-box;
-    image-rendering: pixelated; /* Важно для пиксель-арта */
+    image-rendering: pixelated; /* Четкие пиксели */
 }
 
 body {
@@ -53,15 +53,16 @@ header p {
 }
 
 main {
-    max-width: 980px;
+    max-width: 1200px; /* Чуть шире, чтобы влезли большие карточки */
     margin: 0 auto;
     padding: 0 16px 60px;
 }
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-    gap: 24px;
+    /* Адаптивная сетка: карточки минимум 300px шириной */
+    grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+    gap: 30px;
 }
 
 .card {
@@ -70,47 +71,49 @@ main {
     padding: 24px;
     text-decoration: none;
     color: inherit;
-    position: relative;
-    transition: all 0.1s steps(2);
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    transition: all 0.2s ease;
 }
 
 .card:hover {
     border-color: var(--accent);
     transform: translateY(-4px);
-    box-shadow: 0 4px 0 rgba(0,0,0,0.5);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     background: #1a201a;
+    z-index: 10;
 }
 
-/* СТИЛИ ДЛЯ ИКОНОК-КАРТИНОК */
-.card-icon {
-    width: 64px;       /* Размер иконки */
-    height: 64px;      /* Квадрат */
-    object-fit: cover; /* Если картинка не квадратная, обрезаем */
-    object-position: center;
-    margin-bottom: 20px;
-    border: 2px solid var(--border); /* Рамка вокруг иконки */
-    background: #000;
+/* --- СТИЛЬ ПРЕВЬЮ --- */
+.card-preview {
+    width: 100%;
+    /* Фиксированная высота для единообразия, или auto */
+    height: 200px; 
+    object-fit: contain; /* Картинка влезает целиком */
+    background: #000;    /* Черный фон под картинкой */
+    border: 1px solid #2a2f2a;
+    margin-bottom: 24px;
     border-radius: 4px;
+    padding: 10px;       /* Отступ внутри рамки */
 }
 
-.card:hover .card-icon {
-    border-color: var(--accent);
+.card:hover .card-preview {
+    border-color: #555;
 }
 
 .title {
-    font-size: 12px;
+    font-size: 14px;      /* Крупнее */
     margin-bottom: 12px;
     color: var(--accent);
     text-transform: uppercase;
-    letter-spacing: 1px;
+    line-height: 1.4;
+    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
 }
 
 .desc {
-    font-size: 9px;
-    line-height: 1.8;
+    font-size: 10px;
+    line-height: 1.6;
     color: var(--muted);
 }
 
@@ -130,59 +133,58 @@ footer {
 
 <header>
     <h1>GAMEDEV TOOLS</h1>
-    <p>DONNYSCOTTINA HUB v2.0</p>
+    <p>DONNYSCOTTINA HUB </p>
 </header>
 
 <main>
      <div class="grid">
 
+
         <a href="spritesheet.html" class="card">
-            <img src="girl.png" class="card-icon" alt="Sprite Packer">
+            <img src="girl.png" class="card-preview" alt="Sprite Packer Preview">
             <div class="title">Sprite Packer</div>
             <div class="desc">
                 Сборка спрайтшитов и атласов из отдельных изображений.
             </div>
         </a>
 
-
+       
         <a href="palette.html" class="card">
-            <img src="palletextractor.png" class="card-icon" alt="Palette Extractor">
+            <img src="palletextractor.png" class="card-preview" alt="Palette Extractor Preview">
             <div class="title">Palette Extractor</div>
             <div class="desc">
                 Быстрое извлечение цветовой палитры из любых изображений.
             </div>
         </a>
 
-     
         <a href="pixelart.html" class="card">
-            <img src="paint.png" class="card-icon" alt="Pixel Art">
+            <img src="paint.png" class="card-preview" alt="Pixel Art Preview">
             <div class="title">Pixel Art Editor</div>
             <div class="desc">
                 Рисование пиксель-арта прямо в браузере.
             </div>
         </a>
 
-
+     
         <a href="sfx.html" class="card">
-            <img src="sound.png" class="card-icon" alt="SFX">
+            <img src="sound.png" class="card-preview" alt="SFX Preview">
             <div class="title">8-Bit SFX</div>
             <div class="desc">
                 Генерация ретро-звуков для игр (Bfxr style).
             </div>
         </a>
 
-      
+    
         <a href="ColorQuantization.html" class="card">
-            <img src="remaper.png" class="card-icon" alt="Remapper">
+            <img src="remaper.png" class="card-preview" alt="Remapper Preview">
             <div class="title">Palette Remapper</div>
             <div class="desc">
                 Умное упрощение цветов и замена палитры спрайтов.
             </div>
         </a>
         
-    
         <a href="palette-reducer.html" class="card">
-            <img src="PalletCleaner.png" class="card-icon" alt="Reducer">
+            <img src="PalletCleaner.png" class="card-preview" alt="Reducer Preview">
             <div class="title">Palette Reducer</div>
             <div class="desc">
                 Сжатие количества цветов (Median Cut Algorithm).
