@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://donnyscottina.github.io/gamedev-tools/sitemap.xml
