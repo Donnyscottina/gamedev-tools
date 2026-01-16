@@ -2,13 +2,18 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Pixel Art Editor Pro (Aseprite Style)</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pixel Art Editor Pro</title>
     <link href="style.css" rel="stylesheet">
     <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
         body {
             height: 100vh;
             overflow: hidden;
             user-select: none;
+            display: flex;
+            flex-direction: column;
         }
 
         .app-container {
@@ -17,8 +22,6 @@
             flex: 1;
             height: 100%;
             overflow: hidden;
-            border-top: 1px solid var(--border);
-            border-bottom: 1px solid var(--border);
         }
 
         .main-row {
@@ -29,142 +32,433 @@
         }
         
         /* Toolbar (Left) */
-        .toolbar { width: 40px; background: var(--panel); border-right: 1px solid var(--border); display: flex; flex-direction: column; align-items: center; padding: 10px 0; gap: 8px; z-index: 10; flex-shrink: 0; }
-        .tool-btn { width: 32px; height: 32px; background: transparent; color: var(--text); border: 1px solid transparent; border-radius: 4px; cursor: pointer; font-size: 16px; display: flex; align-items: center; justify-content: center; position: relative;}
+        .toolbar { 
+            width: 45px; 
+            background: var(--panel); 
+            border-right: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 8px 0; 
+            gap: 6px; 
+            z-index: 10; 
+            flex-shrink: 0; 
+        }
+        .tool-btn { 
+            width: 36px; 
+            height: 36px; 
+            background: transparent; 
+            color: var(--text); 
+            border: 1px solid transparent; 
+            border-radius: 4px; 
+            cursor: pointer; 
+            font-size: 18px; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            position: relative;
+            transition: all 0.15s;
+        }
         .tool-btn:hover { background: var(--highlight); }
         .tool-btn.active { background: var(--accent); border-color: var(--accent); color: var(--bg); }
-        .tool-btn .key { position: absolute; bottom: 1px; right: 1px; font-size: 6px; color: rgba(255,255,255,0.7); }
 
         /* Workspace (Center) */
-        .workspace-col { flex-grow: 1; display: flex; flex-direction: column; min-width: 0; }
-        .top-bar { height: 32px; background: var(--panel); border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 10px; gap: 15px; font-size: 10px; flex-shrink: 0; }
+        .workspace-col { 
+            flex-grow: 1; 
+            display: flex; 
+            flex-direction: column; 
+            min-width: 0; 
+            background: #0a0a0a;
+        }
+        .top-bar { 
+            height: 35px; 
+            background: var(--panel); 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 12px; 
+            gap: 12px; 
+            font-size: 11px; 
+            flex-shrink: 0; 
+        }
+        .top-bar input[type="number"] {
+            width: 45px;
+            padding: 3px 5px;
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 3px;
+            font-size: 11px;
+        }
+        .top-bar button {
+            padding: 4px 12px;
+            background: var(--highlight);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: 0.15s;
+        }
+        .top-bar button:hover { background: var(--accent); color: var(--bg); }
+        .top-bar label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
+            margin: 0;
+        }
         
         .canvas-viewport { 
             flex-grow: 1; 
-            background: #151515; 
+            background: #0a0a0a;
             display: flex; 
             justify-content: center; 
             align-items: center; 
             overflow: auto; 
             position: relative;
+            padding: 20px;
         }
 
         /* Drawing Board */
         .drawing-board {
             position: relative;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            background-color: #222;
+            box-shadow: 0 0 30px rgba(0,0,0,0.8);
+            background-color: #1a1a1a;
             background-image: 
-                linear-gradient(45deg, #333 25%, transparent 25%), 
-                linear-gradient(-45deg, #333 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #333 75%), 
-                linear-gradient(-45deg, transparent 75%, #333 75%);
-            background-size: 20px 20px;
-            background-position: 0 0, 0 10px, 10px -10px, -10px 0px;
+                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
+                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+            background-size: 16px 16px;
+            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+        }
+
+        #layersContainer {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         canvas.layer-canvas { 
             position: absolute; 
-            top: 0; left: 0; 
+            top: 0; 
+            left: 0; 
             image-rendering: pixelated; 
+            width: 100%;
+            height: 100%;
         }
         #cursorCanvas { z-index: 100; pointer-events: none; }
-        #gridCanvas { z-index: 101; pointer-events: none; opacity: 0.5; }
+        #gridCanvas { z-index: 101; pointer-events: none; opacity: 0.4; }
 
-        /* Panels (Right) */
-        .right-sidebar { width: 220px; background: var(--panel); border-left: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; overflow-y: auto;}
-        .panel { padding: 10px; border-bottom: 1px solid var(--border); }
-        .panel h3 { margin: 0 0 5px 0; font-size: 10px; text-transform: uppercase; color: var(--muted); display:flex; justify-content:space-between;}
+        /* Right Sidebar */
+        .right-sidebar { 
+            width: 240px; 
+            background: var(--panel); 
+            border-left: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+            overflow-y: auto;
+        }
+        .panel { 
+            padding: 12px; 
+            border-bottom: 1px solid var(--border); 
+        }
+        .panel h3 { 
+            margin: 0 0 8px 0; 
+            font-size: 10px; 
+            text-transform: uppercase; 
+            color: var(--muted); 
+            display: flex; 
+            justify-content: space-between;
+            align-items: center;
+        }
         
-        .palette { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; }
-        .color-swatch { width: 100%; aspect-ratio: 1; border-radius: 2px; cursor: pointer; border: 1px solid #000; box-sizing: border-box;}
-        .color-swatch:hover { transform: scale(1.1); z-index: 50; border: 1px solid white; box-shadow: 0 0 5px black; }
+        .palette { 
+            display: grid; 
+            grid-template-columns: repeat(6, 1fr); 
+            gap: 3px; 
+        }
+        .color-swatch { 
+            width: 100%; 
+            aspect-ratio: 1; 
+            border-radius: 3px; 
+            cursor: pointer; 
+            border: 2px solid transparent; 
+            transition: all 0.1s;
+        }
+        .color-swatch:hover { 
+            transform: scale(1.15); 
+            border-color: var(--accent);
+            box-shadow: 0 0 8px rgba(156, 255, 138, 0.5);
+            z-index: 10;
+        }
         
         /* Timeline (Bottom) */
-        .timeline-panel { height: 120px; background: var(--panel); border-top: 1px solid var(--border); display: flex; flex-direction: column; flex-shrink: 0; }
-        .timeline-controls { height: 28px; border-bottom: 1px solid var(--border); display: flex; align-items: center; padding: 0 5px; gap: 5px; }
-        .timeline-scroll { flex: 1; overflow: auto; display: flex; }
+        .timeline-panel { 
+            height: 140px; 
+            background: var(--panel); 
+            border-top: 1px solid var(--border); 
+            display: flex; 
+            flex-direction: column; 
+            flex-shrink: 0; 
+        }
+        .timeline-controls { 
+            height: 32px; 
+            border-bottom: 1px solid var(--border); 
+            display: flex; 
+            align-items: center; 
+            padding: 0 8px; 
+            gap: 6px; 
+            background: #1a1a1a;
+        }
+        .timeline-controls button {
+            padding: 4px 10px;
+            background: var(--highlight);
+            border: 1px solid var(--border);
+            color: var(--text);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: 0.15s;
+        }
+        .timeline-controls button:hover { background: var(--accent); color: var(--bg); }
         
-        .timeline-header-col { width: 100px; background: var(--highlight); border-right: 1px solid var(--border); flex-shrink: 0; display: flex; flex-direction: column; }
-        .layer-header { height: 24px; border-bottom: 1px solid var(--border); font-size: 9px; display: flex; align-items: center; padding-left: 5px; cursor: pointer; background: var(--panel); color: var(--text); }
-        .layer-header.active { background: var(--accent); color: var(--bg); }
-        .layer-header .vis-btn { margin-right: 4px; cursor: pointer; font-size: 10px; opacity: 0.5; }
+        .timeline-scroll { 
+            flex: 1; 
+            overflow: auto; 
+            display: flex;
+            background: #0f0f0f;
+        }
+        
+        .timeline-header-col { 
+            width: 120px; 
+            background: #1a1a1a; 
+            border-right: 1px solid var(--border); 
+            flex-shrink: 0; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        .layer-header { 
+            height: 28px; 
+            border-bottom: 1px solid var(--border); 
+            font-size: 10px; 
+            display: flex; 
+            align-items: center; 
+            padding: 0 8px; 
+            cursor: pointer; 
+            background: var(--panel); 
+            color: var(--text);
+            gap: 6px;
+            transition: 0.15s;
+        }
+        .layer-header:hover { background: var(--highlight); }
+        .layer-header.active { background: var(--accent); color: var(--bg); font-weight: bold; }
+        .layer-header .vis-btn { 
+            cursor: pointer; 
+            font-size: 12px; 
+            opacity: 0.3;
+            transition: 0.15s;
+        }
         .layer-header .vis-btn.visible { opacity: 1; }
+        .layer-header .vis-btn:hover { transform: scale(1.2); }
 
-        .timeline-frames-area { flex: 1; display: flex; flex-direction: column; background: #0f0f0f; }
-        .frames-header { height: 20px; display: flex; border-bottom: 1px solid var(--border); }
-        .frame-num { width: 24px; text-align: center; border-right: 1px solid #333; font-size: 8px; line-height: 20px; color: var(--muted); cursor: pointer; }
-        .frame-num.active { background: rgba(156, 255, 138, 0.2); color: var(--accent); }
+        .timeline-frames-area { 
+            flex: 1; 
+            display: flex; 
+            flex-direction: column; 
+            background: #0f0f0f; 
+        }
+        .frames-header { 
+            height: 24px; 
+            display: flex; 
+            border-bottom: 1px solid var(--border);
+            background: #1a1a1a;
+        }
+        .frame-num { 
+            min-width: 32px; 
+            text-align: center; 
+            border-right: 1px solid #333; 
+            font-size: 9px; 
+            line-height: 24px; 
+            color: var(--muted); 
+            cursor: pointer;
+            transition: 0.15s;
+        }
+        .frame-num:hover { background: var(--highlight); }
+        .frame-num.active { 
+            background: rgba(156, 255, 138, 0.15); 
+            color: var(--accent); 
+            font-weight: bold;
+        }
 
         .layers-grid { flex: 1; position: relative; }
-        .layer-row { height: 24px; display: flex; border-bottom: 1px solid #222; }
-        .cel { width: 24px; border-right: 1px solid #222; background: #1a1a1a; cursor: pointer; display: flex; justify-content: center; align-items: center; }
+        .layer-row { 
+            height: 28px; 
+            display: flex; 
+            border-bottom: 1px solid #222; 
+        }
+        .cel { 
+            min-width: 32px; 
+            border-right: 1px solid #222; 
+            background: #1a1a1a; 
+            cursor: pointer; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+            transition: 0.1s;
+        }
         .cel:hover { background: #2a2a2a; }
-        .cel.active { border: 1px solid var(--accent); }
-        .cel.has-content::after { content: ''; width: 6px; height: 6px; background: var(--text); border-radius: 50%; }
+        .cel.active { 
+            background: rgba(156, 255, 138, 0.2);
+            border: 2px solid var(--accent); 
+        }
+        .cel.has-content::after { 
+            content: ''; 
+            width: 8px; 
+            height: 8px; 
+            background: var(--accent); 
+            border-radius: 50%; 
+        }
 
         /* Preview */
         .preview-box {
-            width: 100%; height: 100px; 
+            width: 100%; 
+            height: 120px; 
             background: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAoAAAAKCAYAAACNMs+9AAAAIklEQVQYV2NkYGRkYIAAdiGKQAQjI5QNJ2F0QZg441FCLwAAadQAwVqu1d4AAAAASUVORK5CYII=');
-            display: flex; justify-content: center; align-items: center;
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
             border: 1px solid var(--border);
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+            border-radius: 4px;
+            overflow: hidden;
         }
-        #previewCanvas { image-rendering: pixelated; background: transparent; max-width: 100%; max-height: 100%; }
+        #previewCanvas { 
+            image-rendering: pixelated; 
+            background: transparent; 
+            max-width: 100%; 
+            max-height: 100%; 
+        }
 
-        input, button { font-family: inherit; }
-        .mini-btn { padding: 2px 6px; font-size: 10px; min-width: 20px; }
-        .icon-btn { background: none; border: none; padding: 2px; color: var(--text); cursor: pointer; font-size: 14px; }
-        .icon-btn:hover { color: var(--accent); }
+        input[type="color"] {
+            width: 100%;
+            height: 36px;
+            border: 2px solid var(--border);
+            border-radius: 4px;
+            cursor: pointer;
+            background: var(--bg);
+        }
+
+        input[type="number"] {
+            background: #2a2a2a;
+            border: 1px solid var(--border);
+            color: var(--text);
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        .action-btn {
+            width: 100%;
+            padding: 12px;
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 11px;
+            border-radius: 4px;
+            transition: 0.15s;
+            text-transform: uppercase;
+        }
+        .action-btn:hover {
+            background: var(--text);
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(156, 255, 138, 0.3);
+        }
+
+        .fps-control {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            margin-top: 6px;
+        }
+        .fps-control input {
+            width: 50px;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 2px;
+            transition: 0.15s;
+        }
+        .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
     </style>
 </head>
 <body>
     
-    <!-- Header injected -->
-
     <div class="app-container">
-        <!-- Main Area: Toolbar + Workspace + Right Sidebar -->
         <div class="main-row">
+            <!-- Toolbar -->
             <div class="toolbar">
-                <div class="tool-btn active" onclick="setTool('pencil')" title="Pencil (B)">✏️<span class="key">B</span></div>
-                <div class="tool-btn" onclick="setTool('eraser')" title="Eraser (E)">🧼<span class="key">E</span></div>
-                <div class="tool-btn" onclick="setTool('fill')" title="Fill Bucket (F)">🪣<span class="key">F</span></div>
-                <div class="tool-btn" onclick="setTool('picker')" title="Color Picker (I)">💉<span class="key">I</span></div>
-                <div style="width: 20px; height: 1px; background: var(--border); margin: 5px 0;"></div>
-                <div class="tool-btn" onclick="clearActiveCel()" title="Clear Cell (Del)">🗑️</div>
+                <div class="tool-btn active" onclick="setTool('pencil')" title="Pencil (B)">✏️</div>
+                <div class="tool-btn" onclick="setTool('eraser')" title="Eraser (E)">🧼</div>
+                <div class="tool-btn" onclick="setTool('fill')" title="Fill (F)">🪣</div>
+                <div class="tool-btn" onclick="setTool('picker')" title="Picker (I)">💉</div>
+                <div style="height: 1px; width: 80%; background: var(--border); margin: 4px 0;"></div>
+                <div class="tool-btn" onclick="clearActiveCel()" title="Clear (Del)">🗑️</div>
             </div>
 
+            <!-- Workspace -->
             <div class="workspace-col">
                 <div class="top-bar">
-                    <span><input type="number" id="sizeX" value="32" style="width:40px"> x <input type="number" id="sizeY" value="32" style="width:40px"></span>
-                    <button onclick="resizeProject()" class="mini-btn">Resize</button>
-                    <div style="width:1px; height:20px; background:var(--border);"></div>
-                    <label style="margin:0; display:flex; align-items:center; cursor:pointer;"><input type="checkbox" id="showGrid" checked onchange="renderGrid()"> Grid</label>
-                    <label style="margin:0; display:flex; align-items:center; cursor:pointer;"><input type="checkbox" id="onionSkin" onchange="renderCanvas()"> Onion</label>
+                    <span style="display: flex; align-items: center; gap: 5px;">
+                        <input type="number" id="sizeX" value="32" min="8" max="128"> ×
+                        <input type="number" id="sizeY" value="32" min="8" max="128">
+                    </span>
+                    <button onclick="resizeProject()">Resize</button>
+                    <div style="width: 1px; height: 20px; background: var(--border);"></div>
+                    <label><input type="checkbox" id="showGrid" checked onchange="renderGrid()"> Grid</label>
+                    <label><input type="checkbox" id="onionSkin" onchange="renderCanvas()"> Onion Skin</label>
+                    <div style="flex: 1;"></div>
                 </div>
                 
-                <div class="canvas-viewport" id="viewport">
+                <div class="canvas-viewport">
                     <div class="drawing-board" id="board">
                         <div id="layersContainer"></div>
                         <canvas id="gridCanvas"></canvas>
-                        <canvas id="cursorCanvas"></canvas> <!-- For brush preview -->
+                        <canvas id="cursorCanvas"></canvas>
                     </div>
                 </div>
             </div>
 
+            <!-- Right Sidebar -->
             <div class="right-sidebar">
                 <div class="panel">
-                    <h3>Preview <button class="icon-btn" onclick="togglePlay()">⏯</button></h3>
+                    <h3>
+                        Preview
+                        <button class="icon-btn" onclick="togglePlay()" title="Play/Pause (Space)">⏯️</button>
+                    </h3>
                     <div class="preview-box">
                         <canvas id="previewCanvas"></canvas>
                     </div>
-                    <div style="font-size: 10px;">FPS: <input type="number" id="fpsInput" value="8" min="1" max="60" style="width: 40px;" onchange="updateFPS()"></div>
+                    <div class="fps-control">
+                        <label>FPS:</label>
+                        <input type="number" id="fpsInput" value="8" min="1" max="60" onchange="updateFPS()">
+                    </div>
                 </div>
 
                 <div class="panel">
                     <h3>Color</h3>
-                    <input type="color" id="colorPicker" value="#000000" style="width:100%; height:30px; cursor:pointer;">
+                    <input type="color" id="colorPicker" value="#000000">
                 </div>
                 
                 <div class="panel">
@@ -173,7 +467,7 @@
                 </div>
 
                 <div class="panel">
-                    <button class="action" onclick="downloadSpriteSheet()" style="width:100%; padding:10px; background:var(--accent); color:var(--bg); border:none; cursor:pointer; font-weight:bold; font-size:10px;">SAVE SHEET</button>
+                    <button class="action-btn" onclick="downloadSpriteSheet()">💾 Save Sheet</button>
                 </div>
             </div>
         </div>
@@ -181,72 +475,59 @@
         <!-- Timeline -->
         <div class="timeline-panel">
             <div class="timeline-controls">
-                <button class="mini-btn" onclick="addFrame()">+ Frame</button>
-                <button class="mini-btn" onclick="addLayer()">+ Layer</button>
-                <button class="mini-btn" onclick="deleteFrame()">- Frame</button>
-                <button class="mini-btn" onclick="deleteLayer()">- Layer</button>
-                <div style="flex:1"></div>
-                <button class="mini-btn" onclick="duplicateFrame()">Dup Frame</button>
+                <button onclick="addFrame()">+ Frame</button>
+                <button onclick="addLayer()">+ Layer</button>
+                <button onclick="deleteFrame()">- Frame</button>
+                <button onclick="deleteLayer()">- Layer</button>
+                <div style="flex: 1;"></div>
+                <button onclick="duplicateFrame()">Duplicate Frame</button>
             </div>
             <div class="timeline-scroll">
-                <div class="timeline-header-col" id="layerHeaders">
-                    <!-- Layer headers generated here -->
-                </div>
+                <div class="timeline-header-col" id="layerHeaders"></div>
                 <div class="timeline-frames-area">
-                    <div class="frames-header" id="frameNumbers">
-                        <!-- Frame numbers generated here -->
-                    </div>
-                    <div class="layers-grid" id="timelineGrid">
-                        <!-- Cels generated here -->
-                    </div>
+                    <div class="frames-header" id="frameNumbers"></div>
+                    <div class="layers-grid" id="timelineGrid"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Footer injected -->
     <script src="global.js"></script>
-
     <script>
-        // --- CONSTANTS & CONFIG ---
+        // --- CONFIG ---
         const ZOOM = 15;
-        const DEFAULT_W = 32;
-        const DEFAULT_H = 32;
+        const DEFAULT_W = 32, DEFAULT_H = 32;
         
         // --- STATE ---
         let project = {
             width: DEFAULT_W,
             height: DEFAULT_H,
-            frames: [], // Array of Frame objects. Frame = { cels: {} } where key is layerId
-            layers: [], // Array of Layer objects. Layer = { id, name, visible }
+            frames: [],
+            layers: [],
             nextLayerId: 1
         };
         
         let activeFrameIdx = 0;
-        let activeLayerId = 0; // ID of the currently selected layer
-        
+        let activeLayerId = 0;
         let isPlaying = false;
         let playInterval = null;
         let fps = 8;
-
         let currentTool = 'pencil';
         let currentColor = '#000000';
         let isDrawing = false;
 
-        // --- DOM ELEMENTS ---
+        // --- DOM ---
         const board = document.getElementById('board');
         const layersContainer = document.getElementById('layersContainer');
         const gridCanvas = document.getElementById('gridCanvas');
         const cursorCanvas = document.getElementById('cursorCanvas');
         const previewCanvas = document.getElementById('previewCanvas');
-        
         const layerHeaders = document.getElementById('layerHeaders');
         const frameNumbers = document.getElementById('frameNumbers');
         const timelineGrid = document.getElementById('timelineGrid');
 
-        // --- INITIALIZATION ---
+        // --- INIT ---
         function init() {
-            // Setup Palette
             const pal = ['#000000', '#1D2B53', '#7E2553', '#008751', '#AB5236', '#5F574F', '#C2C3C7', '#FFF1E8',
             '#FF004D', '#FFA300', '#FFEC27', '#00E436', '#29ADFF', '#83769C', '#FF77A8', '#FFCCAA'];
             const pBox = document.getElementById('paletteBox');
@@ -258,25 +539,17 @@
                 pBox.appendChild(d);
             });
 
-            // Initialize Project
-            addLayer(true); // Create Layer 1
-            addFrame(true); // Create Frame 1
-
-            // Setup Resize
+            addLayer(true);
+            addFrame(true);
             resizeProject(true);
-
-            // Events
             setupInput();
         }
 
-        // --- CORE DATA OPERATIONS ---
-        
         function createLayer(name) {
             return { id: project.nextLayerId++, name: name || ('Layer ' + project.nextLayerId), visible: true };
         }
 
         function createCel() {
-            // A Cel is basically ImageData, but we'll store it as a canvas for easy drawing
             const c = document.createElement('canvas');
             c.width = project.width;
             c.height = project.height;
@@ -285,11 +558,8 @@
 
         function addLayer(silent) {
             const layer = createLayer();
-            project.layers.unshift(layer); // Add to top
-            // Add empty cels for this layer to all existing frames
-            project.frames.forEach(f => {
-                f.cels[layer.id] = createCel();
-            });
+            project.layers.unshift(layer);
+            project.frames.forEach(f => { f.cels[layer.id] = createCel(); });
             activeLayerId = layer.id;
             if(!silent) updateUI();
         }
@@ -304,9 +574,7 @@
 
         function addFrame(silent) {
             const newFrame = { cels: {} };
-            project.layers.forEach(l => {
-                newFrame.cels[l.id] = createCel();
-            });
+            project.layers.forEach(l => { newFrame.cels[l.id] = createCel(); });
             project.frames.push(newFrame);
             activeFrameIdx = project.frames.length - 1;
             if(!silent) updateUI();
@@ -333,21 +601,16 @@
             updateUI();
         }
 
-        // --- RENDERING ---
-        
         function resizeProject(silent) {
             if (!silent) {
                 const w = parseInt(document.getElementById('sizeX').value);
                 const h = parseInt(document.getElementById('sizeY').value);
                 if (w === project.width && h === project.height) return;
-                // Ideally we would resize content, but for this simple tool we might just clip or clear? 
-                // Let's reset for simplicity or just change dims (cropping)
                 if(!confirm("Resizing will crop/expand canvas. Continue?")) return;
                 project.width = w;
                 project.height = h;
             }
             
-            // Update UI dimensions
             const cssW = project.width * ZOOM;
             const cssH = project.height * ZOOM;
             board.style.width = cssW + 'px';
@@ -356,36 +619,20 @@
             [gridCanvas, cursorCanvas].forEach(c => {
                 c.width = project.width;
                 c.height = project.height;
+                c.style.width = cssW + 'px';
+                c.style.height = cssH + 'px';
             });
             
             renderGrid();
-            // We need to resize all existing cels if we changed size (complex), 
-            // but for now let's assume this is mostly done at start.
-            // If done mid-work, we should create new canvases and copy data. 
-            // This implementation is a "crop" resize.
-            project.frames.forEach(f => {
-                Object.values(f.cels).forEach(c => {
-                    const old = c;
-                    const nc = document.createElement('canvas');
-                    nc.width = project.width;
-                    nc.height = project.height;
-                    nc.getContext('2d').drawImage(old, 0, 0);
-                    // Update ref? tricky since we store by ID. 
-                    // Actually we can just update the object properties if we kept ref, 
-                    // but we replaced the object. 
-                    // Let's rely on updateUI to refresh everything.
-                });
-            });
-            // Re-render everything
-             updateUI();
+            updateUI();
         }
 
         function renderGrid() {
             const ctx = gridCanvas.getContext('2d');
             ctx.clearRect(0, 0, project.width, project.height);
             if (!document.getElementById('showGrid').checked) return;
-            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
-            ctx.lineWidth = 0.5; // Will be scaled up by CSS but 0.5 logical pixels
+            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+            ctx.lineWidth = 0.05;
             ctx.beginPath();
             for(let x=0; x<=project.width; x++) { ctx.moveTo(x,0); ctx.lineTo(x,project.height); }
             for(let y=0; y<=project.height; y++) { ctx.moveTo(0,y); ctx.lineTo(project.width,y); }
@@ -393,41 +640,30 @@
         }
 
         function renderCanvas() {
-            // This function syncs the visual DOM layers with the current frame's data
             layersContainer.innerHTML = '';
             
-            // Onion Skin (Previous Frame)
             if(document.getElementById('onionSkin').checked && activeFrameIdx > 0) {
                 const prevFrame = project.frames[activeFrameIdx - 1];
-                // Flatten prev frame
                 const osc = document.createElement('canvas');
                 osc.width = project.width; osc.height = project.height;
                 osc.className = 'layer-canvas';
                 osc.style.opacity = 0.3;
-                osc.style.pointerEvents = 'none'; // Click through
+                osc.style.pointerEvents = 'none';
                 const ctx = osc.getContext('2d');
-                
-                // Draw layers bottom up
                 [...project.layers].reverse().forEach(l => {
                     if(l.visible) ctx.drawImage(prevFrame.cels[l.id], 0, 0);
                 });
                 layersContainer.appendChild(osc);
             }
 
-            // Current Frame Layers
-            // We iterate normally (top to bottom in array) but for Z-index we need bottom-up or just append order.
-            // Project.layers[0] is Top. So we should append them in reverse order so DOM order is correct (last is on top)
-            // OR use z-index. Let's just append in reverse order.
-            
             const frame = project.frames[activeFrameIdx];
-            
             [...project.layers].reverse().forEach(layer => {
                 if (!layer.visible) return;
                 const cel = frame.cels[layer.id];
-                // We don't append the cel canvas directly because we might need to scale it or handle events.
-                // But actually, appending the cel canvas directly is the most efficient way.
                 cel.className = 'layer-canvas';
-                cel.style.zIndex = layer.id; // Just use ID as pseudo z-index or relying on DOM order
+                cel.style.zIndex = layer.id;
+                cel.style.width = (project.width * ZOOM) + 'px';
+                cel.style.height = (project.height * ZOOM) + 'px';
                 layersContainer.appendChild(cel);
             });
             
@@ -435,7 +671,6 @@
         }
 
         function updatePreview() {
-            // Render current frame to preview canvas
             const ctx = previewCanvas.getContext('2d');
             previewCanvas.width = project.width;
             previewCanvas.height = project.height;
@@ -446,33 +681,28 @@
                 if(l.visible) ctx.drawImage(frame.cels[l.id], 0, 0);
             });
             
-            // Scale up preview via CSS
-            const scale = project.width < 16 ? 4 : (project.width < 32 ? 2 : 1);
-            previewCanvas.style.width = (project.width * scale * 2) + 'px'; // Double size
-            previewCanvas.style.height = (project.height * scale * 2) + 'px';
+            const scale = Math.min(200 / project.width, 200 / project.height);
+            previewCanvas.style.width = (project.width * scale) + 'px';
+            previewCanvas.style.height = (project.height * scale) + 'px';
         }
 
-        // --- TIMELINE UI ---
         function updateUI() {
             renderCanvas();
             renderTimeline();
         }
 
         function renderTimeline() {
-            // Headers
             layerHeaders.innerHTML = project.layers.map(l => `
                 <div class="layer-header ${l.id === activeLayerId ? 'active' : ''}" onclick="setActiveLayer(${l.id})">
-                    <span class="vis-btn ${l.visible ? 'visible' : ''}" onclick="toggleVis(event, ${l.id})">👁</span>
+                    <span class="vis-btn ${l.visible ? 'visible' : ''}" onclick="toggleVis(event, ${l.id})">👁️</span>
                     ${l.name}
                 </div>
             `).join('');
 
-            // Frame Numbers
             frameNumbers.innerHTML = project.frames.map((_, i) => `
                 <div class="frame-num ${i === activeFrameIdx ? 'active' : ''}" onclick="setActiveFrame(${i})">${i+1}</div>
             `).join('');
 
-            // Grid
             timelineGrid.innerHTML = '';
             project.layers.forEach(l => {
                 const row = document.createElement('div');
@@ -483,15 +713,12 @@
                     cel.className = `cel ${l.id === activeLayerId && fIdx === activeFrameIdx ? 'active' : ''}`;
                     cel.onclick = () => { setActiveFrame(fIdx); setActiveLayer(l.id); };
                     
-                    // Check if cel has content
                     const ctx = f.cels[l.id].getContext('2d');
-                    // This is expensive to check every render, but ok for small sprites
                     const data = ctx.getImageData(0,0,project.width, project.height).data;
                     let hasContent = false;
                     for(let i=3; i<data.length; i+=4) { if(data[i]>0) { hasContent=true; break; } }
                     
                     if(hasContent) cel.classList.add('has-content');
-                    
                     row.appendChild(cel);
                 });
                 timelineGrid.appendChild(row);
@@ -515,11 +742,10 @@
             updateUI();
         }
 
-        // --- DRAWING LOGIC ---
         function getActiveCtx() {
             const frame = project.frames[activeFrameIdx];
             const layer = project.layers.find(l => l.id === activeLayerId);
-            if (!layer || !layer.visible) return null; // Cannot draw on hidden layer
+            if (!layer || !layer.visible) return null;
             return frame.cels[activeLayerId].getContext('2d');
         }
 
@@ -542,9 +768,7 @@
             } else if (currentTool === 'fill' && !isDrag) {
                 floodFill(ctx, x, y, currentColor);
             } else if (currentTool === 'picker' && !isDrag) {
-                // Pick visible color from all layers
                 const frame = project.frames[activeFrameIdx];
-                // Create temp canvas to combine
                 const temp = document.createElement('canvas');
                 temp.width=1; temp.height=1;
                 const tctx = temp.getContext('2d');
@@ -561,14 +785,12 @@
         }
 
         function floodFill(ctx, startX, startY, color) {
-            // Standard flood fill
-            const w = project.width; const h = project.height;
+            const w = project.width, h = project.height;
             const imgData = ctx.getImageData(0,0,w,h);
             const d = imgData.data;
             const startPos = (startY*w + startX)*4;
             const startR=d[startPos], startG=d[startPos+1], startB=d[startPos+2], startA=d[startPos+3];
             
-            // Target color
             const bigint = parseInt(color.slice(1), 16);
             const tr = (bigint >> 16) & 255;
             const tg = (bigint >> 8) & 255;
@@ -593,13 +815,11 @@
             const ctx = getActiveCtx();
             if(ctx) {
                 ctx.clearRect(0,0,project.width, project.height);
-                updateUI(); // To refresh timeline dots
+                updateUI();
             }
         }
 
-        // --- INPUT HANDLING ---
         function setupInput() {
-            // We attach events to the board wrapper to catch all
             board.addEventListener('mousedown', e => {
                 if(e.button !== 0) return;
                 isDrawing = true;
@@ -608,26 +828,27 @@
                 updatePreview();
             });
             window.addEventListener('mouseup', () => {
-                if(isDrawing) { isDrawing = false; updateUI(); /* Refresh timeline for dots */ }
+                if(isDrawing) { isDrawing = false; updateUI(); }
             });
             board.addEventListener('mousemove', e => {
                 const p = getCoords(e);
                 
-                // Cursor preview
                 const cx = cursorCanvas.getContext('2d');
                 cx.clearRect(0,0,project.width, project.height);
-                cx.strokeStyle = '#fff';
-                cx.strokeRect(p.x, p.y, 1, 1);
+                if(p.x >= 0 && p.x < project.width && p.y >= 0 && p.y < project.height) {
+                    cx.strokeStyle = '#fff';
+                    cx.lineWidth = 0.1;
+                    cx.strokeRect(p.x, p.y, 1, 1);
+                }
 
                 if(isDrawing) {
                     useTool(p.x, p.y, true);
-                    updatePreview(); // Live update
+                    updatePreview();
                 }
             });
 
             document.getElementById('colorPicker').addEventListener('input', e => selectColor(e.target.value));
 
-            // Hotkeys
             document.addEventListener('keydown', e => {
                 if(e.target.tagName === 'INPUT') return;
                 switch(e.key.toLowerCase()) {
@@ -654,7 +875,6 @@
             if(btn) btn.classList.add('active');
         }
 
-        // --- ANIMATION ---
         function togglePlay() {
             if(isPlaying) {
                 clearInterval(playInterval);
@@ -673,23 +893,19 @@
             if(isPlaying) { togglePlay(); togglePlay(); }
         }
 
-        // --- EXPORT ---
         function downloadSpriteSheet() {
-            // Create a long strip
             const c = document.createElement('canvas');
             c.width = project.width * project.frames.length;
             c.height = project.height;
             const ctx = c.getContext('2d');
             
             project.frames.forEach((f, i) => {
-                // Flatten frame
                 const temp = document.createElement('canvas');
                 temp.width = project.width; temp.height = project.height;
                 const tctx = temp.getContext('2d');
                 [...project.layers].reverse().forEach(l => {
                     if(l.visible) tctx.drawImage(f.cels[l.id], 0, 0);
                 });
-                
                 ctx.drawImage(temp, i * project.width, 0);
             });
             
