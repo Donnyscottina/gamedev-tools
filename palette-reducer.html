@@ -3,31 +3,41 @@
 <head>
     <meta charset="UTF-8">
     <title>Color Reducer</title>
+    <link href="style.css" rel="stylesheet">
     <style>
-        :root { --bg: #1e1e1e; --panel: #252526; --border: #3e3e42; --accent: #007acc; --text: #d4d4d4; }
-        body { background: var(--bg); color: var(--text); font-family: 'Segoe UI', sans-serif; height: 100vh; margin: 0; display: flex; flex-direction: column; overflow: hidden; }
-        
-        header { background: var(--panel); padding: 10px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
-        h1 { margin: 0; font-size: 18px; color: #fff; }
-        a.back { color: #888; text-decoration: none; font-size: 20px; margin-right: 10px; }
+        body {
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
 
-        .main-container { display: flex; flex-grow: 1; overflow: hidden; }
+        .main-container { 
+            display: flex; 
+            flex-grow: 1; 
+            overflow: hidden; 
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+        
         .col-left { width: 300px; background: var(--panel); border-right: 1px solid var(--border); padding: 20px; display: flex; flex-direction: column; flex-shrink: 0; }
         .col-right { flex-grow: 1; background: #151515; display: flex; flex-direction: column; overflow: hidden; position: relative; }
 
-        h2 { font-size: 12px; text-transform: uppercase; color: #888; margin-top: 0; margin-bottom: 10px; }
+        h2 { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-top: 0; margin-bottom: 10px; }
         
-        .drop-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); margin-bottom: 20px; color: #aaa; font-size: 13px; }
-        .drop-zone:hover { border-color: var(--accent); background: rgba(0,122,204,0.1); }
+        .drop-zone { border: 2px dashed var(--border); border-radius: 6px; padding: 30px; text-align: center; cursor: pointer; transition: 0.2s; background: rgba(0,0,0,0.2); margin-bottom: 20px; color: var(--muted); font-size: 10px; }
+        .drop-zone:hover { border-color: var(--accent); background: rgba(156, 255, 138, 0.1); }
         
         .control-group { margin-bottom: 20px; }
-        .control-group label { display: block; margin-bottom: 5px; font-size: 13px; }
-        input[type="number"], select { width: 100%; background: #333; color: white; border: 1px solid #555; padding: 8px; border-radius: 4px; box-sizing: border-box; }
+        .control-group label { display: block; margin-bottom: 5px; font-size: 10px; color: var(--text); }
+        input[type="number"], select { width: 100%; background: var(--bg); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; box-sizing: border-box; font-family: inherit; font-size: 10px; }
         
-        button.btn-primary { background: var(--accent); color: white; border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; }
-        button.btn-primary:hover { background: #0062a3; }
-        button.btn-sec { background: #333; color: #ddd; border: 1px solid #555; padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 5px; }
-        button.btn-sec:hover { background: #444; }
+        button.btn-primary { background: var(--accent); color: var(--bg); border: none; padding: 12px; border-radius: 4px; cursor: pointer; font-weight: bold; width: 100%; margin-bottom: 10px; font-family: 'Press Start 2P', monospace; font-size: 10px; }
+        button.btn-primary:hover { background: var(--text); }
+        button.btn-primary:disabled { background: var(--border); color: var(--muted); cursor: not-allowed; }
+        
+        button.btn-sec { background: var(--panel); color: var(--text); border: 1px solid var(--border); padding: 8px; border-radius: 4px; cursor: pointer; width: 100%; margin-bottom: 5px; font-family: 'Press Start 2P', monospace; font-size: 8px; }
+        button.btn-sec:hover { background: var(--highlight); border-color: var(--accent); }
 
         /* Preview Area */
         .preview-area { flex: 1; display: flex; justify-content: center; align-items: center; overflow: hidden; padding: 20px; }
@@ -35,41 +45,41 @@
         canvas { image-rendering: pixelated; max-width: 100%; max-height: 100%; }
 
         /* Palette Strip */
-        .palette-strip { background: #111; padding: 10px; height: 80px; display: flex; align-items: center; overflow-x: auto; gap: 2px; border-top: 1px solid var(--border); }
+        .palette-strip { background: var(--bg); padding: 10px; height: 80px; display: flex; align-items: center; overflow-x: auto; gap: 2px; border-top: 1px solid var(--border); }
         .color-box { min-width: 24px; height: 40px; border: 1px solid rgba(255,255,255,0.1); position: relative; cursor: pointer; }
         .color-box:hover::after { content: attr(title); position: absolute; bottom: 100%; left: 0; background: #000; color: #fff; padding: 2px 5px; font-size: 10px; z-index: 10; white-space: nowrap; }
+        
+        header a.back { display: none; }
     </style>
 </head>
 <body>
-    <header>
-        <a href="index.html" class="back">←</a>
-        <h1>Color Reducer</h1>
-    </header>
+    
+    <!-- Header injected -->
 
     <div class="main-container">
         <div class="col-left">
             <div class="drop-zone" id="dropZone">
-                Перетащи картинку сюда
+                Drag & Drop Image
                 <input type="file" id="fileInput" accept="image/*" style="display:none">
             </div>
 
             <div class="control-group">
-                <label>Количество цветов:</label>
+                <label>Color Count:</label>
                 <input type="number" id="colorCount" value="16" min="2" max="256">
             </div>
             
             <div class="control-group">
                 <label style="display:flex; align-items:center; cursor:pointer;">
-                    <input type="checkbox" id="dither" style="margin-right:8px;"> Дизеринг (Floyd-Steinberg)
+                    <input type="checkbox" id="dither" style="margin-right:8px;"> Dithering (Floyd-Steinberg)
                 </label>
             </div>
 
-            <button class="btn-primary" onclick="processImage()" id="procBtn" disabled>УМЕНЬШИТЬ ЦВЕТА</button>
+            <button class="btn-primary" onclick="processImage()" id="procBtn" disabled>REDUCE COLORS</button>
             
-            <div style="border-top:1px solid #333; margin: 10px 0; padding-top:10px;">
-                <h2>Экспорт</h2>
-                <button class="btn-sec" onclick="downloadImage()">Скачать Картинку</button>
-                <button class="btn-sec" onclick="downloadPalette()">Скачать Палитру (PNG)</button>
+            <div style="border-top:1px solid var(--border); margin: 10px 0; padding-top:10px;">
+                <h2>Export</h2>
+                <button class="btn-sec" onclick="downloadImage()">Download Image</button>
+                <button class="btn-sec" onclick="downloadPalette()">Download Palette (PNG)</button>
             </div>
         </div>
 
@@ -80,10 +90,12 @@
                 </div>
             </div>
             <div class="palette-strip" id="paletteStrip">
-                <span style="color:#555; font-size:12px; margin-left:10px;">Палитра появится здесь...</span>
+                <span style="color:var(--muted); font-size:10px; margin-left:10px;">Palette will appear here...</span>
             </div>
         </div>
     </div>
+
+    <script src="global.js"></script>
 
     <script>
         let originalImg = null;
