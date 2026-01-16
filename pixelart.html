@@ -135,12 +135,10 @@
             box-shadow: 0 0 30px rgba(0,0,0,0.8);
             background-color: #1a1a1a;
             background-image: 
-                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
-                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
-                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
-            background-size: 16px 16px;
-            background-position: 0 0, 0 8px, 8px -8px, -8px 0px;
+                repeating-linear-gradient(0deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent),
+                repeating-linear-gradient(90deg, #2a2a2a 0px, #2a2a2a 1px, transparent 1px, transparent);
+            background-size: var(--pixel-size) var(--pixel-size);
+            background-position: 0 0;
         }
 
         #layersContainer {
@@ -172,7 +170,7 @@
             width: 100%; height: 100%;
             z-index: 101; 
             pointer-events: none; 
-            opacity: 0.3; 
+            opacity: 0.4; 
         }
         
         /* Selection Overlay */
@@ -701,6 +699,9 @@
             board.style.width = cssW + 'px';
             board.style.height = cssH + 'px';
             
+            // Set CSS variable for background grid
+            board.style.setProperty('--pixel-size', ZOOM + 'px');
+            
             [gridCanvas, cursorCanvas, selectionCanvas].forEach(c => {
                 c.width = project.width;
                 c.height = project.height;
@@ -716,11 +717,24 @@
             const ctx = gridCanvas.getContext('2d');
             ctx.clearRect(0, 0, project.width, project.height);
             if (!document.getElementById('showGrid').checked) return;
-            ctx.strokeStyle = 'rgba(255,255,255,0.15)';
-            ctx.lineWidth = 0.05;
+            
+            // Draw pixel-perfect grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+            ctx.lineWidth = 0.05; // Thin line in canvas space
             ctx.beginPath();
-            for(let x=0; x<=project.width; x++) { ctx.moveTo(x,0); ctx.lineTo(x,project.height); }
-            for(let y=0; y<=project.height; y++) { ctx.moveTo(0,y); ctx.lineTo(project.width,y); }
+            
+            // Vertical lines
+            for(let x = 0; x <= project.width; x++) {
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, project.height);
+            }
+            
+            // Horizontal lines
+            for(let y = 0; y <= project.height; y++) {
+                ctx.moveTo(0, y);
+                ctx.lineTo(project.width, y);
+            }
+            
             ctx.stroke();
         }
 
@@ -761,17 +775,22 @@
             ctx.clearRect(0, 0, project.width, project.height);
             if (!selection) return;
 
-            // Marching ants effect
-            const offset = (Date.now() / 100) % 16;
-            ctx.setLineDash([2, 2]);
+            // Draw pixel-perfect marching ants
+            const offset = (Date.now() / 100) % 8;
+            
+            // White border
+            ctx.setLineDash([4, 4]);
             ctx.lineDashOffset = -offset;
             ctx.strokeStyle = 'white';
-            ctx.lineWidth = 0.5;
-            ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
+            ctx.lineWidth = 0.1; // Thin in canvas space
             
+            // Draw rect aligned to pixels (no +0.5 offset needed with this approach)
+            ctx.strokeRect(selection.x, selection.y, selection.w, selection.h);
+            
+            // Black border (inverted dash)
             ctx.strokeStyle = 'black';
-            ctx.lineDashOffset = -offset + 2;
-            ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
+            ctx.lineDashOffset = -offset + 4;
+            ctx.strokeRect(selection.x, selection.y, selection.w, selection.h);
         }
 
         setInterval(renderSelection, 50);
@@ -929,7 +948,6 @@
             const ctx = getActiveCtx();
             if(!ctx) return;
             
-            // Get mouse position for paste or use selection origin or 0,0
             let x = 0, y = 0;
             if(selection) {
                 x = selection.x;
@@ -938,7 +956,6 @@
             
             ctx.putImageData(clipboard, x, y);
             
-            // Create new selection around pasted area
             selection = {
                 x: x,
                 y: y,
@@ -999,14 +1016,15 @@
             cx.clearRect(0,0,project.width, project.height);
             
             if (p.x >= 0 && p.x < project.width && p.y >= 0 && p.y < project.height) {
-                cx.strokeStyle = '#fff';
-                cx.lineWidth = 0.15;
+                cx.strokeStyle = 'rgba(255,255,255,0.8)';
+                cx.lineWidth = 0.1;
                 
-                // Draw cursor box matching brush size
+                // Draw cursor box matching brush size - pixel perfect
                 const offset = Math.floor(brushSize/2);
                 const cursorX = p.x - offset;
                 const cursorY = p.y - offset;
                 
+                // Draw outer rectangle
                 cx.strokeRect(cursorX, cursorY, brushSize, brushSize);
                 
                 // Add crosshair for center pixel
