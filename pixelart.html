@@ -124,9 +124,8 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            overflow: auto; 
+            overflow: hidden; /* Changed from auto to hidden to prevent scrollbar with cursor */
             position: relative;
-            padding: 20px;
         }
 
         /* Drawing Board */
@@ -159,8 +158,31 @@
             width: 100%;
             height: 100%;
         }
-        #cursorCanvas { z-index: 100; pointer-events: none; }
-        #gridCanvas { z-index: 101; pointer-events: none; opacity: 0.3; }
+        /* Fix: Limit cursor canvas to board size */
+        #cursorCanvas { 
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 100; 
+            pointer-events: none; 
+        }
+        #gridCanvas { 
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 101; 
+            pointer-events: none; 
+            opacity: 0.3; 
+        }
+        
+        /* Selection Overlay */
+        #selectionCanvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+            z-index: 102;
+            pointer-events: none;
+        }
 
         /* Right Sidebar */
         .right-sidebar { 
@@ -425,6 +447,7 @@
                 <div class="tool-btn" onclick="setTool('circle')" title="Circle (C)">⚪<span class="hotkey">C</span></div>
                 <div class="tool-btn" onclick="setTool('fill')" title="Fill (F)">🪣<span class="hotkey">F</span></div>
                 <div class="tool-btn" onclick="setTool('picker')" title="Picker (I)">💉<span class="hotkey">I</span></div>
+                <div class="tool-btn" onclick="setTool('select')" title="Select (S)">✂️<span class="hotkey">S</span></div>
                 <div class="tool-btn" onclick="setTool('move')" title="Move (M)">✋<span class="hotkey">M</span></div>
                 <div style="height: 1px; width: 80%; background: var(--border); margin: 4px 0;"></div>
                 <div class="tool-btn" onclick="clearActiveCel()" title="Clear (Del)">🗑️</div>
@@ -447,6 +470,10 @@
                     <label><input type="checkbox" id="showGrid" checked onchange="renderGrid()"> Grid</label>
                     <label><input type="checkbox" id="onionSkin" onchange="renderCanvas()"> Onion Skin</label>
                     <div style="flex: 1;"></div>
+                    
+                    <button onclick="cutSelection()" title="Cut (Ctrl+X)">Cut</button>
+                    <button onclick="copySelection()" title="Copy (Ctrl+C)">Copy</button>
+                    <button onclick="pasteSelection()" title="Paste (Ctrl+V)">Paste</button>
                 </div>
                 
                 <div class="canvas-viewport">
@@ -454,6 +481,7 @@
                         <div id="layersContainer"></div>
                         <canvas id="gridCanvas"></canvas>
                         <canvas id="cursorCanvas"></canvas>
+                        <canvas id="selectionCanvas"></canvas>
                     </div>
                 </div>
             </div>
@@ -542,11 +570,16 @@
         let currentPos = {x: 0, y: 0};
         let snapshot = null; // Used for shape preview
 
+        // Selection state
+        let selection = null; // {x, y, w, h} or null
+        let clipboard = null; // ImageData
+
         // --- DOM ---
         const board = document.getElementById('board');
         const layersContainer = document.getElementById('layersContainer');
         const gridCanvas = document.getElementById('gridCanvas');
         const cursorCanvas = document.getElementById('cursorCanvas');
+        const selectionCanvas = document.getElementById('selectionCanvas');
         const previewCanvas = document.getElementById('previewCanvas');
         const layerHeaders = document.getElementById('layerHeaders');
         const frameNumbers = document.getElementById('frameNumbers');
@@ -645,7 +678,7 @@
             board.style.width = cssW + 'px';
             board.style.height = cssH + 'px';
             
-            [gridCanvas, cursorCanvas].forEach(c => {
+            [gridCanvas, cursorCanvas, selectionCanvas].forEach(c => {
                 c.width = project.width;
                 c.height = project.height;
                 c.style.width = cssW + 'px';
@@ -699,6 +732,27 @@
             
             updatePreview();
         }
+
+        function renderSelection() {
+            const ctx = selectionCanvas.getContext('2d');
+            ctx.clearRect(0, 0, project.width, project.height);
+            if (!selection) return;
+
+            // Marching ants effect
+            const offset = (Date.now() / 100) % 16;
+            ctx.setLineDash([2, 2]);
+            ctx.lineDashOffset = -offset;
+            ctx.strokeStyle = 'white';
+            ctx.lineWidth = 0.5; // Scaled by CSS
+            ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
+            
+            ctx.strokeStyle = 'black';
+            ctx.lineDashOffset = -offset + 2;
+            ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
+        }
+
+        // Animate selection marquee
+        setInterval(renderSelection, 50);
 
         function updatePreview() {
             const ctx = previewCanvas.getContext('2d');
@@ -768,8 +822,6 @@
 
         function getCoords(e) {
             const rect = board.getBoundingClientRect();
-            // Using logic relative to board element, but e.clientX is viewport relative.
-            // Correct approach:
             const x = Math.floor((e.clientX - rect.left) / ZOOM);
             const y = Math.floor((e.clientY - rect.top) / ZOOM);
             return {x, y};
@@ -792,40 +844,46 @@
         }
 
         function drawBrush(ctx, x, y) {
+            // Apply selection mask if active
+            if(selection) {
+                if(x < selection.x || x >= selection.x + selection.w || 
+                   y < selection.y || y >= selection.y + selection.h) return;
+            }
+
             ctx.fillStyle = currentColor;
-            // Simple square brush for pixel art
             const offset = Math.floor(brushSize / 2);
-            // If brush is 1, draw at x,y. If 2, draw x,y and x+1,y+1.
-            // Let's center it.
-            const startX = x - Math.floor((brushSize - 1) / 2);
-            const startY = y - Math.floor((brushSize - 1) / 2);
+            // Fix: properly center brush
+            let startX = x - (brushSize % 2 === 0 ? offset - 1 : offset); 
+            let startY = y - (brushSize % 2 === 0 ? offset - 1 : offset);
+            
+            // Adjust for even brush sizes to match cursor
+            if (brushSize % 2 === 0) {
+                 // Even sizes logic: cursor is top-left of the 2x2 center block ideally
+                 // But simply centering based on floor is enough for now
+                 startX = x - Math.floor(brushSize/2);
+                 startY = y - Math.floor(brushSize/2);
+            } else {
+                 startX = x - Math.floor(brushSize/2);
+                 startY = y - Math.floor(brushSize/2);
+            }
             
             ctx.fillRect(startX, startY, brushSize, brushSize);
         }
 
         function drawRect(ctx, x1, y1, x2, y2) {
-             // Bresenham line for 4 sides or just fill?
-             // Usually tools draw outlines. Let's draw outline rect.
-             // Simplest: use strokeRect logic but per pixel.
              const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
              const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
-             
-             // Top & Bottom
              for(let x=minX; x<=maxX; x++) { drawBrush(ctx, x, minY); drawBrush(ctx, x, maxY); }
-             // Left & Right
              for(let y=minY; y<=maxY; y++) { drawBrush(ctx, minX, y); drawBrush(ctx, maxX, y); }
         }
 
         function drawCircle(ctx, x0, y0, x1, y1) {
-            // Midpoint ellipse algorithm or simple radius
-            // Let's assume circle based on bounding box
             const rX = Math.abs(x1 - x0) / 2;
             const rY = Math.abs(y1 - y0) / 2;
             const cX = Math.min(x0, x1) + rX;
             const cY = Math.min(y0, y1) + rY;
             
-            // Simple parametric
-            const step = 1 / Math.max(rX, rY) / 2; // finer steps
+            const step = 1 / Math.max(rX, rY) / 2;
             for(let t=0; t<Math.PI*2; t+=step) {
                 const px = Math.round(cX + rX * Math.cos(t));
                 const py = Math.round(cY + rY * Math.sin(t));
@@ -839,20 +897,64 @@
             ctx.drawImage(snapshot, dx, dy);
         }
 
+        // --- SELECTION TOOLS ---
+        function cutSelection() {
+            if(!selection) return;
+            copySelection();
+            const ctx = getActiveCtx();
+            if(ctx) {
+                ctx.clearRect(selection.x, selection.y, selection.w, selection.h);
+                updateUI();
+            }
+        }
+
+        function copySelection() {
+            if(!selection) return;
+            const ctx = getActiveCtx();
+            if(!ctx) return;
+            clipboard = ctx.getImageData(selection.x, selection.y, selection.w, selection.h);
+        }
+
+        function pasteSelection() {
+            if(!clipboard) return;
+            const ctx = getActiveCtx();
+            if(!ctx) return;
+            // Paste at center or top left? selection x,y?
+            // Let's paste at top left of selection or 0,0
+            const x = selection ? selection.x : 0;
+            const y = selection ? selection.y : 0;
+            ctx.putImageData(clipboard, x, y);
+            updateUI();
+        }
+
         // --- TOOL HANDLER ---
         function onMouseDown(e) {
             if(e.button !== 0) return;
-            isDrawing = true;
             const p = getCoords(e);
+            
+            // Check bounds
+            if (p.x < 0 || p.x >= project.width || p.y < 0 || p.y >= project.height) return;
+
+            isDrawing = true;
             startPos = p;
             currentPos = p;
             
+            // If selecting, clear old selection
+            if (currentTool === 'select') {
+                selection = { x: p.x, y: p.y, w: 1, h: 1 };
+                renderSelection();
+                return;
+            }
+
+            // Click outside selection clears it (unless using move?)
+            if (currentTool !== 'select' && currentTool !== 'move' && selection) {
+                // If drawing inside selection, that's fine. Logic in drawBrush handles mask.
+            }
+
             const ctx = getActiveCtx();
             if(!ctx) return;
 
-            // Save state for shape preview
             if (['line', 'rect', 'circle', 'move'].includes(currentTool)) {
-                // Snapshot the current canvas
                 const temp = document.createElement('canvas');
                 temp.width = project.width; temp.height = project.height;
                 temp.getContext('2d').drawImage(ctx.canvas, 0, 0);
@@ -878,37 +980,52 @@
             const p = getCoords(e);
             currentPos = p;
             
-            // Render cursor
+            // Render cursor (only if inside board)
             const cx = cursorCanvas.getContext('2d');
             cx.clearRect(0,0,project.width, project.height);
             
-            // Cursor shape
-            cx.strokeStyle = '#fff';
-            cx.lineWidth = 0.5;
-            const bOffset = Math.floor((brushSize-1)/2);
-            cx.strokeRect(p.x - bOffset, p.y - bOffset, brushSize, brushSize);
+            if (p.x >= 0 && p.x < project.width && p.y >= 0 && p.y < project.height) {
+                cx.strokeStyle = '#fff';
+                cx.lineWidth = 0.5;
+                const bOffset = Math.floor(brushSize/2);
+                cx.strokeRect(p.x - bOffset, p.y - bOffset, brushSize, brushSize);
+            }
 
             if(!isDrawing) return;
+
+            // Selection Drag
+            if (currentTool === 'select') {
+                const w = p.x - startPos.x;
+                const h = p.y - startPos.y;
+                selection = {
+                    x: w >= 0 ? startPos.x : p.x,
+                    y: h >= 0 ? startPos.y : p.y,
+                    w: Math.abs(w) + 1, // +1 because pixels
+                    h: Math.abs(h) + 1
+                };
+                // Clamp selection to canvas
+                selection.x = Math.max(0, selection.x);
+                selection.y = Math.max(0, selection.y);
+                selection.w = Math.min(selection.w, project.width - selection.x);
+                selection.h = Math.min(selection.h, project.height - selection.y);
+                renderSelection();
+                return;
+            }
 
             const ctx = getActiveCtx();
             if(!ctx) return;
 
             if (currentTool === 'pencil') {
-                // Bresenham for smooth lines even when mouse moves fast
                 drawLine(ctx, startPos.x, startPos.y, p.x, p.y);
-                startPos = p; // update start for continuous line
+                startPos = p;
             } else if (currentTool === 'eraser') {
                  const s = brushSize;
                  const offset = Math.floor(s/2);
-                 // clearRect is simple, does not support continuous 'line' logic easily without own bresenham
-                 // simple approach:
                  ctx.clearRect(p.x - offset, p.y - offset, s, s);
             } else if (['line', 'rect', 'circle'].includes(currentTool)) {
-                // Restore snapshot then draw shape
                 if(snapshot) {
                     ctx.clearRect(0, 0, project.width, project.height);
                     ctx.drawImage(snapshot, 0, 0);
-                    
                     if(currentTool === 'line') drawLine(ctx, startPos.x, startPos.y, p.x, p.y);
                     else if(currentTool === 'rect') drawRect(ctx, startPos.x, startPos.y, p.x, p.y);
                     else if(currentTool === 'circle') drawCircle(ctx, startPos.x, startPos.y, p.x, p.y);
@@ -926,7 +1043,7 @@
             if(isDrawing) {
                 isDrawing = false;
                 snapshot = null;
-                updateUI(); // Refresh UI thumbnails
+                updateUI();
             }
         }
 
@@ -950,6 +1067,11 @@
                 const [x,y] = stack.pop();
                 const pos = (y*w + x)*4;
                 if(x<0||x>=w||y<0||y>=h) continue;
+                if(selection) {
+                    // Bounds check for selection
+                    if (x < selection.x || x >= selection.x + selection.w || y < selection.y || y >= selection.y + selection.h) continue;
+                }
+
                 if(d[pos]===startR && d[pos+1]===startG && d[pos+2]===startB && d[pos+3]===startA) {
                     d[pos]=tr; d[pos+1]=tg; d[pos+2]=tb; d[pos+3]=255;
                     stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
@@ -977,7 +1099,11 @@
         function clearActiveCel() {
             const ctx = getActiveCtx();
             if(ctx) {
-                ctx.clearRect(0,0,project.width, project.height);
+                if(selection) {
+                    ctx.clearRect(selection.x, selection.y, selection.w, selection.h);
+                } else {
+                    ctx.clearRect(0,0,project.width, project.height);
+                }
                 updateUI();
             }
         }
@@ -995,6 +1121,22 @@
 
             document.addEventListener('keydown', e => {
                 if(e.target.tagName === 'INPUT') return;
+                
+                // Ctrl combinations
+                if (e.ctrlKey) {
+                    switch(e.key.toLowerCase()) {
+                        case 'x': cutSelection(); e.preventDefault(); break;
+                        case 'c': copySelection(); e.preventDefault(); break;
+                        case 'v': pasteSelection(); e.preventDefault(); break;
+                        case 'a': 
+                            selection = {x:0, y:0, w:project.width, h:project.height}; 
+                            renderSelection();
+                            e.preventDefault(); 
+                            break;
+                    }
+                    return;
+                }
+
                 switch(e.key.toLowerCase()) {
                     case 'b': setTool('pencil'); break;
                     case 'e': setTool('eraser'); break;
@@ -1003,6 +1145,7 @@
                     case 'l': setTool('line'); break;
                     case 'r': setTool('rect'); break;
                     case 'c': setTool('circle'); break;
+                    case 's': setTool('select'); break;
                     case 'm': setTool('move'); break;
                     case 'delete': clearActiveCel(); break;
                     case ' ': togglePlay(); e.preventDefault(); break;
@@ -1014,6 +1157,9 @@
                         brushSize = Math.min(10, brushSize + 1); 
                         brushInput.value = brushSize; 
                         break;
+                    case 'escape':
+                        if(selection) { selection = null; renderSelection(); }
+                        break;
                 }
             });
         }
@@ -1021,7 +1167,7 @@
         function selectColor(hex) {
             currentColor = hex;
             document.getElementById('colorPicker').value = hex;
-            if(['eraser', 'picker', 'move'].includes(currentTool)) setTool('pencil');
+            if(['eraser', 'picker', 'move', 'select'].includes(currentTool)) setTool('pencil');
         }
 
         function setTool(t) {
@@ -1029,6 +1175,9 @@
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             const btn = document.querySelector(`[onclick="setTool('${t}')"]`);
             if(btn) btn.classList.add('active');
+            
+            // If tool is not select, but we have a selection, keep it (allows painting inside selection)
+            // If tool is move, we might move the pixels inside selection (not implemented fully, currently moves whole layer)
         }
 
         function togglePlay() {
