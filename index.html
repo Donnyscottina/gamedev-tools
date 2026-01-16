@@ -4,167 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>GameDev Tools — DonnyScottina Hub</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-
-<style>
-:root {
-    --bg: #0b0e0b;
-    --panel: #141814;
-    --border: #3a3f3a;
-    --text: #c7f0c2;
-    --muted: #7fa77a;
-    --accent: #9cff8a;
-}
-
-* {
-    box-sizing: border-box;
-    image-rendering: pixelated;
-}
-
-body {
-    margin: 0;
-    min-height: 100vh;
-    background:
-        repeating-linear-gradient(
-            0deg,
-            rgba(255,255,255,0.02),
-            rgba(255,255,255,0.02) 1px,
-            transparent 1px,
-            transparent 2px
-        ),
-        var(--bg);
-    color: var(--text);
-    font-family: 'Press Start 2P', monospace;
-}
-
-header {
-    text-align: center;
-    padding: 60px 16px 40px;
-}
-header h1 {
-    font-size: 20px;
-    margin-bottom: 20px;
-    text-shadow: 2px 2px 0 #000;
-}
-header p {
-    font-size: 10px;
-    color: var(--muted);
-}
-
-main {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 16px 60px;
-}
-
-.grid {
-    display: grid;
-    /* Карточки адаптивные, минимум 320px шириной */
-    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-    gap: 30px;
-}
-
-.card {
-    background: var(--panel);
-    border: 2px solid var(--border);
-    padding: 20px;
-    text-decoration: none;
-    color: inherit;
-    display: flex;
-    flex-direction: column;
-    transition: all 0.2s ease;
-}
-
-.card:hover {
-    border-color: var(--accent);
-    transform: translateY(-4px);
-    box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    background: #1a201a;
-    z-index: 10;
-}
-
-/* --- КОНТЕЙНЕР ДЛЯ КАРТИНКИ --- */
-/* Делаем жесткий "телевизор" для картинки */
-.image-wrapper {
-    width: 100%;
-    /* Высота фиксированная, чтобы карточки были ровными */
-    height: 220px; 
-    background: #000;
-    border: 1px solid #2a2f2a;
-    border-radius: 4px;
-    margin-bottom: 20px;
-    overflow: hidden; /* Обрезаем всё, что торчит */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    position: relative;
-}
-
-.card:hover .image-wrapper {
-    border-color: #555;
-}
-
-.card-preview {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    display: block;
-    /* Если картинка маленькая - не растягиваем мыло, если большая - уменьшаем */
-}
-
-.title {
-    font-size: 14px;
-    margin-bottom: 12px;
-    color: var(--accent);
-    text-transform: uppercase;
-    line-height: 1.4;
-    text-shadow: 1px 1px 0 rgba(0,0,0,0.5);
-}
-
-.desc {
-    font-size: 10px;
-    line-height: 1.6;
-    color: var(--muted);
-}
-
-footer {
-    text-align: center;
-    padding: 40px 16px;
-    font-size: 8px;
-    color: var(--muted);
-    border-top: 1px solid var(--border);
-    margin-top: 40px;
-    background: #0d110d;
-}
-</style>
-
+<link href="style.css" rel="stylesheet">
 </head>
 
 <body>
 
-<header>
-    <h1>GAMEDEV TOOLS</h1>
-    <p>DONNYSCOTTINA HUB </p>
-    
-<!-- Yandex.Metrika counter -->
-<script type="text/javascript">
-    (function(m,e,t,r,i,k,a){
-        m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
-        m[i].l=1*new Date();
-        for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
-        k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)
-    })(window, document,'script','https://mc.yandex.ru/metrika/tag.js?id=106284741', 'ym');
-
-    ym(106284741, 'init', {ssr:true, webvisor:true, clickmap:true, ecommerce:"dataLayer", accurateTrackBounce:true, trackLinks:true});
-</script>
-<noscript><div><img src="https://mc.yandex.ru/watch/106284741" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
-<!-- /Yandex.Metrika counter -->
-
-
-
-</header>
+<!-- Header will be injected by global.js -->
 
 <main>
      <div class="grid">
@@ -212,6 +57,15 @@ footer {
             </div>
         </a>
 
+        <a href="converter.html" class="card">
+            <div class="image-wrapper">
+            <img src="converter.webp" class="card-preview" alt="Converter Preview"> <!-- Note: converter.webp might not exist yet, using placeholder or existing image if available, for now linking to card logic -->
+             </div>
+            <div class="title">Batch Converter</div>
+            <div class="desc">
+                Пакетная конвертация изображений (WebP, PNG, JPEG).
+            </div>
+        </a>
     
         <a href="paletteremapper.html" class="card">
             <div class="image-wrapper">
@@ -235,9 +89,7 @@ footer {
     </div>
 </main>
 
-<footer>
-    © 2026 DONNYSCOTTINA INC. ALL RIGHTS RESERVED.
-</footer>
+<script src="global.js"></script>
 
 </body>
 </html>
