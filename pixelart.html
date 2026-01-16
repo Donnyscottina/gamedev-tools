@@ -124,8 +124,9 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            overflow: hidden; /* Changed from auto to hidden to prevent scrollbar with cursor */
+            overflow: auto;
             position: relative;
+            padding: 20px;
         }
 
         /* Drawing Board */
@@ -158,7 +159,6 @@
             width: 100%;
             height: 100%;
         }
-        /* Fix: Limit cursor canvas to board size */
         #cursorCanvas { 
             position: absolute;
             top: 0; left: 0;
@@ -432,6 +432,15 @@
             transition: 0.15s;
         }
         .icon-btn:hover { color: var(--accent); transform: scale(1.1); }
+        
+        /* Zoom controls */
+        .zoom-control {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            border-left: 1px solid var(--border);
+            padding-left: 10px;
+        }
     </style>
 </head>
 <body>
@@ -464,6 +473,13 @@
                     
                     <div class="brush-size-control">
                         Size: <input type="number" id="brushSize" value="1" min="1" max="10" style="width: 35px;">
+                    </div>
+                    
+                    <div class="zoom-control">
+                        Zoom: 
+                        <button onclick="changeZoom(-2)" style="padding: 2px 8px;">−</button>
+                        <span id="zoomDisplay" style="min-width: 40px; text-align: center;">15×</span>
+                        <button onclick="changeZoom(2)" style="padding: 2px 8px;">+</button>
                     </div>
 
                     <div style="width: 1px; height: 20px; background: var(--border);"></div>
@@ -541,7 +557,7 @@
     <script src="global.js"></script>
     <script>
         // --- CONFIG ---
-        const ZOOM = 15;
+        let ZOOM = 15;
         const DEFAULT_W = 32, DEFAULT_H = 32;
         
         // --- STATE ---
@@ -568,11 +584,11 @@
         let isDrawing = false;
         let startPos = {x: 0, y: 0};
         let currentPos = {x: 0, y: 0};
-        let snapshot = null; // Used for shape preview
+        let snapshot = null;
 
         // Selection state
-        let selection = null; // {x, y, w, h} or null
-        let clipboard = null; // ImageData
+        let selection = null;
+        let clipboard = null;
 
         // --- DOM ---
         const board = document.getElementById('board');
@@ -603,6 +619,13 @@
             addFrame(true);
             resizeProject(true);
             setupInput();
+        }
+
+        // --- ZOOM ---
+        function changeZoom(delta) {
+            ZOOM = Math.max(5, Math.min(30, ZOOM + delta));
+            document.getElementById('zoomDisplay').textContent = ZOOM + '×';
+            resizeProject(true);
         }
 
         // --- PROJECT DATA ---
@@ -743,7 +766,7 @@
             ctx.setLineDash([2, 2]);
             ctx.lineDashOffset = -offset;
             ctx.strokeStyle = 'white';
-            ctx.lineWidth = 0.5; // Scaled by CSS
+            ctx.lineWidth = 0.5;
             ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
             
             ctx.strokeStyle = 'black';
@@ -751,7 +774,6 @@
             ctx.strokeRect(selection.x + 0.5, selection.y + 0.5, selection.w, selection.h);
         }
 
-        // Animate selection marquee
         setInterval(renderSelection, 50);
 
         function updatePreview() {
@@ -844,7 +866,6 @@
         }
 
         function drawBrush(ctx, x, y) {
-            // Apply selection mask if active
             if(selection) {
                 if(x < selection.x || x >= selection.x + selection.w || 
                    y < selection.y || y >= selection.y + selection.h) return;
@@ -852,20 +873,8 @@
 
             ctx.fillStyle = currentColor;
             const offset = Math.floor(brushSize / 2);
-            // Fix: properly center brush
-            let startX = x - (brushSize % 2 === 0 ? offset - 1 : offset); 
-            let startY = y - (brushSize % 2 === 0 ? offset - 1 : offset);
-            
-            // Adjust for even brush sizes to match cursor
-            if (brushSize % 2 === 0) {
-                 // Even sizes logic: cursor is top-left of the 2x2 center block ideally
-                 // But simply centering based on floor is enough for now
-                 startX = x - Math.floor(brushSize/2);
-                 startY = y - Math.floor(brushSize/2);
-            } else {
-                 startX = x - Math.floor(brushSize/2);
-                 startY = y - Math.floor(brushSize/2);
-            }
+            const startX = x - offset;
+            const startY = y - offset;
             
             ctx.fillRect(startX, startY, brushSize, brushSize);
         }
@@ -919,11 +928,24 @@
             if(!clipboard) return;
             const ctx = getActiveCtx();
             if(!ctx) return;
-            // Paste at center or top left? selection x,y?
-            // Let's paste at top left of selection or 0,0
-            const x = selection ? selection.x : 0;
-            const y = selection ? selection.y : 0;
+            
+            // Get mouse position for paste or use selection origin or 0,0
+            let x = 0, y = 0;
+            if(selection) {
+                x = selection.x;
+                y = selection.y;
+            }
+            
             ctx.putImageData(clipboard, x, y);
+            
+            // Create new selection around pasted area
+            selection = {
+                x: x,
+                y: y,
+                w: clipboard.width,
+                h: clipboard.height
+            };
+            
             updateUI();
         }
 
@@ -932,23 +954,16 @@
             if(e.button !== 0) return;
             const p = getCoords(e);
             
-            // Check bounds
             if (p.x < 0 || p.x >= project.width || p.y < 0 || p.y >= project.height) return;
 
             isDrawing = true;
             startPos = p;
             currentPos = p;
             
-            // If selecting, clear old selection
             if (currentTool === 'select') {
                 selection = { x: p.x, y: p.y, w: 1, h: 1 };
                 renderSelection();
                 return;
-            }
-
-            // Click outside selection clears it (unless using move?)
-            if (currentTool !== 'select' && currentTool !== 'move' && selection) {
-                // If drawing inside selection, that's fine. Logic in drawBrush handles mask.
             }
 
             const ctx = getActiveCtx();
@@ -964,9 +979,8 @@
             if (currentTool === 'pencil') {
                 drawBrush(ctx, p.x, p.y);
             } else if (currentTool === 'eraser') {
-                const s = brushSize;
-                const offset = Math.floor(s/2);
-                ctx.clearRect(p.x - offset, p.y - offset, s, s);
+                const offset = Math.floor(brushSize/2);
+                ctx.clearRect(p.x - offset, p.y - offset, brushSize, brushSize);
             } else if (currentTool === 'fill') {
                 floodFill(ctx, p.x, p.y, currentColor);
             } else if (currentTool === 'picker') {
@@ -980,30 +994,43 @@
             const p = getCoords(e);
             currentPos = p;
             
-            // Render cursor (only if inside board)
+            // Render cursor with brush size
             const cx = cursorCanvas.getContext('2d');
             cx.clearRect(0,0,project.width, project.height);
             
             if (p.x >= 0 && p.x < project.width && p.y >= 0 && p.y < project.height) {
                 cx.strokeStyle = '#fff';
-                cx.lineWidth = 0.5;
-                const bOffset = Math.floor(brushSize/2);
-                cx.strokeRect(p.x - bOffset, p.y - bOffset, brushSize, brushSize);
+                cx.lineWidth = 0.15;
+                
+                // Draw cursor box matching brush size
+                const offset = Math.floor(brushSize/2);
+                const cursorX = p.x - offset;
+                const cursorY = p.y - offset;
+                
+                cx.strokeRect(cursorX, cursorY, brushSize, brushSize);
+                
+                // Add crosshair for center pixel
+                if(brushSize > 1) {
+                    cx.beginPath();
+                    cx.moveTo(p.x + 0.5, cursorY);
+                    cx.lineTo(p.x + 0.5, cursorY + brushSize);
+                    cx.moveTo(cursorX, p.y + 0.5);
+                    cx.lineTo(cursorX + brushSize, p.y + 0.5);
+                    cx.stroke();
+                }
             }
 
             if(!isDrawing) return;
 
-            // Selection Drag
             if (currentTool === 'select') {
                 const w = p.x - startPos.x;
                 const h = p.y - startPos.y;
                 selection = {
                     x: w >= 0 ? startPos.x : p.x,
                     y: h >= 0 ? startPos.y : p.y,
-                    w: Math.abs(w) + 1, // +1 because pixels
+                    w: Math.abs(w) + 1,
                     h: Math.abs(h) + 1
                 };
-                // Clamp selection to canvas
                 selection.x = Math.max(0, selection.x);
                 selection.y = Math.max(0, selection.y);
                 selection.w = Math.min(selection.w, project.width - selection.x);
@@ -1019,9 +1046,8 @@
                 drawLine(ctx, startPos.x, startPos.y, p.x, p.y);
                 startPos = p;
             } else if (currentTool === 'eraser') {
-                 const s = brushSize;
-                 const offset = Math.floor(s/2);
-                 ctx.clearRect(p.x - offset, p.y - offset, s, s);
+                 const offset = Math.floor(brushSize/2);
+                 ctx.clearRect(p.x - offset, p.y - offset, brushSize, brushSize);
             } else if (['line', 'rect', 'circle'].includes(currentTool)) {
                 if(snapshot) {
                     ctx.clearRect(0, 0, project.width, project.height);
@@ -1068,7 +1094,6 @@
                 const pos = (y*w + x)*4;
                 if(x<0||x>=w||y<0||y>=h) continue;
                 if(selection) {
-                    // Bounds check for selection
                     if (x < selection.x || x >= selection.x + selection.w || y < selection.y || y >= selection.y + selection.h) continue;
                 }
 
@@ -1122,7 +1147,6 @@
             document.addEventListener('keydown', e => {
                 if(e.target.tagName === 'INPUT') return;
                 
-                // Ctrl combinations
                 if (e.ctrlKey) {
                     switch(e.key.toLowerCase()) {
                         case 'x': cutSelection(); e.preventDefault(); break;
@@ -1162,6 +1186,14 @@
                         break;
                 }
             });
+            
+            // Mouse wheel zoom
+            board.addEventListener('wheel', e => {
+                if(e.ctrlKey) {
+                    e.preventDefault();
+                    changeZoom(e.deltaY < 0 ? 2 : -2);
+                }
+            }, { passive: false });
         }
 
         function selectColor(hex) {
@@ -1175,9 +1207,6 @@
             document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
             const btn = document.querySelector(`[onclick="setTool('${t}')"]`);
             if(btn) btn.classList.add('active');
-            
-            // If tool is not select, but we have a selection, keep it (allows painting inside selection)
-            // If tool is move, we might move the pixels inside selection (not implemented fully, currently moves whole layer)
         }
 
         function togglePlay() {
