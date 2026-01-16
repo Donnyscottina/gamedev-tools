@@ -84,20 +84,25 @@ main {
     background: #1a201a;
     z-index: 10;
 }
+.card-preview {
+    padding: 0;          /* Без отступа */
+    object-fit: cover;   /* Заполнить всё (обрезать лишнее) */
+    background: transparent;
+}
 
-/* --- СТИЛЬ ПРЕВЬЮ --- */
+/* --- СТИЛЬ ПРЕВЬЮ --- 
 .card-preview {
     width: 100%;
-    /* Фиксированная высота для единообразия, или auto */
+  
     height: 200px; 
-    object-fit: contain; /* Картинка влезает целиком */
-    background: #000;    /* Черный фон под картинкой */
+    object-fit: contain; 
+    background: #000;    
     border: 1px solid #2a2f2a;
     margin-bottom: 24px;
     border-radius: 4px;
-    padding: 10px;       /* Отступ внутри рамки */
+    padding: 10px;     
 }
-
+*/
 .card:hover .card-preview {
     border-color: #555;
 }
