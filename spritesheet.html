@@ -4,28 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sprite Sheet Packer Pro</title>
+    <link href="style.css" rel="stylesheet">
     <style>
-        :root {
-            --bg-color: #1e1e1e;
-            --panel-bg: #252526;
-            --text-color: #d4d4d4;
-            --accent: #007acc;
-            --border: #3e3e42;
+        /* Tool Specific Overrides */
+        body {
+            /* Override style.css body to ensure full height for the app layout */
+            height: 100vh;
+            overflow: hidden; /* Hide scrollbars on body, scroll inside containers */
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            margin: 0;
+        .app-container {
             display: flex;
-            height: 100vh;
-            overflow: hidden;
+            flex: 1;
+            overflow: hidden; /* Prevent spillover */
+            height: 100%;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
         }
 
         .sidebar {
             width: 320px;
-            background-color: var(--panel-bg);
+            background-color: var(--panel);
             border-right: 1px solid var(--border);
             padding: 20px;
             display: flex;
@@ -35,75 +34,43 @@
             flex-shrink: 0;
         }
 
-        h2, h3 { margin: 0 0 10px 0; font-weight: 500; }
-        h3 { font-size: 14px; text-transform: uppercase; color: #888; margin-top: 10px; }
+        h2, h3 { margin: 0 0 10px 0; font-weight: normal; }
+        h3 { font-size: 10px; text-transform: uppercase; color: var(--muted); margin-top: 10px; }
+        h2 { font-size: 14px; color: var(--accent); }
 
         .control-group {
             display: flex;
             flex-direction: column;
             gap: 8px;
-            background: rgba(0,0,0,0.1);
+            background: rgba(0,0,0,0.2);
             padding: 10px;
-            border-radius: 4px;
+            border: 1px solid var(--border);
         }
 
-        label { font-size: 13px; display: flex; align-items: center; gap: 8px; }
-        
-        input[type="number"], input[type="color"], select {
-            background: #3c3c3c;
-            border: 1px solid #3c3c3c;
-            color: white;
-            padding: 5px;
-            border-radius: 3px;
-            width: 100%;
-            box-sizing: border-box;
-        }
-        
-        /* Скрываем спиннеры у number input */
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; margin: 0; 
-        }
-
-        input[type="file"] { display: none; }
-
-        .btn {
-            background-color: var(--accent);
-            color: white;
-            border: none;
-            padding: 10px;
-            cursor: pointer;
-            border-radius: 3px;
-            font-size: 14px;
-            text-align: center;
-            transition: background 0.2s;
-            width: 100%;
-        }
-        .btn:hover { background-color: #0062a3; }
-        .btn-secondary { background-color: #3e3e42; }
-        .btn-secondary:hover { background-color: #4e4e52; }
-        
         .file-drop-area {
             border: 2px dashed var(--border);
-            border-radius: 5px;
             padding: 20px;
             text-align: center;
             cursor: pointer;
             transition: all 0.2s;
+            font-size: 10px;
+            color: var(--muted);
         }
-        .file-drop-area:hover { border-color: var(--accent); background: rgba(0,122,204,0.1); }
+        .file-drop-area:hover { border-color: var(--accent); background: rgba(156, 255, 138, 0.1); }
 
         .main-content {
             flex-grow: 1;
             display: flex;
             flex-direction: column;
             padding: 20px;
+            background-color: #1a1a1a;
             background-image: 
-                linear-gradient(45deg, #2a2a2a 25%, transparent 25%), 
-                linear-gradient(-45deg, #2a2a2a 25%, transparent 25%), 
-                linear-gradient(45deg, transparent 75%, #2a2a2a 75%), 
-                linear-gradient(-45deg, transparent 75%, #2a2a2a 75%);
+                linear-gradient(45deg, #222 25%, transparent 25%), 
+                linear-gradient(-45deg, #222 25%, transparent 25%), 
+                linear-gradient(45deg, transparent 75%, #222 75%), 
+                linear-gradient(-45deg, transparent 75%, #222 75%);
             background-size: 20px 20px;
+            overflow: hidden;
         }
 
         .canvas-container {
@@ -113,7 +80,7 @@
             align-items: center;
             overflow: auto;
             border: 1px solid var(--border);
-            background: rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.5);
             position: relative;
         }
 
@@ -128,110 +95,113 @@
         }
 
         .file-list {
-            font-size: 12px;
-            color: #aaa;
+            font-size: 8px;
+            color: var(--text);
             max-height: 80px;
             overflow-y: auto;
         }
-        .info-row { display: flex; justify-content: space-between; font-size: 12px; color: #888; }
         
         .mode-switch {
             display: flex;
-            background: #3e3e42;
-            border-radius: 4px;
+            background: var(--bg);
+            border: 1px solid var(--border);
             padding: 2px;
             margin-bottom: 10px;
         }
         .mode-btn {
             flex: 1;
-            padding: 5px;
+            padding: 8px;
             text-align: center;
             cursor: pointer;
-            font-size: 13px;
-            border-radius: 3px;
+            font-size: 10px;
         }
         .mode-btn.active {
             background: var(--accent);
-            color: white;
-            font-weight: bold;
+            color: var(--bg);
         }
     </style>
 </head>
 <body>
+    
+    <!-- Header injected by global.js -->
 
-    <div class="sidebar">
-        <h2>Sprite Packer Pro</h2>
-        
-        <div class="control-group">
-            <input type="file" id="fileInput" multiple accept="image/*">
-            <div class="file-drop-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
-                Перетащите файлы сюда
+    <div class="app-container">
+        <div class="sidebar">
+            <h2>Sprite Packer</h2>
+            
+            <div class="control-group">
+                <input type="file" id="fileInput" multiple accept="image/*" style="display:none">
+                <div class="file-drop-area" id="dropArea" onclick="document.getElementById('fileInput').click()">
+                    Drag & Drop Files
+                </div>
+                <div class="file-list" id="fileList"></div>
+                <button class="btn" onclick="clearImages()" style="margin-top:5px; padding: 5px; font-size: 8px;">Очистить</button>
             </div>
-            <div class="file-list" id="fileList"></div>
-            <button class="btn btn-secondary" onclick="clearImages()" style="margin-top:5px; padding: 5px;">Очистить</button>
-        </div>
 
-        <h3>Режим упаковки</h3>
-        <div class="mode-switch">
-            <div class="mode-btn active" onclick="setMode('grid')" id="btn-grid">Сетка (Grid)</div>
-            <div class="mode-btn" onclick="setMode('bin')" id="btn-bin">Умный (Bin)</div>
-        </div>
-
-        <!-- Настройки Сетки (видны только в Grid режиме) -->
-        <div id="grid-settings" class="control-group">
-            <div class="info-row"><span>Настройки ячеек</span></div>
-            <label>
-                <input type="checkbox" id="autoSize" checked onchange="toggleGridInputs()"> 
-                Размер по макс. спрайту
-            </label>
-            <div id="manualGridInputs" style="display:none; gap: 5px;">
-                <input type="number" id="cellWidth" placeholder="W" value="64">
-                <input type="number" id="cellHeight" placeholder="H" value="64">
+            <h3>Режим упаковки</h3>
+            <div class="mode-switch">
+                <div class="mode-btn active" onclick="setMode('grid')" id="btn-grid">Grid</div>
+                <div class="mode-btn" onclick="setMode('bin')" id="btn-bin">Smart</div>
             </div>
-            <label>Колонок (0 = Авто):</label>
-            <input type="number" id="colCount" value="0" min="0">
+
+            <!-- Настройки Сетки -->
+            <div id="grid-settings" class="control-group">
+                <label>
+                    <input type="checkbox" id="autoSize" checked onchange="toggleGridInputs()"> 
+                    Auto Size
+                </label>
+                <div id="manualGridInputs" style="display:none; gap: 5px;">
+                    <input type="number" id="cellWidth" placeholder="W" value="64">
+                    <input type="number" id="cellHeight" placeholder="H" value="64">
+                </div>
+                <label>Cols (0=Auto):</label>
+                <input type="number" id="colCount" value="0" min="0">
+            </div>
+
+            <!-- Настройки Умной упаковки -->
+            <div id="bin-settings" class="control-group" style="display:none;">
+                <label>Sort:</label>
+                <select id="sortMethod">
+                    <option value="maxSide">Max Side</option>
+                    <option value="area">Area</option>
+                    <option value="width">Width</option>
+                    <option value="height">Height</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label>Padding:</label>
+                <input type="number" id="padding" value="2" min="0">
+            </div>
+
+            <h3>Экспорт</h3>
+            <div class="control-group">
+                <label><input type="checkbox" id="pixelArtMode" checked> Pixel Art</label>
+                <label><input type="checkbox" id="showBorders"> Borders</label>
+                <label>
+                    <input type="checkbox" id="useBgColor"> 
+                    Bg Color
+                    <input type="color" id="bgColor" value="#00ff00" disabled style="width:30px; height:20px; padding:0; margin-left: auto;">
+                </label>
+            </div>
+            
+            <div style="margin-top: auto;">
+                <div id="status" style="margin-bottom: 10px; font-size: 10px; text-align: center; color: var(--muted);"></div>
+                <button class="btn" onclick="downloadSprite()">Download PNG</button>
+                <button class="btn" onclick="downloadJSON()" style="margin-top: 5px; background: var(--panel);">Download JSON</button>
+            </div>
         </div>
 
-        <!-- Настройки Умной упаковки (видны только в Bin режиме) -->
-        <div id="bin-settings" class="control-group" style="display:none;">
-            <div class="info-row"><span>Алгоритм MaxRects</span></div>
-            <label>Сортировка:</label>
-            <select id="sortMethod">
-                <option value="maxSide">По макс. стороне</option>
-                <option value="area">По площади</option>
-                <option value="width">По ширине</option>
-                <option value="height">По высоте</option>
-            </select>
-        </div>
-
-        <div class="control-group">
-            <label>Отступ (Padding):</label>
-            <input type="number" id="padding" value="2" min="0">
-        </div>
-
-        <h3>Экспорт</h3>
-        <div class="control-group">
-            <label><input type="checkbox" id="pixelArtMode" checked> Pixel Art (без сглаживания)</label>
-            <label><input type="checkbox" id="showBorders"> Показать границы</label>
-            <label>
-                <input type="checkbox" id="useBgColor"> 
-                Фон: <input type="color" id="bgColor" value="#00ff00" disabled style="width:50px; height:20px; padding:0;">
-            </label>
-        </div>
-        
-        <div style="margin-top: auto;">
-            <div id="status" style="margin-bottom: 10px; font-size: 12px; text-align: center; color: #888;"></div>
-            <button class="btn" onclick="downloadSprite()">Скачать PNG</button>
-            <button class="btn btn-secondary" onclick="downloadJSON()" style="margin-top: 5px;">Скачать JSON (Координаты)</button>
+        <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="previewCanvas"></canvas>
+            </div>
         </div>
     </div>
 
-    <div class="main-content">
-        <div class="canvas-container">
-            <canvas id="previewCanvas"></canvas>
-        </div>
-    </div>
+    <!-- Footer injected by global.js -->
 
+    <script src="global.js"></script>
     <script>
         // --- Глобальные переменные ---
         let imagesData = []; 
@@ -272,11 +242,11 @@
                 dropArea.addEventListener(eventName, e => { e.preventDefault(); e.stopPropagation(); }, false);
             });
 
-            dropArea.addEventListener('dragenter', () => dropArea.style.borderColor = '#007acc');
-            dropArea.addEventListener('dragleave', () => dropArea.style.borderColor = '#3e3e42');
+            dropArea.addEventListener('dragenter', () => dropArea.style.borderColor = '#9cff8a');
+            dropArea.addEventListener('dragleave', () => dropArea.style.borderColor = '#3a3f3a');
             
             dropArea.addEventListener('drop', e => {
-                dropArea.style.borderColor = '#3e3e42';
+                dropArea.style.borderColor = '#3a3f3a';
                 handleFiles(e.dataTransfer.files);
             });
             
@@ -326,7 +296,7 @@
             const list = document.getElementById('fileList');
             list.innerHTML = imagesData.map(d => 
                 `<div class="file-item" style="display:flex; justify-content:space-between; padding:2px 0;">
-                    <span>${d.name}</span> <span style="color:#666">${d.w}x${d.h}</span>
+                    <span>${d.name}</span> <span style="color:var(--muted)">${d.w}x${d.h}</span>
                 </div>`
             ).join('');
         }
@@ -394,14 +364,12 @@
                 });
 
                 let x = padding, y = padding, currentRowH = 0;
-                // Грубая оценка ширины канваса (квадратный корень из площади всех картинок)
+                // Грубая оценка ширины канваса
                 const totalArea = sorted.reduce((sum, img) => sum + (img.w + padding)*(img.h + padding), 0);
                 const maxWidth = Math.max(Math.sqrt(totalArea) * 1.5, Math.max(...sorted.map(i => i.w))) + padding * 2;
                 
-                // Простейший алгоритм "Полка" (Shelf)
                 sorted.forEach(d => {
                     if (x + d.w + padding > maxWidth) {
-                        // Перенос строки
                         x = padding;
                         y += currentRowH + padding;
                         currentRowH = 0;
@@ -444,7 +412,7 @@
                 if (showBorders) ctx.strokeRect(Math.floor(item.x), Math.floor(item.y), item.w, item.h);
             });
 
-            document.getElementById('status').innerText = `${finalW}x${finalH}px | Спрайтов: ${layout.length}`;
+            document.getElementById('status').innerText = `${finalW}x${finalH}px | Count: ${layout.length}`;
         }
 
         function downloadSprite() {
