@@ -47,6 +47,7 @@ header {
 header h1 {
     font-size: 20px;
     margin-bottom: 20px;
+    text-shadow: 2px 2px 0 #000;
 }
 
 header p {
@@ -66,62 +67,131 @@ main {
 
 .grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-    gap: 20px;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 24px;
 }
 
 /* ===== Cards ===== */
 .card {
     background: var(--panel);
     border: 2px solid var(--border);
-    padding: 20px;
+    padding: 24px;
     text-decoration: none;
     color: inherit;
     position: relative;
-    transition: all 0.15s steps(2);
-}
-
-.card::before {
-    content: ">";
-    position: absolute;
-    left: 8px;
-    top: 8px;
-    opacity: 0;
-    color: var(--accent);
+    transition: all 0.1s steps(2);
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
 }
 
 .card:hover {
     border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 4px 0 rgba(0,0,0,0.5);
     background: #1a201a;
 }
 
-.card:hover::before {
-    opacity: 1;
+.card:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
-.icon {
-    font-size: 18px;
-    margin-bottom: 12px;
+/* --- PIXEL ART CSS ICONS --- */
+.pixel-icon {
+    width: 4px; height: 4px;
+    display: inline-block;
+    margin-bottom: 24px;
+    position: relative;
+    top: 4px; left: 4px; /* Center adjustment */
+}
+
+/* Icon 1: Sprite Packer (Box) */
+.icon-box {
+    box-shadow: 
+        4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent),
+        0 4px var(--accent), 16px 4px var(--accent),
+        0 8px var(--accent), 4px 8px var(--accent), 12px 8px var(--accent), 16px 8px var(--accent),
+        0 12px var(--accent), 16px 12px var(--accent),
+        4px 16px var(--accent), 8px 16px var(--accent), 12px 16px var(--accent);
+    width: 1px; height: 1px;
+}
+
+/* Icon 2: Palette (Palette) */
+.icon-palette {
+    box-shadow: 
+        4px 0 #fff, 8px 0 #fff, 
+        0 4px #fff, 12px 4px #fff,
+        0 8px #fff, 4px 8px var(--accent), 8px 8px #fff, 12px 8px #fff,
+        4px 12px #fff, 8px 12px #fff;
+    width: 1px; height: 1px; color: var(--accent);
+}
+
+/* Icon 3: Brush (Pencil) */
+.icon-brush {
+    box-shadow: 
+        12px 0 var(--accent), 
+        8px 4px var(--accent), 12px 4px var(--muted),
+        4px 8px var(--accent), 8px 8px var(--muted),
+        0 12px var(--accent), 4px 12px var(--accent), 
+        0 16px var(--accent);
+    width: 1px; height: 1px;
+}
+
+/* Icon 4: Sound (Note) */
+.icon-sound {
+    box-shadow: 
+        4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent),
+        4px 4px var(--accent), 12px 4px var(--accent),
+        4px 8px var(--accent), 12px 8px var(--accent),
+        0 12px var(--accent), 4px 12px var(--accent), 8px 12px var(--accent), 12px 12px var(--accent);
+    width: 1px; height: 1px;
+}
+
+/* Icon 5: Brain (Quantization) */
+.icon-brain {
+    box-shadow: 
+        4px 0 var(--accent), 8px 0 var(--accent), 
+        0 4px var(--accent), 12px 4px var(--accent),
+        0 8px var(--accent), 8px 8px var(--accent), 12px 8px var(--accent),
+        4px 12px var(--accent), 8px 12px var(--accent);
+    width: 1px; height: 1px;
+}
+
+/* Icon 6: Reducer (Filter) */
+.icon-filter {
+    box-shadow: 
+        0 0 var(--accent), 4px 0 var(--accent), 8px 0 var(--accent), 12px 0 var(--accent), 16px 0 var(--accent),
+        4px 4px var(--accent), 8px 4px var(--accent), 12px 4px var(--accent),
+        8px 8px var(--accent),
+        8px 12px var(--accent),
+        8px 16px var(--accent);
+    width: 1px; height: 1px;
 }
 
 .title {
     font-size: 12px;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     color: var(--accent);
+    text-transform: uppercase;
+    letter-spacing: 1px;
 }
 
 .desc {
     font-size: 9px;
-    line-height: 1.7;
+    line-height: 1.8;
     color: var(--muted);
 }
 
 /* ===== Footer ===== */
 footer {
     text-align: center;
-    padding: 30px 16px;
+    padding: 40px 16px;
     font-size: 8px;
     color: var(--muted);
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    background: #0d110d;
 }
 </style>
 </head>
@@ -131,7 +201,8 @@ footer {
 <header>
     <h1>GAMEDEV TOOLS</h1>
     <p>
-       Полезности для 2д графики
+       // DONNYSCOTTINA HUB v1.0 <br>
+       [SYSTEM READY]
     </p>
 </header>
 
@@ -139,7 +210,7 @@ footer {
      <div class="grid">
 
         <a href="spritesheet.html" class="card">
-            <div class="icon">🍱</div>
+            <div class="pixel-icon icon-box"></div>
             <div class="title">Sprite Packer</div>
             <div class="desc">
                 Сборка спрайтшитов и атласов из отдельных изображений.
@@ -147,7 +218,7 @@ footer {
         </a>
 
         <a href="palette.html" class="card">
-            <div class="icon">🎨</div>
+            <div class="pixel-icon icon-palette"></div>
             <div class="title">Palette Extractor</div>
             <div class="desc">
                 Быстрое извлечение цветовой палитры из любых изображений.
@@ -155,7 +226,7 @@ footer {
         </a>
 
         <a href="pixelart.html" class="card">
-            <div class="icon">🖌️</div>
+            <div class="pixel-icon icon-brush"></div>
             <div class="title">Pixel Art Editor</div>
             <div class="desc">
                 Рисование пиксель-арта прямо в браузере.
@@ -163,33 +234,34 @@ footer {
         </a>
 
         <a href="sfx.html" class="card">
-            <div class="icon">🔊</div>
+            <div class="pixel-icon icon-sound"></div>
             <div class="title">8-Bit SFX</div>
             <div class="desc">
-                Генерация ретро-звуков для игр
+                Генерация ретро-звуков для игр (Bfxr style).
             </div>
         </a>
 
-        <a href="ColorQuantization.html" class="card">
-            <div class="icon">🧠</div>
-            <div class="title">Color Quantization</div>
+        <a href="palette-remap.html" class="card">
+            <div class="pixel-icon icon-brain"></div>
+            <div class="title">Palette Remapper</div>
             <div class="desc">
-                Умное упрощение цветов для ретро-стиля,
-                оптимизации и пиксельной графики.
+                Умное упрощение цветов и замена палитры спрайтов.
             </div>
         </a>
+        
         <a href="palette-reducer.html" class="card">
-            <div class="icon">🧠</div>
+            <div class="pixel-icon icon-filter"></div>
             <div class="title">Palette Reducer</div>
             <div class="desc">
-                Схлапывание смежных цветов
+                Сжатие количества цветов (Median Cut Algorithm).
             </div>
         </a>
     </div>
 </main>
 
 <footer>
-    
+    © 2026 DONNYSCOTTINA INC. ALL RIGHTS RESERVED. <br>
+    POWERED BY COFFEE AND PIXELS.
 </footer>
 
 </body>
