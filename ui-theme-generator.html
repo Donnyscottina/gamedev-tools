@@ -3,58 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UI Theme Generator</title>
+    <title>UI Theme Generator Pro</title>
     <link href="style.css" rel="stylesheet">
     <style>
-        .tool-container { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-top: 20px; }
-        @media (max-width: 1024px) { .tool-container { grid-template-columns: 1fr; } }
+        .tool-container { display: grid; grid-template-columns: 380px 1fr; gap: 25px; margin-top: 20px; }
+        @media (max-width: 1200px) { .tool-container { grid-template-columns: 1fr; } }
         
         /* Controls Section */
-        .controls-panel { background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .controls-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
         .color-input-group { margin-bottom: 25px; }
-        .color-input-group label { display: block; margin-bottom: 8px; font-weight: 500; }
-        .color-picker-wrapper { display: flex; gap: 10px; align-items: center; }
-        .color-picker { width: 80px; height: 80px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; }
-        .hex-input { flex: 1; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 4px; font-family: monospace; font-size: 16px; }
+        .color-input-group label { display: block; margin-bottom: 10px; font-weight: 600; font-size: 14px; }
+        .color-picker-wrapper { display: flex; gap: 12px; align-items: center; }
+        .color-picker { width: 70px; height: 70px; border: 3px solid var(--border); border-radius: 10px; cursor: pointer; transition: all 0.2s; }
+        .color-picker:hover { transform: scale(1.05); border-color: var(--accent); }
+        .hex-input { flex: 1; padding: 12px; border: 2px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; }
+        .hex-input:focus { outline: none; border-color: var(--accent); }
         
-        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
-        .mode-btn { flex: 1; padding: 10px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        /* Scheme Selector */
+        .scheme-selector { margin-bottom: 25px; }
+        .scheme-selector h4 { margin-bottom: 12px; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .scheme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+        .scheme-btn { padding: 12px 8px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 12px; font-weight: 500; text-align: center; }
+        .scheme-btn:hover { border-color: var(--accent); background: rgba(0,122,204,0.05); }
+        .scheme-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 25px; }
+        .mode-btn { flex: 1; padding: 14px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 8px; cursor: pointer; transition: all 0.2s; font-weight: 600; }
+        .mode-btn:hover { border-color: var(--accent); }
         .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
         
         /* Palette Display */
-        .palette-section { margin-top: 20px; }
-        .palette-section h4 { margin-bottom: 12px; font-size: 14px; color: #888; }
-        .color-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
-        .color-swatch { width: 40px; height: 40px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
-        .color-label { flex: 1; font-size: 13px; }
-        .color-value { font-family: monospace; font-size: 12px; color: #888; cursor: pointer; }
-        .color-value:hover { color: var(--accent); }
+        .palette-section { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .palette-section h4 { margin-bottom: 15px; font-size: 12px; color: #888; text-transform: uppercase; letter-spacing: 0.8px; }
+        .color-row { display: flex; gap: 10px; margin-bottom: 10px; align-items: center; padding: 8px; border-radius: 6px; transition: background 0.2s; }
+        .color-row:hover { background: rgba(0,122,204,0.03); }
+        .color-swatch { width: 50px; height: 50px; border-radius: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 2px 8px rgba(0,0,0,0.15); transition: all 0.2s; position: relative; overflow: hidden; }
+        .color-swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.25); }
+        .color-swatch::before { content: ''; position: absolute; top: 0; left: 0; right: 0; bottom: 0; background: linear-gradient(135deg, transparent 40%, rgba(255,255,255,0.1) 100%); }
+        .color-info { flex: 1; }
+        .color-label { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+        .color-meta { display: flex; gap: 8px; align-items: center; }
+        .color-value { font-family: 'Courier New', monospace; font-size: 11px; color: #888; cursor: pointer; padding: 3px 6px; background: rgba(0,122,204,0.05); border-radius: 3px; }
+        .color-value:hover { color: var(--accent); background: rgba(0,122,204,0.1); }
+        .contrast-badge { font-size: 10px; padding: 3px 6px; border-radius: 3px; font-weight: 600; }
+        .contrast-aaa { background: #28a745; color: white; }
+        .contrast-aa { background: #ffc107; color: #000; }
+        .contrast-fail { background: #dc3545; color: white; }
         
         /* Preview Section */
-        .preview-panel { background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .preview-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
+        .preview-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .preview-header h3 { margin: 0; }
         .preview-mode { display: none; }
         .preview-mode.active { display: block; }
         
         /* UI Preview Styles */
-        .ui-preview { padding: 30px; border-radius: 8px; }
-        .ui-header { padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; }
-        .ui-content { padding: 20px; border-radius: 6px; margin-bottom: 20px; }
-        .ui-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
-        .ui-btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
-        .ui-alerts { display: flex; flex-direction: column; gap: 10px; }
-        .ui-alert { padding: 12px 16px; border-radius: 4px; border-left: 4px solid; font-size: 14px; }
-        .ui-input { width: 100%; padding: 10px; border-radius: 4px; font-size: 14px; margin-top: 10px; }
-        .ui-card { padding: 20px; border-radius: 6px; margin-bottom: 15px; border: 1px solid; }
+        .ui-preview { padding: 30px; border-radius: 12px; transition: all 0.3s; }
+        .ui-nav { padding: 18px 24px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .ui-nav-title { font-weight: 700; font-size: 18px; }
+        .ui-nav-links { display: flex; gap: 20px; font-size: 14px; }
+        .ui-content { padding: 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
+        .ui-heading { margin: 0 0 12px 0; font-size: 20px; font-weight: 700; }
+        .ui-text { margin: 0 0 15px 0; line-height: 1.6; }
+        .ui-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
+        .ui-btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
+        .ui-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .ui-btn:active { transform: translateY(0); }
+        .ui-alerts { display: grid; gap: 12px; margin: 20px 0; }
+        .ui-alert { padding: 16px 20px; border-radius: 8px; border-left: 4px solid; font-size: 14px; display: flex; align-items: center; gap: 12px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); }
+        .ui-alert-icon { font-size: 20px; }
+        .ui-input { width: 100%; padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 12px; border: 2px solid; transition: all 0.2s; }
+        .ui-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(0,122,204,0.1); }
+        .ui-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; margin-top: 20px; }
+        .ui-card { padding: 20px; border-radius: 10px; border: 1px solid; transition: all 0.2s; }
+        .ui-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .ui-card-title { margin: 0 0 8px 0; font-size: 16px; font-weight: 700; }
+        .ui-card-text { margin: 0; font-size: 13px; line-height: 1.5; }
         
-        /* Export Button */
-        .export-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 20px; }
-        .export-btn:hover { opacity: 0.9; }
+        /* Export Section */
+        .export-section { margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border); }
+        .export-btn { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
+        .export-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .export-options { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+        .export-option { padding: 10px; background: var(--panel); border: 1px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-size: 12px; transition: all 0.2s; }
+        .export-option:hover { border-color: var(--accent); background: rgba(0,122,204,0.05); }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🎨 UI Theme Generator</h2>
-        <p style="color: #888; margin-bottom: 20px;">Выбери базовый цвет — получи полную палитру для интерфейса</p>
+        <h2>🎨 UI Theme Generator Pro</h2>
+        <p style="color: #888; margin-bottom: 20px;">Генератор цветовых схем с теорией цвета и расчетом контрастности WCAG</p>
         
         <div class="tool-container">
             <!-- Controls -->
@@ -63,7 +101,19 @@
                     <label>Базовый цвет</label>
                     <div class="color-picker-wrapper">
                         <input type="color" id="primaryColor" class="color-picker" value="#007acc">
-                        <input type="text" id="primaryHex" class="hex-input" value="#007acc">
+                        <input type="text" id="primaryHex" class="hex-input" value="#007acc" maxlength="7">
+                    </div>
+                </div>
+                
+                <div class="scheme-selector">
+                    <h4>Цветовая схема</h4>
+                    <div class="scheme-grid">
+                        <button class="scheme-btn active" data-scheme="monochromatic">Монохромная</button>
+                        <button class="scheme-btn" data-scheme="complementary">Комплементарная</button>
+                        <button class="scheme-btn" data-scheme="analogous">Аналоговая</button>
+                        <button class="scheme-btn" data-scheme="triadic">Триадная</button>
+                        <button class="scheme-btn" data-scheme="split">Сплит-комплемент</button>
+                        <button class="scheme-btn" data-scheme="tetradic">Тетрадная</button>
                     </div>
                 </div>
                 
@@ -74,25 +124,35 @@
                 
                 <!-- Generated Palette -->
                 <div class="palette-section">
-                    <h4>ОСНОВНЫЕ ЦВЕТА</h4>
+                    <h4>Основные цвета</h4>
                     <div id="primaryPalette"></div>
                     
-                    <h4 style="margin-top: 20px;">СОСТОЯНИЯ</h4>
+                    <h4 style="margin-top: 20px;">Состояния элементов</h4>
                     <div id="statesPalette"></div>
                     
-                    <h4 style="margin-top: 20px;">ФОНЫ И ТЕКСТ</h4>
+                    <h4 style="margin-top: 20px;">Фоны и границы</h4>
                     <div id="basePalette"></div>
                     
-                    <h4 style="margin-top: 20px;">УВЕДОМЛЕНИЯ</h4>
+                    <h4 style="margin-top: 20px;">Семантические цвета</h4>
                     <div id="alertsPalette"></div>
                 </div>
                 
-                <button class="export-btn" onclick="exportPalette()">📋 Экспортировать CSS</button>
+                <div class="export-section">
+                    <button class="export-btn" onclick="exportPalette('css')">📋 Экспортировать CSS</button>
+                    <div class="export-options">
+                        <div class="export-option" onclick="exportPalette('scss')">SCSS</div>
+                        <div class="export-option" onclick="exportPalette('json')">JSON</div>
+                        <div class="export-option" onclick="exportPalette('tailwind')">Tailwind</div>
+                        <div class="export-option" onclick="exportPalette('figma')">Figma</div>
+                    </div>
+                </div>
             </div>
             
             <!-- Preview -->
             <div class="preview-panel">
-                <h3>Предварительный просмотр</h3>
+                <div class="preview-header">
+                    <h3>Предварительный просмотр</h3>
+                </div>
                 
                 <div class="preview-mode active" id="lightPreview">
                     <div class="ui-preview" id="lightUI"></div>
@@ -108,18 +168,20 @@
     <script src="global.js"></script>
     <script>
         let currentMode = 'light';
+        let currentScheme = 'monochromatic';
         let currentPalette = {};
         
         // Initialize
         document.getElementById('primaryColor').addEventListener('input', e => {
-            document.getElementById('primaryHex').value = e.target.value;
+            document.getElementById('primaryHex').value = e.target.value.toUpperCase();
             generateTheme(e.target.value);
         });
         
         document.getElementById('primaryHex').addEventListener('input', e => {
-            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
-                document.getElementById('primaryColor').value = e.target.value;
-                generateTheme(e.target.value);
+            const val = e.target.value.toUpperCase();
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                document.getElementById('primaryColor').value = val;
+                generateTheme(val);
             }
         });
         
@@ -134,7 +196,16 @@
             });
         });
         
-        // Color generation functions
+        document.querySelectorAll('.scheme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.scheme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentScheme = btn.dataset.scheme;
+                generateTheme(document.getElementById('primaryColor').value);
+            });
+        });
+        
+        // Color conversion utilities
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
             return result ? {
@@ -145,68 +216,214 @@
         }
         
         function rgbToHex(r, g, b) {
-            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1).toUpperCase();
         }
         
-        function adjustColor(hex, amount) {
+        function hexToHsl(hex) {
             const rgb = hexToRgb(hex);
-            const r = Math.max(0, Math.min(255, rgb.r + amount));
-            const g = Math.max(0, Math.min(255, rgb.g + amount));
-            const b = Math.max(0, Math.min(255, rgb.b + amount));
-            return rgbToHex(r, g, b);
+            const r = rgb.r / 255, g = rgb.g / 255, b = rgb.b / 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            
+            if (max === min) {
+                h = s = 0;
+            } else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: h * 360, s: s * 100, l: l * 100 };
         }
         
-        function saturate(hex, amount) {
-            const rgb = hexToRgb(hex);
-            const max = Math.max(rgb.r, rgb.g, rgb.b);
-            const min = Math.min(rgb.r, rgb.g, rgb.b);
-            const delta = max - min;
+        function hslToHex(h, s, l) {
+            s /= 100; l /= 100;
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r = 0, g = 0, b = 0;
             
-            if (delta === 0) return hex;
-            
-            const scale = amount / 100;
-            const r = Math.round(rgb.r + (rgb.r - (rgb.r + rgb.g + rgb.b) / 3) * scale);
-            const g = Math.round(rgb.g + (rgb.g - (rgb.r + rgb.g + rgb.b) / 3) * scale);
-            const b = Math.round(rgb.b + (rgb.b - (rgb.r + rgb.g + rgb.b) / 3) * scale);
+            if (0 <= h && h < 60) { r = c; g = x; b = 0; }
+            else if (60 <= h && h < 120) { r = x; g = c; b = 0; }
+            else if (120 <= h && h < 180) { r = 0; g = c; b = x; }
+            else if (180 <= h && h < 240) { r = 0; g = x; b = c; }
+            else if (240 <= h && h < 300) { r = x; g = 0; b = c; }
+            else if (300 <= h && h < 360) { r = c; g = 0; b = x; }
             
             return rgbToHex(
-                Math.max(0, Math.min(255, r)),
-                Math.max(0, Math.min(255, g)),
-                Math.max(0, Math.min(255, b))
+                Math.round((r + m) * 255),
+                Math.round((g + m) * 255),
+                Math.round((b + m) * 255)
             );
+        }
+        
+        // Color manipulation
+        function adjustLightness(hex, amount) {
+            const hsl = hexToHsl(hex);
+            hsl.l = Math.max(0, Math.min(100, hsl.l + amount));
+            return hslToHex(hsl.h, hsl.s, hsl.l);
+        }
+        
+        function adjustSaturation(hex, amount) {
+            const hsl = hexToHsl(hex);
+            hsl.s = Math.max(0, Math.min(100, hsl.s + amount));
+            return hslToHex(hsl.h, hsl.s, hsl.l);
+        }
+        
+        function rotateHue(hex, degrees) {
+            const hsl = hexToHsl(hex);
+            hsl.h = (hsl.h + degrees + 360) % 360;
+            return hslToHex(hsl.h, hsl.s, hsl.l);
+        }
+        
+        // WCAG Contrast calculation
+        function getLuminance(hex) {
+            const rgb = hexToRgb(hex);
+            const [r, g, b] = [rgb.r, rgb.g, rgb.b].map(val => {
+                val /= 255;
+                return val <= 0.03928 ? val / 12.92 : Math.pow((val + 0.055) / 1.055, 2.4);
+            });
+            return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+        }
+        
+        function getContrastRatio(hex1, hex2) {
+            const lum1 = getLuminance(hex1);
+            const lum2 = getLuminance(hex2);
+            const lighter = Math.max(lum1, lum2);
+            const darker = Math.min(lum1, lum2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+        
+        function getContrastLevel(ratio) {
+            if (ratio >= 7) return 'AAA';
+            if (ratio >= 4.5) return 'AA';
+            return 'FAIL';
+        }
+        
+        // Smart text color based on contrast
+        function getTextColor(bgHex, isLight) {
+            const darkText = isLight ? '#1a1a1a' : '#e0e0e0';
+            const lightText = isLight ? '#ffffff' : '#0a0a0a';
+            
+            const darkContrast = getContrastRatio(bgHex, darkText);
+            const lightContrast = getContrastRatio(bgHex, lightText);
+            
+            return darkContrast > lightContrast ? darkText : lightText;
+        }
+        
+        // Color scheme generators
+        function generateColorScheme(baseHex, scheme) {
+            const hsl = hexToHsl(baseHex);
+            const colors = [baseHex];
+            
+            switch(scheme) {
+                case 'monochromatic':
+                    colors.push(
+                        adjustLightness(baseHex, 15),
+                        adjustLightness(baseHex, -15),
+                        adjustSaturation(baseHex, -20)
+                    );
+                    break;
+                    
+                case 'complementary':
+                    colors.push(rotateHue(baseHex, 180));
+                    colors.push(adjustLightness(colors[0], 15));
+                    colors.push(adjustLightness(colors[1], 15));
+                    break;
+                    
+                case 'analogous':
+                    colors.push(
+                        rotateHue(baseHex, 30),
+                        rotateHue(baseHex, -30),
+                        rotateHue(baseHex, 60)
+                    );
+                    break;
+                    
+                case 'triadic':
+                    colors.push(
+                        rotateHue(baseHex, 120),
+                        rotateHue(baseHex, 240)
+                    );
+                    colors.push(adjustLightness(colors[0], 10));
+                    break;
+                    
+                case 'split':
+                    colors.push(
+                        rotateHue(baseHex, 150),
+                        rotateHue(baseHex, 210)
+                    );
+                    colors.push(adjustLightness(colors[0], 10));
+                    break;
+                    
+                case 'tetradic':
+                    colors.push(
+                        rotateHue(baseHex, 90),
+                        rotateHue(baseHex, 180),
+                        rotateHue(baseHex, 270)
+                    );
+                    break;
+            }
+            
+            return colors;
         }
         
         function generateTheme(primaryColor) {
             const isLight = currentMode === 'light';
+            const schemeColors = generateColorScheme(primaryColor, currentScheme);
             
-            // Primary colors
-            const primary = primaryColor;
-            const primaryHover = adjustColor(primary, isLight ? -20 : 20);
-            const primaryActive = adjustColor(primary, isLight ? -40 : 40);
-            const primaryDisabled = adjustColor(primary, isLight ? 60 : -60);
+            // Primary colors with states
+            const primary = schemeColors[0];
+            const primaryHover = adjustLightness(primary, isLight ? -10 : 10);
+            const primaryActive = adjustLightness(primary, isLight ? -20 : 20);
+            const primaryDisabled = adjustSaturation(adjustLightness(primary, isLight ? 30 : -30), -40);
             
-            // Backgrounds
-            const background = isLight ? '#ffffff' : '#1a1a1a';
-            const backgroundAlt = isLight ? '#f5f5f5' : '#252525';
-            const surface = isLight ? '#ffffff' : '#2a2a2a';
-            const border = isLight ? '#e0e0e0' : '#404040';
+            // Secondary/Accent from scheme
+            const secondary = schemeColors[1] || adjustLightness(primary, 20);
+            const accent = schemeColors[2] || adjustSaturation(primary, 20);
             
-            // Text
-            const textPrimary = isLight ? '#1a1a1a' : '#e0e0e0';
-            const textSecondary = isLight ? '#666666' : '#a0a0a0';
-            const textDisabled = isLight ? '#999999' : '#666666';
+            // Backgrounds - smart adaptation
+            const background = isLight ? '#ffffff' : '#0f0f0f';
+            const backgroundAlt = isLight ? '#f8f9fa' : '#1a1a1a';
+            const surface = isLight ? '#ffffff' : '#242424';
+            const surfaceAlt = isLight ? '#f1f3f5' : '#2d2d2d';
+            const border = isLight ? '#dee2e6' : '#3d3d3d';
+            const borderLight = isLight ? '#e9ecef' : '#333333';
+            
+            // Text colors with proper contrast
+            const textPrimary = isLight ? '#1a1a1a' : '#f0f0f0';
+            const textSecondary = isLight ? '#495057' : '#b0b0b0';
+            const textTertiary = isLight ? '#6c757d' : '#808080';
+            const textDisabled = isLight ? '#adb5bd' : '#606060';
             
             // Semantic colors
             const success = '#28a745';
+            const successBg = isLight ? '#d4edda' : '#1a3d24';
+            const successText = getTextColor(successBg, isLight);
+            
             const warning = '#ffc107';
+            const warningBg = isLight ? '#fff3cd' : '#3d3420';
+            const warningText = getTextColor(warningBg, isLight);
+            
             const error = '#dc3545';
+            const errorBg = isLight ? '#f8d7da' : '#3d1a1f';
+            const errorText = getTextColor(errorBg, isLight);
+            
             const info = '#17a2b8';
+            const infoBg = isLight ? '#d1ecf1' : '#1a3639';
+            const infoText = getTextColor(infoBg, isLight);
             
             currentPalette = {
                 primary, primaryHover, primaryActive, primaryDisabled,
-                background, backgroundAlt, surface, border,
-                textPrimary, textSecondary, textDisabled,
-                success, warning, error, info
+                secondary, accent,
+                background, backgroundAlt, surface, surfaceAlt, border, borderLight,
+                textPrimary, textSecondary, textTertiary, textDisabled,
+                success, successBg, successText,
+                warning, warningBg, warningText,
+                error, errorBg, errorText,
+                info, infoBg, infoText
             };
             
             renderPalette();
@@ -217,83 +434,109 @@
             const p = currentPalette;
             
             document.getElementById('primaryPalette').innerHTML = `
-                ${colorRow('Primary', p.primary)}
-                ${colorRow('Hover', p.primaryHover)}
-                ${colorRow('Active', p.primaryActive)}
-                ${colorRow('Disabled', p.primaryDisabled)}
+                ${colorRow('Primary', p.primary, p.background)}
+                ${colorRow('Secondary', p.secondary, p.background)}
+                ${colorRow('Accent', p.accent, p.background)}
             `;
             
             document.getElementById('statesPalette').innerHTML = `
-                ${colorRow('Success', p.success)}
-                ${colorRow('Warning', p.warning)}
-                ${colorRow('Error', p.error)}
-                ${colorRow('Info', p.info)}
+                ${colorRow('Hover', p.primaryHover, p.background)}
+                ${colorRow('Active', p.primaryActive, p.background)}
+                ${colorRow('Disabled', p.primaryDisabled, p.background)}
             `;
             
             document.getElementById('basePalette').innerHTML = `
-                ${colorRow('Background', p.background)}
-                ${colorRow('Background Alt', p.backgroundAlt)}
-                ${colorRow('Surface', p.surface)}
-                ${colorRow('Border', p.border)}
-                ${colorRow('Text Primary', p.textPrimary)}
-                ${colorRow('Text Secondary', p.textSecondary)}
-                ${colorRow('Text Disabled', p.textDisabled)}
+                ${colorRow('Background', p.background, p.textPrimary)}
+                ${colorRow('Background Alt', p.backgroundAlt, p.textPrimary)}
+                ${colorRow('Surface', p.surface, p.textPrimary)}
+                ${colorRow('Border', p.border, p.background)}
+                ${colorRow('Text Primary', p.textPrimary, p.background)}
+                ${colorRow('Text Secondary', p.textSecondary, p.background)}
+            `;
+            
+            document.getElementById('alertsPalette').innerHTML = `
+                ${colorRow('Success', p.success, p.successBg)}
+                ${colorRow('Warning', p.warning, p.warningBg)}
+                ${colorRow('Error', p.error, p.errorBg)}
+                ${colorRow('Info', p.info, p.infoBg)}
             `;
         }
         
-        function colorRow(name, color) {
+        function colorRow(name, color, contrastWith) {
+            const ratio = getContrastRatio(color, contrastWith).toFixed(2);
+            const level = getContrastLevel(ratio);
+            const badgeClass = level === 'AAA' ? 'contrast-aaa' : level === 'AA' ? 'contrast-aa' : 'contrast-fail';
+            
             return `
                 <div class="color-row">
                     <div class="color-swatch" style="background: ${color}" onclick="copyColor('${color}')"></div>
-                    <div class="color-label">${name}</div>
-                    <div class="color-value" onclick="copyColor('${color}')">${color}</div>
+                    <div class="color-info">
+                        <div class="color-label">${name}</div>
+                        <div class="color-meta">
+                            <div class="color-value" onclick="copyColor('${color}')">${color}</div>
+                            <div class="contrast-badge ${badgeClass}">${ratio}:1 ${level}</div>
+                        </div>
+                    </div>
                 </div>
             `;
         }
         
         function copyColor(color) {
             navigator.clipboard.writeText(color);
-            console.log('Copied:', color);
         }
         
         function renderPreview() {
             const p = currentPalette;
+            const primaryText = getTextColor(p.primary, currentMode === 'light');
+            
             const previewHTML = `
-                <div class="ui-header" style="background: ${p.primary}; color: white;">
-                    <strong>App Header</strong>
+                <div class="ui-nav" style="background: ${p.primary}; color: ${primaryText};">
+                    <div class="ui-nav-title">Application</div>
+                    <div class="ui-nav-links">Dashboard • Settings • Profile</div>
                 </div>
                 
                 <div class="ui-content" style="background: ${p.surface}; color: ${p.textPrimary}; border: 1px solid ${p.border};">
-                    <h4 style="margin: 0 0 10px 0;">Пример контента</h4>
-                    <p style="color: ${p.textSecondary}; margin: 0;">Вторичный текст для описания</p>
+                    <h4 class="ui-heading">Заголовок контентной области</h4>
+                    <p class="ui-text" style="color: ${p.textSecondary};">Это описание демонстрирует вторичный текст. Он используется для менее важной информации и должен иметь достаточный контраст для читаемости.</p>
                     
-                    <input class="ui-input" placeholder="Введите текст..." style="background: ${p.background}; color: ${p.textPrimary}; border: 1px solid ${p.border};">
+                    <input class="ui-input" placeholder="Введите текст..." style="background: ${p.background}; color: ${p.textPrimary}; border-color: ${p.border};">
                 </div>
                 
                 <div class="ui-buttons">
-                    <button class="ui-btn" style="background: ${p.primary}; color: white;">Primary Button</button>
-                    <button class="ui-btn" style="background: ${p.primaryHover}; color: white;">Hover State</button>
-                    <button class="ui-btn" style="background: ${p.primaryDisabled}; color: white; opacity: 0.6; cursor: not-allowed;">Disabled</button>
+                    <button class="ui-btn" style="background: ${p.primary}; color: ${primaryText};">Primary Button</button>
+                    <button class="ui-btn" style="background: ${p.secondary}; color: ${getTextColor(p.secondary, currentMode === 'light')};">Secondary</button>
+                    <button class="ui-btn" style="background: ${p.accent}; color: ${getTextColor(p.accent, currentMode === 'light')};">Accent</button>
+                    <button class="ui-btn" style="background: ${p.primaryDisabled}; color: ${p.textDisabled}; opacity: 0.6; cursor: not-allowed;">Disabled</button>
                 </div>
                 
                 <div class="ui-alerts">
-                    <div class="ui-alert" style="background: ${adjustColor(p.success, 50)}; color: ${adjustColor(p.success, -80)}; border-left-color: ${p.success};">
-                        ✓ Успешное действие выполнено
+                    <div class="ui-alert" style="background: ${p.successBg}; color: ${p.successText}; border-left-color: ${p.success};">
+                        <span class="ui-alert-icon">✓</span>
+                        <div>Операция выполнена успешно. Все изменения сохранены.</div>
                     </div>
-                    <div class="ui-alert" style="background: ${adjustColor(p.info, 50)}; color: ${adjustColor(p.info, -80)}; border-left-color: ${p.info};">
-                        ℹ Информационное сообщение
+                    <div class="ui-alert" style="background: ${p.infoBg}; color: ${p.infoText}; border-left-color: ${p.info};">
+                        <span class="ui-alert-icon">ℹ</span>
+                        <div>Информационное сообщение для пользователя.</div>
                     </div>
-                    <div class="ui-alert" style="background: ${adjustColor(p.warning, 50)}; color: ${adjustColor(p.warning, -100)}; border-left-color: ${p.warning};">
-                        ⚠ Предупреждение
+                    <div class="ui-alert" style="background: ${p.warningBg}; color: ${p.warningText}; border-left-color: ${p.warning};">
+                        <span class="ui-alert-icon">⚠</span>
+                        <div>Предупреждение: проверьте введенные данные.</div>
                     </div>
-                    <div class="ui-alert" style="background: ${adjustColor(p.error, 50)}; color: ${adjustColor(p.error, -80)}; border-left-color: ${p.error};">
-                        ✕ Ошибка при выполнении
+                    <div class="ui-alert" style="background: ${p.errorBg}; color: ${p.errorText}; border-left-color: ${p.error};">
+                        <span class="ui-alert-icon">✕</span>
+                        <div>Ошибка: не удалось выполнить операцию.</div>
                     </div>
                 </div>
                 
-                <div class="ui-card" style="background: ${p.backgroundAlt}; color: ${p.textPrimary}; border-color: ${p.border};">
-                    <h5 style="margin: 0 0 8px 0;">Card Component</h5>
-                    <p style="color: ${p.textSecondary}; margin: 0; font-size: 13px;">Карточка с контентом на альтернативном фоне</p>
+                <div class="ui-cards">
+                    <div class="ui-card" style="background: ${p.surface}; color: ${p.textPrimary}; border-color: ${p.border};">
+                        <h5 class="ui-card-title">Card Component</h5>
+                        <p class="ui-card-text" style="color: ${p.textSecondary};">Карточка с контентом на основном фоне</p>
+                    </div>
+                    <div class="ui-card" style="background: ${p.backgroundAlt}; color: ${p.textPrimary}; border-color: ${p.border};">
+                        <h5 class="ui-card-title">Alternative Card</h5>
+                        <p class="ui-card-text" style="color: ${p.textSecondary};">Карточка на альтернативном фоне</p>
+                    </div>
                 </div>
             `;
             
@@ -302,36 +545,50 @@
             document.getElementById(targetId).style.background = p.background;
         }
         
-        function exportPalette() {
+        function exportPalette(format) {
             const p = currentPalette;
-            const css = `/* Generated UI Theme - ${currentMode} mode */
-:root {
-    /* Primary Colors */
-    --color-primary: ${p.primary};
-    --color-primary-hover: ${p.primaryHover};
-    --color-primary-active: ${p.primaryActive};
-    --color-primary-disabled: ${p.primaryDisabled};
-    
-    /* Backgrounds */
-    --color-background: ${p.background};
-    --color-background-alt: ${p.backgroundAlt};
-    --color-surface: ${p.surface};
-    --color-border: ${p.border};
-    
-    /* Text */
-    --color-text: ${p.textPrimary};
-    --color-text-secondary: ${p.textSecondary};
-    --color-text-disabled: ${p.textDisabled};
-    
-    /* Semantic */
-    --color-success: ${p.success};
-    --color-warning: ${p.warning};
-    --color-error: ${p.error};
-    --color-info: ${p.info};
-}`;
+            let output = '';
             
-            navigator.clipboard.writeText(css);
-            alert('CSS скопирован в буфер обмена!');
+            switch(format) {
+                case 'css':
+                    output = `/* ${currentMode} mode - ${currentScheme} scheme */\n:root {\n`;
+                    for (let [key, value] of Object.entries(p)) {
+                        const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                        output += `  --color-${cssKey}: ${value};\n`;
+                    }
+                    output += '}';
+                    break;
+                    
+                case 'scss':
+                    output = `// ${currentMode} mode - ${currentScheme} scheme\n`;
+                    for (let [key, value] of Object.entries(p)) {
+                        const scssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+                        output += `$color-${scssKey}: ${value};\n`;
+                    }
+                    break;
+                    
+                case 'json':
+                    output = JSON.stringify({ [currentMode]: { [currentScheme]: p } }, null, 2);
+                    break;
+                    
+                case 'tailwind':
+                    output = `// tailwind.config.js\nmodule.exports = {\n  theme: {\n    extend: {\n      colors: {\n`;
+                    for (let [key, value] of Object.entries(p)) {
+                        output += `        '${key}': '${value}',\n`;
+                    }
+                    output += '      }\n    }\n  }\n}';
+                    break;
+                    
+                case 'figma':
+                    output = `Figma Color Styles:\n\n`;
+                    for (let [key, value] of Object.entries(p)) {
+                        output += `${key}: ${value}\n`;
+                    }
+                    break;
+            }
+            
+            navigator.clipboard.writeText(output);
+            console.log(`Exported as ${format.toUpperCase()}`);
         }
         
         // Initial generation
