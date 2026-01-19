@@ -39,9 +39,35 @@ body {
         ),
         var(--bg);
     color: var(--text);
-    font-family: 'Press Start 2P', monospace;
+    /* Основной текстовый шрифт - читаемый моноширинный */
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 14px;
+    line-height: 1.6;
     display: flex;
     flex-direction: column;
+}
+
+/* Акцидентный шрифт ТОЛЬКО для заголовков и UI элементов */
+h1, h2, h3, h4, h5, h6,
+.title,
+button, .btn,
+header h1,
+header p {
+    font-family: 'Press Start 2P', monospace;
+    line-height: 1.5;
+}
+
+/* Размеры заголовков */
+h1 { font-size: 20px; margin: 0 0 20px 0; }
+h2 { font-size: 16px; margin: 0 0 18px 0; }
+h3 { font-size: 14px; margin: 0 0 15px 0; }
+h4 { font-size: 12px; margin: 0 0 12px 0; }
+h5, h6 { font-size: 10px; margin: 0 0 10px 0; }
+
+/* Основной текст - нормальный размер */
+p, li, span, div:not(.title):not(.btn):not(button) {
+    font-size: 14px;
+    line-height: 1.6;
 }
 
 /* Header Styles */
@@ -49,7 +75,7 @@ header {
     text-align: center;
     padding: 30px 16px 20px;
     border-bottom: 1px solid var(--border);
-    margin-bottom: 0; /* Changed from 30px to 0 for app-like feel */
+    margin-bottom: 0;
     background: rgba(11, 14, 11, 0.95);
     flex-shrink: 0;
 }
@@ -75,7 +101,7 @@ main, .container {
 }
 
 /* Common UI Elements */
-button, .btn, select, input[type="text"], input[type="number"], input[type="file"] {
+button, .btn, select {
     font-family: 'Press Start 2P', monospace;
     background: var(--panel);
     border: 2px solid var(--border);
@@ -85,10 +111,32 @@ button, .btn, select, input[type="text"], input[type="number"], input[type="file
     cursor: pointer;
     transition: all 0.2s;
     outline: none;
-    border-radius: 0; /* Pixel perfect */
+    border-radius: 0;
 }
 
-button:hover, .btn:hover, select:hover, input:hover {
+/* Инпуты используют обычный шрифт для удобства ввода */
+input[type="text"],
+input[type="number"],
+input[type="file"],
+textarea {
+    font-family: 'Courier New', Courier, monospace;
+    background: var(--panel);
+    border: 2px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    font-size: 14px;
+    cursor: text;
+    transition: all 0.2s;
+    outline: none;
+    border-radius: 0;
+}
+
+select {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+}
+
+button:hover, .btn:hover, select:hover, input:hover, textarea:hover {
     border-color: var(--accent);
     background: var(--highlight);
     box-shadow: 0 0 10px rgba(156, 255, 138, 0.1);
@@ -132,9 +180,10 @@ input[type="range"]::-webkit-slider-thumb {
 label {
     display: block;
     margin-bottom: 10px;
-    font-size: 10px;
+    font-size: 14px;
     color: var(--text);
-    line-height: 1.5;
+    line-height: 1.6;
+    font-weight: 600;
 }
 
 /* Tool Specific Containers */
@@ -148,7 +197,7 @@ label {
 footer {
     text-align: center;
     padding: 20px 16px;
-    font-size: 8px;
+    font-size: 11px;
     color: var(--muted);
     border-top: 1px solid var(--border);
     margin-top: auto;
@@ -180,9 +229,25 @@ footer {
     z-index: 10;
 }
 .image-wrapper {
-    width: 100%; height: 200px; background: #000;
-    border: 1px solid #2a2f2a; margin-bottom: 15px;
-    overflow: hidden; display: flex; justify-content: center; 
+    width: 100%; 
+    height: 200px; 
+    background: #000;
+    border: 1px solid #2a2f2a; 
+    margin-bottom: 15px;
+    overflow: hidden; 
+    display: flex; 
+    justify-content: center;
 }
-.title { font-size: 12px; margin-bottom: 10px; color: var(--accent); text-transform: uppercase; }
-.desc { font-size: 10px; color: var(--muted); line-height: 1.5; }
+.title { 
+    font-family: 'Press Start 2P', monospace;
+    font-size: 12px; 
+    margin-bottom: 10px; 
+    color: var(--accent); 
+    text-transform: uppercase; 
+}
+.desc { 
+    font-size: 13px; 
+    color: var(--muted); 
+    line-height: 1.6;
+    font-family: 'Courier New', Courier, monospace;
+}
