@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UI Theme Generator</title>
+    <link href="style.css" rel="stylesheet">
+    <style>
+        .tool-container { display: grid; grid-template-columns: 1fr 2fr; gap: 30px; margin-top: 20px; }
+        @media (max-width: 1024px) { .tool-container { grid-template-columns: 1fr; } }
+        
+        /* Controls Section */
+        .controls-panel { background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .color-input-group { margin-bottom: 25px; }
+        .color-input-group label { display: block; margin-bottom: 8px; font-weight: 500; }
+        .color-picker-wrapper { display: flex; gap: 10px; align-items: center; }
+        .color-picker { width: 80px; height: 80px; border: 2px solid var(--border); border-radius: 8px; cursor: pointer; }
+        .hex-input { flex: 1; padding: 10px; border: 1px solid var(--border); background: var(--bg); color: var(--text); border-radius: 4px; font-family: monospace; font-size: 16px; }
+        
+        .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .mode-btn { flex: 1; padding: 10px; background: var(--panel); border: 1px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; transition: all 0.2s; }
+        .mode-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+        
+        /* Palette Display */
+        .palette-section { margin-top: 20px; }
+        .palette-section h4 { margin-bottom: 12px; font-size: 14px; color: #888; }
+        .color-row { display: flex; gap: 8px; margin-bottom: 8px; align-items: center; }
+        .color-swatch { width: 40px; height: 40px; border-radius: 4px; cursor: pointer; border: 1px solid rgba(255,255,255,0.1); }
+        .color-label { flex: 1; font-size: 13px; }
+        .color-value { font-family: monospace; font-size: 12px; color: #888; cursor: pointer; }
+        .color-value:hover { color: var(--accent); }
+        
+        /* Preview Section */
+        .preview-panel { background: var(--panel); padding: 20px; border-radius: 8px; border: 1px solid var(--border); }
+        .preview-mode { display: none; }
+        .preview-mode.active { display: block; }
+        
+        /* UI Preview Styles */
+        .ui-preview { padding: 30px; border-radius: 8px; }
+        .ui-header { padding: 15px 20px; border-radius: 6px; margin-bottom: 20px; }
+        .ui-content { padding: 20px; border-radius: 6px; margin-bottom: 20px; }
+        .ui-buttons { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 20px; }
+        .ui-btn { padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+        .ui-alerts { display: flex; flex-direction: column; gap: 10px; }
+        .ui-alert { padding: 12px 16px; border-radius: 4px; border-left: 4px solid; font-size: 14px; }
+        .ui-input { width: 100%; padding: 10px; border-radius: 4px; font-size: 14px; margin-top: 10px; }
+        .ui-card { padding: 20px; border-radius: 6px; margin-bottom: 15px; border: 1px solid; }
+        
+        /* Export Button */
+        .export-btn { width: 100%; padding: 12px; background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; margin-top: 20px; }
+        .export-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>🎨 UI Theme Generator</h2>
+        <p style="color: #888; margin-bottom: 20px;">Выбери базовый цвет — получи полную палитру для интерфейса</p>
+        
+        <div class="tool-container">
+            <!-- Controls -->
+            <div class="controls-panel">
+                <div class="color-input-group">
+                    <label>Базовый цвет</label>
+                    <div class="color-picker-wrapper">
+                        <input type="color" id="primaryColor" class="color-picker" value="#007acc">
+                        <input type="text" id="primaryHex" class="hex-input" value="#007acc">
+                    </div>
+                </div>
+                
+                <div class="mode-selector">
+                    <button class="mode-btn active" data-mode="light">☀️ Light</button>
+                    <button class="mode-btn" data-mode="dark">🌙 Dark</button>
+                </div>
+                
+                <!-- Generated Palette -->
+                <div class="palette-section">
+                    <h4>ОСНОВНЫЕ ЦВЕТА</h4>
+                    <div id="primaryPalette"></div>
+                    
+                    <h4 style="margin-top: 20px;">СОСТОЯНИЯ</h4>
+                    <div id="statesPalette"></div>
+                    
+                    <h4 style="margin-top: 20px;">ФОНЫ И ТЕКСТ</h4>
+                    <div id="basePalette"></div>
+                    
+                    <h4 style="margin-top: 20px;">УВЕДОМЛЕНИЯ</h4>
+                    <div id="alertsPalette"></div>
+                </div>
+                
+                <button class="export-btn" onclick="exportPalette()">📋 Экспортировать CSS</button>
+            </div>
+            
+            <!-- Preview -->
+            <div class="preview-panel">
+                <h3>Предварительный просмотр</h3>
+                
+                <div class="preview-mode active" id="lightPreview">
+                    <div class="ui-preview" id="lightUI"></div>
+                </div>
+                
+                <div class="preview-mode" id="darkPreview">
+                    <div class="ui-preview" id="darkUI"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script src="global.js"></script>
+    <script>
+        let currentMode = 'light';
+        let currentPalette = {};
+        
+        // Initialize
+        document.getElementById('primaryColor').addEventListener('input', e => {
+            document.getElementById('primaryHex').value = e.target.value;
+            generateTheme(e.target.value);
+        });
+        
+        document.getElementById('primaryHex').addEventListener('input', e => {
+            if (/^#[0-9A-F]{6}$/i.test(e.target.value)) {
+                document.getElementById('primaryColor').value = e.target.value;
+                generateTheme(e.target.value);
+            }
+        });
+        
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                document.querySelectorAll('.preview-mode').forEach(p => p.classList.remove('active'));
+                document.getElementById(currentMode + 'Preview').classList.add('active');
+                generateTheme(document.getElementById('primaryColor').value);
+            });
+        });
+        
+        // Color generation functions
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            return result ? {
+                r: parseInt(result[1], 16),
+                g: parseInt(result[2], 16),
+                b: parseInt(result[3], 16)
+            } : null;
+        }
+        
+        function rgbToHex(r, g, b) {
+            return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
+        }
+        
+        function adjustColor(hex, amount) {
+            const rgb = hexToRgb(hex);
+            const r = Math.max(0, Math.min(255, rgb.r + amount));
+            const g = Math.max(0, Math.min(255, rgb.g + amount));
+            const b = Math.max(0, Math.min(255, rgb.b + amount));
+            return rgbToHex(r, g, b);
+        }
+        
+        function saturate(hex, amount) {
+            const rgb = hexToRgb(hex);
+            const max = Math.max(rgb.r, rgb.g, rgb.b);
+            const min = Math.min(rgb.r, rgb.g, rgb.b);
+            const delta = max - min;
+            
+            if (delta === 0) return hex;
+            
+            const scale = amount / 100;
+            const r = Math.round(rgb.r + (rgb.r - (rgb.r + rgb.g + rgb.b) / 3) * scale);
+            const g = Math.round(rgb.g + (rgb.g - (rgb.r + rgb.g + rgb.b) / 3) * scale);
+            const b = Math.round(rgb.b + (rgb.b - (rgb.r + rgb.g + rgb.b) / 3) * scale);
+            
+            return rgbToHex(
+                Math.max(0, Math.min(255, r)),
+                Math.max(0, Math.min(255, g)),
+                Math.max(0, Math.min(255, b))
+            );
+        }
+        
+        function generateTheme(primaryColor) {
+            const isLight = currentMode === 'light';
+            
+            // Primary colors
+            const primary = primaryColor;
+            const primaryHover = adjustColor(primary, isLight ? -20 : 20);
+            const primaryActive = adjustColor(primary, isLight ? -40 : 40);
+            const primaryDisabled = adjustColor(primary, isLight ? 60 : -60);
+            
+            // Backgrounds
+            const background = isLight ? '#ffffff' : '#1a1a1a';
+            const backgroundAlt = isLight ? '#f5f5f5' : '#252525';
+            const surface = isLight ? '#ffffff' : '#2a2a2a';
+            const border = isLight ? '#e0e0e0' : '#404040';
+            
+            // Text
+            const textPrimary = isLight ? '#1a1a1a' : '#e0e0e0';
+            const textSecondary = isLight ? '#666666' : '#a0a0a0';
+            const textDisabled = isLight ? '#999999' : '#666666';
+            
+            // Semantic colors
+            const success = '#28a745';
+            const warning = '#ffc107';
+            const error = '#dc3545';
+            const info = '#17a2b8';
+            
+            currentPalette = {
+                primary, primaryHover, primaryActive, primaryDisabled,
+                background, backgroundAlt, surface, border,
+                textPrimary, textSecondary, textDisabled,
+                success, warning, error, info
+            };
+            
+            renderPalette();
+            renderPreview();
+        }
+        
+        function renderPalette() {
+            const p = currentPalette;
+            
+            document.getElementById('primaryPalette').innerHTML = `
+                ${colorRow('Primary', p.primary)}
+                ${colorRow('Hover', p.primaryHover)}
+                ${colorRow('Active', p.primaryActive)}
+                ${colorRow('Disabled', p.primaryDisabled)}
+            `;
+            
+            document.getElementById('statesPalette').innerHTML = `
+                ${colorRow('Success', p.success)}
+                ${colorRow('Warning', p.warning)}
+                ${colorRow('Error', p.error)}
+                ${colorRow('Info', p.info)}
+            `;
+            
+            document.getElementById('basePalette').innerHTML = `
+                ${colorRow('Background', p.background)}
+                ${colorRow('Background Alt', p.backgroundAlt)}
+                ${colorRow('Surface', p.surface)}
+                ${colorRow('Border', p.border)}
+                ${colorRow('Text Primary', p.textPrimary)}
+                ${colorRow('Text Secondary', p.textSecondary)}
+                ${colorRow('Text Disabled', p.textDisabled)}
+            `;
+        }
+        
+        function colorRow(name, color) {
+            return `
+                <div class="color-row">
+                    <div class="color-swatch" style="background: ${color}" onclick="copyColor('${color}')"></div>
+                    <div class="color-label">${name}</div>
+                    <div class="color-value" onclick="copyColor('${color}')">${color}</div>
+                </div>
+            `;
+        }
+        
+        function copyColor(color) {
+            navigator.clipboard.writeText(color);
+            console.log('Copied:', color);
+        }
+        
+        function renderPreview() {
+            const p = currentPalette;
+            const previewHTML = `
+                <div class="ui-header" style="background: ${p.primary}; color: white;">
+                    <strong>App Header</strong>
+                </div>
+                
+                <div class="ui-content" style="background: ${p.surface}; color: ${p.textPrimary}; border: 1px solid ${p.border};">
+                    <h4 style="margin: 0 0 10px 0;">Пример контента</h4>
+                    <p style="color: ${p.textSecondary}; margin: 0;">Вторичный текст для описания</p>
+                    
+                    <input class="ui-input" placeholder="Введите текст..." style="background: ${p.background}; color: ${p.textPrimary}; border: 1px solid ${p.border};">
+                </div>
+                
+                <div class="ui-buttons">
+                    <button class="ui-btn" style="background: ${p.primary}; color: white;">Primary Button</button>
+                    <button class="ui-btn" style="background: ${p.primaryHover}; color: white;">Hover State</button>
+                    <button class="ui-btn" style="background: ${p.primaryDisabled}; color: white; opacity: 0.6; cursor: not-allowed;">Disabled</button>
+                </div>
+                
+                <div class="ui-alerts">
+                    <div class="ui-alert" style="background: ${adjustColor(p.success, 50)}; color: ${adjustColor(p.success, -80)}; border-left-color: ${p.success};">
+                        ✓ Успешное действие выполнено
+                    </div>
+                    <div class="ui-alert" style="background: ${adjustColor(p.info, 50)}; color: ${adjustColor(p.info, -80)}; border-left-color: ${p.info};">
+                        ℹ Информационное сообщение
+                    </div>
+                    <div class="ui-alert" style="background: ${adjustColor(p.warning, 50)}; color: ${adjustColor(p.warning, -100)}; border-left-color: ${p.warning};">
+                        ⚠ Предупреждение
+                    </div>
+                    <div class="ui-alert" style="background: ${adjustColor(p.error, 50)}; color: ${adjustColor(p.error, -80)}; border-left-color: ${p.error};">
+                        ✕ Ошибка при выполнении
+                    </div>
+                </div>
+                
+                <div class="ui-card" style="background: ${p.backgroundAlt}; color: ${p.textPrimary}; border-color: ${p.border};">
+                    <h5 style="margin: 0 0 8px 0;">Card Component</h5>
+                    <p style="color: ${p.textSecondary}; margin: 0; font-size: 13px;">Карточка с контентом на альтернативном фоне</p>
+                </div>
+            `;
+            
+            const targetId = currentMode === 'light' ? 'lightUI' : 'darkUI';
+            document.getElementById(targetId).innerHTML = previewHTML;
+            document.getElementById(targetId).style.background = p.background;
+        }
+        
+        function exportPalette() {
+            const p = currentPalette;
+            const css = `/* Generated UI Theme - ${currentMode} mode */
+:root {
+    /* Primary Colors */
+    --color-primary: ${p.primary};
+    --color-primary-hover: ${p.primaryHover};
+    --color-primary-active: ${p.primaryActive};
+    --color-primary-disabled: ${p.primaryDisabled};
+    
+    /* Backgrounds */
+    --color-background: ${p.background};
+    --color-background-alt: ${p.backgroundAlt};
+    --color-surface: ${p.surface};
+    --color-border: ${p.border};
+    
+    /* Text */
+    --color-text: ${p.textPrimary};
+    --color-text-secondary: ${p.textSecondary};
+    --color-text-disabled: ${p.textDisabled};
+    
+    /* Semantic */
+    --color-success: ${p.success};
+    --color-warning: ${p.warning};
+    --color-error: ${p.error};
+    --color-info: ${p.info};
+}`;
+            
+            navigator.clipboard.writeText(css);
+            alert('CSS скопирован в буфер обмена!');
+        }
+        
+        // Initial generation
+        generateTheme('#007acc');
+    </script>
+</body>
+</html>
