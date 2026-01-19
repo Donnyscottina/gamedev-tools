@@ -3,10 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>UI Theme Generator Pro</title>
+    <title>UI Theme Generator Pro v2.0</title>
     <link href="style.css" rel="stylesheet">
     <style>
-        .tool-container { display: grid; grid-template-columns: 400px 1fr; gap: 25px; margin-top: 20px; }
+        .tool-container { display: grid; grid-template-columns: 420px 1fr; gap: 25px; margin-top: 20px; }
         @media (max-width: 1200px) { .tool-container { grid-template-columns: 1fr; } }
         
         .controls-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid var(--border); max-height: 90vh; overflow-y: auto; }
@@ -17,15 +17,27 @@
         .color-picker:hover { transform: scale(1.05); border-color: var(--accent); }
         .hex-input { flex: 1; padding: 12px; border: 2px solid var(--border); background: var(--bg); color: var(--text); border-radius: 8px; font-family: 'Courier New', monospace; font-size: 15px; font-weight: 600; }
         
+        .color-space-selector { display: flex; gap: 8px; margin-bottom: 20px; }
+        .space-btn { flex: 1; padding: 10px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; transition: all 0.2s; }
+        .space-btn:hover { border-color: var(--accent); }
+        .space-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        
         .quick-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 20px; }
-        .quick-btn { padding: 10px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 12px; text-align: center; transition: all 0.2s; }
+        .quick-btn { padding: 10px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; font-size: 11px; text-align: center; transition: all 0.2s; }
         .quick-btn:hover { border-color: var(--accent); background: var(--highlight); }
         
+        .cvd-selector { margin-bottom: 20px; }
+        .cvd-selector h4 { margin-bottom: 10px; font-size: 12px; color: #888; }
+        .cvd-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; }
+        .cvd-btn { padding: 8px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 4px; cursor: pointer; font-size: 10px; text-align: center; transition: all 0.2s; }
+        .cvd-btn:hover { border-color: var(--accent); }
+        .cvd-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
+        
         .scheme-selector { margin-bottom: 20px; }
-        .scheme-selector h4 { margin-bottom: 12px; font-size: 13px; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+        .scheme-selector h4 { margin-bottom: 12px; font-size: 12px; color: #888; text-transform: uppercase; }
         .scheme-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
         .scheme-btn { padding: 12px 8px; background: var(--panel); border: 2px solid var(--border); color: var(--text); border-radius: 6px; cursor: pointer; transition: all 0.2s; font-size: 11px; text-align: center; }
-        .scheme-btn:hover { border-color: var(--accent); background: rgba(0,122,204,0.05); }
+        .scheme-btn:hover { border-color: var(--accent); }
         .scheme-btn.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
         
         .mode-selector { display: flex; gap: 10px; margin-bottom: 20px; }
@@ -34,10 +46,11 @@
         .mode-btn.active { background: var(--accent); color: #000; border-color: var(--accent); }
         
         .palette-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); }
-        .palette-section h4 { margin-bottom: 12px; font-size: 12px; color: #888; text-transform: uppercase; }
+        .palette-section h4 { margin-bottom: 12px; font-size: 11px; color: #888; text-transform: uppercase; display: flex; justify-content: space-between; align-items: center; }
+        .autofix-btn { padding: 4px 8px; background: var(--accent); color: #000; border: none; border-radius: 4px; cursor: pointer; font-size: 9px; font-weight: bold; }
         .color-row { display: flex; gap: 10px; margin-bottom: 8px; align-items: center; padding: 6px; border-radius: 6px; transition: background 0.2s; }
         .color-row:hover { background: rgba(0,122,204,0.03); }
-        .color-swatch { width: 45px; height: 45px; border-radius: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); box-shadow: 0 2px 6px rgba(0,0,0,0.15); transition: all 0.2s; position: relative; }
+        .color-swatch { width: 45px; height: 45px; border-radius: 8px; cursor: pointer; border: 2px solid rgba(255,255,255,0.1); transition: all 0.2s; position: relative; }
         .color-swatch:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.25); }
         .color-info { flex: 1; }
         .color-label { font-size: 12px; font-weight: 600; margin-bottom: 2px; }
@@ -45,65 +58,54 @@
         .color-value { font-family: 'Courier New', monospace; font-size: 10px; color: #888; cursor: pointer; padding: 2px 5px; background: rgba(0,122,204,0.05); border-radius: 3px; }
         .color-value:hover { color: var(--accent); background: rgba(0,122,204,0.1); }
         .contrast-badge { font-size: 9px; padding: 2px 5px; border-radius: 3px; font-weight: 600; }
-        .contrast-aaa { background: #28a745; color: white; }
-        .contrast-aa { background: #ffc107; color: #000; }
-        .contrast-fail { background: #dc3545; color: white; }
+        .apca-aaa { background: #28a745; color: white; }
+        .apca-aa { background: #17a2b8; color: white; }
+        .apca-pass { background: #ffc107; color: #000; }
+        .apca-fail { background: #dc3545; color: white; }
+        
+        .contrast-matrix { margin-top: 15px; padding: 15px; background: var(--bg); border: 1px solid var(--border); border-radius: 8px; }
+        .matrix-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(60px, 1fr)); gap: 4px; margin-top: 10px; }
+        .matrix-cell { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 4px; font-size: 9px; font-weight: bold; cursor: pointer; border: 1px solid var(--border); }
+        
+        .mixer-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); }
+        .mixer-controls { display: flex; gap: 10px; align-items: center; margin-top: 10px; }
+        .mixer-slider { flex: 1; }
         
         .preview-panel { background: var(--panel); padding: 25px; border-radius: 12px; border: 1px solid var(--border); }
-        .preview-tabs { display: flex; gap: 8px; margin-bottom: 20px; }
-        .preview-tab { padding: 10px 16px; background: var(--panel); border: 2px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+        .preview-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+        .preview-tab { padding: 10px 16px; background: var(--panel); border: 2px solid var(--border); border-radius: 6px; cursor: pointer; font-size: 11px; transition: all 0.2s; }
         .preview-tab:hover { border-color: var(--accent); }
         .preview-tab.active { background: var(--accent); color: #000; border-color: var(--accent); font-weight: bold; }
         .preview-mode { display: none; }
         .preview-mode.active { display: block; }
         
         .ui-preview { padding: 30px; border-radius: 12px; transition: all 0.3s; }
-        .ui-nav { padding: 18px 24px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
-        .ui-nav-title { font-weight: 700; font-size: 18px; }
-        .ui-nav-links { display: flex; gap: 20px; font-size: 14px; }
-        .ui-content { padding: 25px; border-radius: 10px; margin-bottom: 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.05); }
-        .ui-heading { margin: 0 0 12px 0; font-size: 20px; font-weight: 700; }
-        .ui-text { margin: 0 0 15px 0; line-height: 1.6; }
+        .ui-nav { padding: 18px 24px; border-radius: 10px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+        .ui-content { padding: 25px; border-radius: 10px; margin-bottom: 20px; }
         .ui-buttons { display: flex; gap: 12px; flex-wrap: wrap; margin: 20px 0; }
-        .ui-btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; box-shadow: 0 2px 6px rgba(0,0,0,0.1); }
-        .ui-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+        .ui-btn { padding: 12px 24px; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
         .ui-alerts { display: grid; gap: 12px; margin: 20px 0; }
-        .ui-alert { padding: 16px 20px; border-radius: 8px; border-left: 4px solid; font-size: 14px; display: flex; align-items: center; gap: 12px; }
-        .ui-input { width: 100%; padding: 14px; border-radius: 8px; font-size: 14px; margin-top: 12px; border: 2px solid; }
+        .ui-alert { padding: 16px 20px; border-radius: 8px; border-left: 4px solid; font-size: 14px; }
         .ui-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 20px; }
-        .ui-card { padding: 20px; border-radius: 10px; border: 1px solid; transition: all 0.2s; }
-        .ui-card:hover { transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+        .ui-card { padding: 20px; border-radius: 10px; border: 1px solid; }
         
-        .game-preview { padding: 20px; }
-        .game-hud { position: relative; padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .health-bar { height: 30px; border-radius: 6px; overflow: hidden; border: 2px solid; position: relative; }
-        .health-fill { height: 100%; transition: width 0.3s; }
-        .game-menu { padding: 20px; border-radius: 8px; margin-bottom: 20px; }
-        .menu-item { padding: 12px 20px; margin: 8px 0; border-radius: 6px; cursor: pointer; transition: all 0.2s; }
-        .menu-item:hover { transform: translateX(5px); }
-        
-        .gradient-preview { height: 60px; border-radius: 8px; margin: 10px 0; }
+        .ramp-preview { display: flex; gap: 4px; margin: 10px 0; height: 40px; }
+        .ramp-swatch { flex: 1; border-radius: 4px; cursor: pointer; position: relative; }
+        .ramp-label { position: absolute; bottom: 2px; left: 50%; transform: translateX(-50%); font-size: 8px; color: white; text-shadow: 0 0 2px black; }
         
         .export-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); }
-        .export-btn { width: 100%; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; transition: all 0.2s; }
-        .export-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+        .export-btn { width: 100%; padding: 14px; background: var(--accent); color: #000; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
         .export-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; margin-top: 8px; }
-        .export-option { padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; text-align: center; font-size: 11px; transition: all 0.2s; }
-        .export-option:hover { border-color: var(--accent); background: var(--highlight); }
-        
-        .preset-section { margin-top: 20px; padding-top: 15px; border-top: 1px solid var(--border); }
-        .preset-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; margin-top: 10px; }
-        .preset-item { padding: 10px; background: var(--panel); border: 2px solid var(--border); border-radius: 6px; cursor: pointer; text-align: center; font-size: 11px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
-        .preset-item:hover { border-color: var(--accent); }
-        .preset-color { width: 20px; height: 20px; border-radius: 4px; border: 1px solid rgba(0,0,0,0.2); }
+        .export-option { padding: 8px; background: var(--panel); border: 1px solid var(--border); border-radius: 4px; cursor: pointer; text-align: center; font-size: 10px; }
+        .export-option:hover { border-color: var(--accent); }
         
         #imageInput { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <h2>🎨 UI Theme Generator Pro</h2>
-        <p style="color: #888; margin-bottom: 20px;">Генератор цветовых схем для веба и игр с теорией цвета и WCAG контрастностью</p>
+        <h2>🎨 UI Theme Generator Pro v2.0</h2>
+        <p style="color: #888; margin-bottom: 20px;">OKLCH • APCA • Color Blind Safe • K-means • Palette Mixer</p>
         
         <div class="tool-container">
             <div class="controls-panel">
@@ -115,24 +117,40 @@
                     </div>
                 </div>
                 
+                <div class="color-space-selector">
+                    <button class="space-btn active" data-space="oklch">OKLCH</button>
+                    <button class="space-btn" data-space="hsl">HSL</button>
+                    <button class="space-btn" data-space="lab">LAB</button>
+                </div>
+                
                 <div class="quick-actions">
                     <button class="quick-btn" onclick="randomColor()">🎲 Случайный</button>
-                    <button class="quick-btn" onclick="document.getElementById('imageInput').click()">🖼️ Из фото</button>
-                    <button class="quick-btn" onclick="invertColor()">🔄 Инвертировать</button>
-                    <button class="quick-btn" onclick="lightenColor()">☀️ Осветлить</button>
+                    <button class="quick-btn" onclick="document.getElementById('imageInput').click()">🖼️ Из фото (K-means)</button>
+                    <button class="quick-btn" onclick="invertColor()">🔄 Инверт</button>
+                    <button class="quick-btn" onclick="generateRamps()">📊 Ramps</button>
                 </div>
                 
                 <input type="file" id="imageInput" accept="image/*" onchange="extractFromImage(event)">
                 
+                <div class="cvd-selector">
+                    <h4>Симуляция дальтонизма</h4>
+                    <div class="cvd-grid">
+                        <button class="cvd-btn active" data-cvd="none">Normal</button>
+                        <button class="cvd-btn" data-cvd="protanopia">Protanopia</button>
+                        <button class="cvd-btn" data-cvd="deuteranopia">Deuteranopia</button>
+                        <button class="cvd-btn" data-cvd="tritanopia">Tritanopia</button>
+                    </div>
+                </div>
+                
                 <div class="scheme-selector">
                     <h4>Цветовая схема</h4>
                     <div class="scheme-grid">
-                        <button class="scheme-btn active" data-scheme="monochromatic">Монохромная</button>
-                        <button class="scheme-btn" data-scheme="complementary">Комплементар</button>
-                        <button class="scheme-btn" data-scheme="analogous">Аналоговая</button>
-                        <button class="scheme-btn" data-scheme="triadic">Триадная</button>
+                        <button class="scheme-btn active" data-scheme="monochromatic">Монохром</button>
+                        <button class="scheme-btn" data-scheme="complementary">Комплемент</button>
+                        <button class="scheme-btn" data-scheme="analogous">Аналогия</button>
+                        <button class="scheme-btn" data-scheme="triadic">Триада</button>
                         <button class="scheme-btn" data-scheme="split">Сплит</button>
-                        <button class="scheme-btn" data-scheme="tetradic">Тетрадная</button>
+                        <button class="scheme-btn" data-scheme="tetradic">Тетрада</button>
                     </div>
                 </div>
                 
@@ -142,26 +160,25 @@
                 </div>
                 
                 <div class="palette-section">
-                    <h4>Основные цвета</h4>
-                    <div id="primaryPalette"></div>
-                    
-                    <h4 style="margin-top: 15px;">Состояния</h4>
-                    <div id="statesPalette"></div>
-                    
-                    <h4 style="margin-top: 15px;">Фоны</h4>
-                    <div id="basePalette"></div>
-                    
-                    <h4 style="margin-top: 15px;">Семантика</h4>
-                    <div id="alertsPalette"></div>
+                    <h4>
+                        Палитра
+                        <button class="autofix-btn" onclick="autoFixAccessibility()">Auto-Fix</button>
+                    </h4>
+                    <div id="colorList"></div>
                 </div>
                 
-                <div class="preset-section">
-                    <h4>Пресеты</h4>
-                    <div class="quick-actions">
-                        <button class="quick-btn" onclick="savePreset()">💾 Сохранить</button>
-                        <button class="quick-btn" onclick="loadPresets()">📂 Загрузить</button>
+                <div class="palette-section">
+                    <h4>Контрастная матрица (APCA)</h4>
+                    <div class="contrast-matrix" id="contrastMatrix"></div>
+                </div>
+                
+                <div class="mixer-section">
+                    <h4>Миксер палитр</h4>
+                    <div class="mixer-controls">
+                        <input type="color" id="mixColor" value="#ff6b6b">
+                        <input type="range" id="mixAmount" class="mixer-slider" min="0" max="100" value="50">
+                        <button class="quick-btn" onclick="mixPalettes()" style="width: auto; padding: 8px 12px;">Mix</button>
                     </div>
-                    <div class="preset-grid" id="presetList"></div>
                 </div>
                 
                 <div class="export-section">
@@ -181,12 +198,12 @@
                 <div class="preview-tabs">
                     <button class="preview-tab active" data-preview="web">🌐 Web UI</button>
                     <button class="preview-tab" data-preview="game">🎮 Game UI</button>
-                    <button class="preview-tab" data-preview="gradient">🌈 Градиенты</button>
+                    <button class="preview-tab" data-preview="ramps">📊 Tone Ramps</button>
                 </div>
                 
                 <div class="preview-mode active" id="webPreview"></div>
                 <div class="preview-mode" id="gamePreview"></div>
-                <div class="preview-mode" id="gradientPreview"></div>
+                <div class="preview-mode" id="rampsPreview"></div>
             </div>
         </div>
     </div>
@@ -195,49 +212,122 @@
     <script>
         let currentMode = 'light';
         let currentScheme = 'monochromatic';
+        let currentColorSpace = 'oklch';
+        let currentCVD = 'none';
         let currentPalette = {};
-        let presets = JSON.parse(localStorage.getItem('colorPresets') || '[]');
         
-        document.getElementById('primaryColor').addEventListener('input', e => {
-            document.getElementById('primaryHex').value = e.target.value.toUpperCase();
-            generateTheme(e.target.value);
-        });
+        // OKLCH conversion functions
+        function hexToOKLCH(hex) {
+            const rgb = hexToRgb(hex);
+            const [r, g, b] = [rgb.r/255, rgb.g/255, rgb.b/255];
+            
+            // sRGB to linear RGB
+            const toLinear = (c) => c <= 0.04045 ? c / 12.92 : Math.pow((c + 0.055) / 1.055, 2.4);
+            const lr = toLinear(r), lg = toLinear(g), lb = toLinear(b);
+            
+            // Linear RGB to OKLab
+            const l = 0.4122214708 * lr + 0.5363325363 * lg + 0.0514459929 * lb;
+            const m = 0.2119034982 * lr + 0.6806995451 * lg + 0.1073969566 * lb;
+            const s = 0.0883024619 * lr + 0.2817188376 * lg + 0.6299787005 * lb;
+            
+            const l_ = Math.cbrt(l);
+            const m_ = Math.cbrt(m);
+            const s_ = Math.cbrt(s);
+            
+            const L = 0.2104542553 * l_ + 0.7936177850 * m_ - 0.0040720468 * s_;
+            const a = 1.9779984951 * l_ - 2.4285922050 * m_ + 0.4505937099 * s_;
+            const b_ = 0.0259040371 * l_ + 0.7827717662 * m_ - 0.8086757660 * s_;
+            
+            // Lab to LCH
+            const C = Math.sqrt(a * a + b_ * b_);
+            let H = Math.atan2(b_, a) * 180 / Math.PI;
+            if (H < 0) H += 360;
+            
+            return { L: L * 100, C: C * 100, H };
+        }
         
-        document.getElementById('primaryHex').addEventListener('input', e => {
-            const val = e.target.value.toUpperCase();
-            if (/^#[0-9A-F]{6}$/i.test(val)) {
-                document.getElementById('primaryColor').value = val;
-                generateTheme(val);
+        function oklchToHex(L, C, H) {
+            L /= 100; C /= 100;
+            const a = C * Math.cos(H * Math.PI / 180);
+            const b = C * Math.sin(H * Math.PI / 180);
+            
+            const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+            const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+            const s_ = L - 0.0894841775 * a - 1.2914855480 * b;
+            
+            const l = l_ * l_ * l_;
+            const m = m_ * m_ * m_;
+            const s = s_ * s_ * s_;
+            
+            let lr = +4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s;
+            let lg = -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s;
+            let lb = -0.0041960863 * l - 0.7034186147 * m + 1.7076147010 * s;
+            
+            const fromLinear = (c) => {
+                c = Math.max(0, Math.min(1, c));
+                return c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1/2.4) - 0.055;
+            };
+            
+            const r = Math.round(fromLinear(lr) * 255);
+            const g = Math.round(fromLinear(lg) * 255);
+            const b = Math.round(fromLinear(lb) * 255);
+            
+            return rgbToHex(Math.max(0, Math.min(255, r)), Math.max(0, Math.min(255, g)), Math.max(0, Math.min(255, b)));
+        }
+        
+        // APCA contrast (simplified)
+        function calcAPCA(txtColor, bgColor) {
+            const txtY = getLuminance(txtColor);
+            const bgY = getLuminance(bgColor);
+            
+            const Ytxt = txtY > 0.022 ? Math.pow(txtY, 0.57) : txtY + 0.032;
+            const Ybg = bgY > 0.022 ? Math.pow(bgY, 0.57) : bgY + 0.032;
+            
+            let Lc = Ytxt > Ybg ? (Math.pow(Ytxt, 0.62) - Math.pow(Ybg, 0.65)) * 1.14 : (Math.pow(Ybg, 0.62) - Math.pow(Ytxt, 0.65)) * 1.14;
+            
+            return Math.abs(Lc * 100);
+        }
+        
+        function getAPCALevel(score) {
+            if (score >= 90) return 'AAA';
+            if (score >= 75) return 'AA';
+            if (score >= 60) return 'PASS';
+            return 'FAIL';
+        }
+        
+        // Color blindness simulation (Brettel-Vienot-Mollon)
+        function simulateCVD(hex, type) {
+            if (type === 'none') return hex;
+            
+            const rgb = hexToRgb(hex);
+            let [r, g, b] = [rgb.r/255, rgb.g/255, rgb.b/255];
+            
+            // Simplified simulation matrices
+            let matrix;
+            switch(type) {
+                case 'protanopia':
+                    matrix = [0.567, 0.433, 0, 0.558, 0.442, 0, 0, 0.242, 0.758];
+                    break;
+                case 'deuteranopia':
+                    matrix = [0.625, 0.375, 0, 0.7, 0.3, 0, 0, 0.3, 0.7];
+                    break;
+                case 'tritanopia':
+                    matrix = [0.95, 0.05, 0, 0, 0.433, 0.567, 0, 0.475, 0.525];
+                    break;
+                default:
+                    return hex;
             }
-        });
-        
-        document.querySelectorAll('.mode-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentMode = btn.dataset.mode;
-                generateTheme(document.getElementById('primaryColor').value);
-            });
-        });
-        
-        document.querySelectorAll('.scheme-btn').forEach(btn => {
-            btn.addEventListener('click', () => {
-                document.querySelectorAll('.scheme-btn').forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                currentScheme = btn.dataset.scheme;
-                generateTheme(document.getElementById('primaryColor').value);
-            });
-        });
-        
-        document.querySelectorAll('.preview-tab').forEach(tab => {
-            tab.addEventListener('click', () => {
-                document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
-                tab.classList.add('active');
-                const previewType = tab.dataset.preview;
-                document.querySelectorAll('.preview-mode').forEach(p => p.classList.remove('active'));
-                document.getElementById(previewType + 'Preview').classList.add('active');
-            });
-        });
+            
+            const nr = matrix[0] * r + matrix[1] * g + matrix[2] * b;
+            const ng = matrix[3] * r + matrix[4] * g + matrix[5] * b;
+            const nb = matrix[6] * r + matrix[7] * g + matrix[8] * b;
+            
+            return rgbToHex(
+                Math.round(Math.max(0, Math.min(1, nr)) * 255),
+                Math.round(Math.max(0, Math.min(1, ng)) * 255),
+                Math.round(Math.max(0, Math.min(1, nb)) * 255)
+            );
+        }
         
         function hexToRgb(hex) {
             const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
@@ -293,19 +383,28 @@
             );
         }
         
+        function adjustColorOKLCH(hex, deltaL, deltaC, deltaH) {
+            const oklch = hexToOKLCH(hex);
+            return oklchToHex(
+                Math.max(0, Math.min(100, oklch.L + deltaL)),
+                Math.max(0, oklch.C + deltaC),
+                (oklch.H + deltaH + 360) % 360
+            );
+        }
+        
         function adjustLightness(hex, amount) {
+            if (currentColorSpace === 'oklch') {
+                return adjustColorOKLCH(hex, amount, 0, 0);
+            }
             const hsl = hexToHsl(hex);
             hsl.l = Math.max(0, Math.min(100, hsl.l + amount));
             return hslToHex(hsl.h, hsl.s, hsl.l);
         }
         
-        function adjustSaturation(hex, amount) {
-            const hsl = hexToHsl(hex);
-            hsl.s = Math.max(0, Math.min(100, hsl.s + amount));
-            return hslToHex(hsl.h, hsl.s, hsl.l);
-        }
-        
         function rotateHue(hex, degrees) {
+            if (currentColorSpace === 'oklch') {
+                return adjustColorOKLCH(hex, 0, 0, degrees);
+            }
             const hsl = hexToHsl(hex);
             hsl.h = (hsl.h + degrees + 360) % 360;
             return hslToHex(hsl.h, hsl.s, hsl.l);
@@ -320,26 +419,12 @@
             return 0.2126 * r + 0.7152 * g + 0.0722 * b;
         }
         
-        function getContrastRatio(hex1, hex2) {
-            const lum1 = getLuminance(hex1);
-            const lum2 = getLuminance(hex2);
-            const lighter = Math.max(lum1, lum2);
-            const darker = Math.min(lum1, lum2);
-            return (lighter + 0.05) / (darker + 0.05);
-        }
-        
-        function getContrastLevel(ratio) {
-            if (ratio >= 7) return 'AAA';
-            if (ratio >= 4.5) return 'AA';
-            return 'FAIL';
-        }
-        
-        function getTextColor(bgHex, isLight) {
-            const darkText = isLight ? '#1a1a1a' : '#e0e0e0';
-            const lightText = isLight ? '#ffffff' : '#0a0a0a';
-            const darkContrast = getContrastRatio(bgHex, darkText);
-            const lightContrast = getContrastRatio(bgHex, lightText);
-            return darkContrast > lightContrast ? darkText : lightText;
+        function getTextColor(bgHex) {
+            const darkText = currentMode === 'light' ? '#1a1a1a' : '#e0e0e0';
+            const lightText = currentMode === 'light' ? '#ffffff' : '#0a0a0a';
+            const darkScore = calcAPCA(darkText, bgHex);
+            const lightScore = calcAPCA(lightText, bgHex);
+            return darkScore > lightScore ? darkText : lightText;
         }
         
         function randomColor() {
@@ -358,14 +443,7 @@
             generateTheme(inverted);
         }
         
-        function lightenColor() {
-            const current = document.getElementById('primaryColor').value;
-            const lightened = adjustLightness(current, 15);
-            document.getElementById('primaryColor').value = lightened;
-            document.getElementById('primaryHex').value = lightened;
-            generateTheme(lightened);
-        }
-        
+        // K-means clustering for palette extraction
         function extractFromImage(event) {
             const file = event.target.files[0];
             if (!file) return;
@@ -381,75 +459,115 @@
                     ctx.drawImage(img, 0, 0);
                     
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
-                    const colorMap = {};
+                    const pixels = [];
                     
                     for (let i = 0; i < imageData.length; i += 4) {
-                        const r = imageData[i], g = imageData[i+1], b = imageData[i+2], a = imageData[i+3];
-                        if (a < 128) continue;
-                        const hex = rgbToHex(r, g, b);
-                        colorMap[hex] = (colorMap[hex] || 0) + 1;
+                        if (imageData[i+3] < 128) continue;
+                        pixels.push([imageData[i], imageData[i+1], imageData[i+2]]);
                     }
                     
-                    const sortedColors = Object.entries(colorMap).sort((a, b) => b[1] - a[1]);
-                    if (sortedColors.length > 0) {
-                        const dominantColor = sortedColors[0][0];
-                        document.getElementById('primaryColor').value = dominantColor;
-                        document.getElementById('primaryHex').value = dominantColor;
-                        generateTheme(dominantColor);
-                    }
+                    // K-means with k=5
+                    const clusters = kMeans(pixels, 5, 20);
+                    const palette = clusters.map(c => rgbToHex(Math.round(c[0]), Math.round(c[1]), Math.round(c[2])));
+                    
+                    // Use most vibrant as primary
+                    let maxSat = 0, primaryIdx = 0;
+                    palette.forEach((color, i) => {
+                        const hsl = hexToHsl(color);
+                        if (hsl.s > maxSat) {
+                            maxSat = hsl.s;
+                            primaryIdx = i;
+                        }
+                    });
+                    
+                    const primaryColor = palette[primaryIdx];
+                    document.getElementById('primaryColor').value = primaryColor;
+                    document.getElementById('primaryHex').value = primaryColor;
+                    generateTheme(primaryColor);
+                    
+                    alert(`Извлечено ${palette.length} цветов методом K-means!\n${palette.join('\n')}`);
                 };
                 img.src = e.target.result;
             };
             reader.readAsDataURL(file);
         }
         
-        function savePreset() {
-            const name = prompt('Название пресета:', `Preset ${presets.length + 1}`);
-            if (!name) return;
+        function kMeans(data, k, maxIter) {
+            let centroids = data.slice(0, k).map(p => [...p]);
             
-            presets.push({
-                name,
-                color: document.getElementById('primaryColor').value,
-                scheme: currentScheme,
-                mode: currentMode
-            });
-            localStorage.setItem('colorPresets', JSON.stringify(presets));
-            renderPresets();
+            for (let iter = 0; iter < maxIter; iter++) {
+                const clusters = Array(k).fill().map(() => []);
+                
+                data.forEach(point => {
+                    let minDist = Infinity, closestIdx = 0;
+                    centroids.forEach((centroid, i) => {
+                        const dist = Math.sqrt(
+                            Math.pow(point[0] - centroid[0], 2) +
+                            Math.pow(point[1] - centroid[1], 2) +
+                            Math.pow(point[2] - centroid[2], 2)
+                        );
+                        if (dist < minDist) {
+                            minDist = dist;
+                            closestIdx = i;
+                        }
+                    });
+                    clusters[closestIdx].push(point);
+                });
+                
+                centroids = clusters.map(cluster => {
+                    if (cluster.length === 0) return centroids[0];
+                    const sum = cluster.reduce((acc, p) => [acc[0] + p[0], acc[1] + p[1], acc[2] + p[2]], [0, 0, 0]);
+                    return [sum[0] / cluster.length, sum[1] / cluster.length, sum[2] / cluster.length];
+                });
+            }
+            
+            return centroids;
         }
         
-        function loadPresets() {
-            renderPresets();
-        }
-        
-        function renderPresets() {
-            const list = document.getElementById('presetList');
-            list.innerHTML = presets.map((p, i) => `
-                <div class="preset-item" onclick="applyPreset(${i})">
-                    <div class="preset-color" style="background: ${p.color}"></div>
-                    <span>${p.name}</span>
-                </div>
-            `).join('');
-        }
-        
-        function applyPreset(index) {
-            const preset = presets[index];
-            document.getElementById('primaryColor').value = preset.color;
-            document.getElementById('primaryHex').value = preset.color;
-            currentScheme = preset.scheme;
-            currentMode = preset.mode;
+        function mixPalettes() {
+            const mixColor = document.getElementById('mixColor').value;
+            const amount = parseFloat(document.getElementById('mixAmount').value) / 100;
             
-            document.querySelectorAll('.scheme-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.scheme === preset.scheme);
-            });
-            document.querySelectorAll('.mode-btn').forEach(b => {
-                b.classList.toggle('active', b.dataset.mode === preset.mode);
+            Object.keys(currentPalette).forEach(key => {
+                const original = currentPalette[key];
+                const rgb1 = hexToRgb(original);
+                const rgb2 = hexToRgb(mixColor);
+                
+                const mixed = rgbToHex(
+                    Math.round(rgb1.r * (1 - amount) + rgb2.r * amount),
+                    Math.round(rgb1.g * (1 - amount) + rgb2.g * amount),
+                    Math.round(rgb1.b * (1 - amount) + rgb2.b * amount)
+                );
+                
+                currentPalette[key] = mixed;
             });
             
-            generateTheme(preset.color);
+            renderPalette();
+            renderPreviews();
+        }
+        
+        function autoFixAccessibility() {
+            const bg = currentPalette.background;
+            Object.keys(currentPalette).forEach(key => {
+                if (key.includes('text') || key.includes('Text')) {
+                    const score = calcAPCA(currentPalette[key], bg);
+                    if (score < 60) {
+                        // Adjust lightness until passing
+                        let adjusted = currentPalette[key];
+                        let dir = getLuminance(adjusted) > getLuminance(bg) ? 5 : -5;
+                        while (calcAPCA(adjusted, bg) < 60) {
+                            adjusted = adjustLightness(adjusted, dir);
+                        }
+                        currentPalette[key] = adjusted;
+                    }
+                }
+            });
+            renderPalette();
+            renderPreviews();
+            alert('Accessibility auto-fixed!');
         }
         
         function generateColorScheme(baseHex, scheme) {
-            const hsl = hexToHsl(baseHex);
             const colors = [baseHex];
             
             switch(scheme) {
@@ -457,7 +575,7 @@
                     colors.push(
                         adjustLightness(baseHex, 15),
                         adjustLightness(baseHex, -15),
-                        adjustSaturation(baseHex, -20)
+                        adjustLightness(baseHex, -30)
                     );
                     break;
                 case 'complementary':
@@ -502,186 +620,152 @@
             const schemeColors = generateColorScheme(primaryColor, currentScheme);
             
             const primary = schemeColors[0];
-            const primaryHover = adjustLightness(primary, isLight ? -10 : 10);
-            const primaryActive = adjustLightness(primary, isLight ? -20 : 20);
-            const primaryDisabled = adjustSaturation(adjustLightness(primary, isLight ? 30 : -30), -40);
-            
             const secondary = schemeColors[1] || adjustLightness(primary, 20);
-            const accent = schemeColors[2] || adjustSaturation(primary, 20);
+            const accent = schemeColors[2] || adjustLightness(primary, -10);
             
             const background = isLight ? '#ffffff' : '#0f0f0f';
-            const backgroundAlt = isLight ? '#f8f9fa' : '#1a1a1a';
             const surface = isLight ? '#ffffff' : '#242424';
             const border = isLight ? '#dee2e6' : '#3d3d3d';
             
             const textPrimary = isLight ? '#1a1a1a' : '#f0f0f0';
             const textSecondary = isLight ? '#495057' : '#b0b0b0';
-            const textDisabled = isLight ? '#adb5bd' : '#606060';
-            
-            const success = '#28a745';
-            const successBg = isLight ? '#d4edda' : '#1a3d24';
-            const successText = getTextColor(successBg, isLight);
-            
-            const warning = '#ffc107';
-            const warningBg = isLight ? '#fff3cd' : '#3d3420';
-            const warningText = getTextColor(warningBg, isLight);
-            
-            const error = '#dc3545';
-            const errorBg = isLight ? '#f8d7da' : '#3d1a1f';
-            const errorText = getTextColor(errorBg, isLight);
-            
-            const info = '#17a2b8';
-            const infoBg = isLight ? '#d1ecf1' : '#1a3639';
-            const infoText = getTextColor(infoBg, isLight);
             
             currentPalette = {
-                primary, primaryHover, primaryActive, primaryDisabled,
-                secondary, accent,
-                background, backgroundAlt, surface, border,
-                textPrimary, textSecondary, textDisabled,
-                success, successBg, successText,
-                warning, warningBg, warningText,
-                error, errorBg, errorText,
-                info, infoBg, infoText
+                primary, secondary, accent,
+                background, surface, border,
+                textPrimary, textSecondary,
+                success: '#28a745',
+                warning: '#ffc107',
+                error: '#dc3545',
+                info: '#17a2b8'
             };
             
             renderPalette();
-            renderWebPreview();
-            renderGamePreview();
-            renderGradientPreview();
+            renderPreviews();
         }
         
         function renderPalette() {
-            const p = currentPalette;
+            let html = '';
+            const bg = currentPalette.background;
             
-            document.getElementById('primaryPalette').innerHTML = `
-                ${colorRow('Primary', p.primary, p.background)}
-                ${colorRow('Secondary', p.secondary, p.background)}
-                ${colorRow('Accent', p.accent, p.background)}
-            `;
+            Object.entries(currentPalette).forEach(([name, color]) => {
+                const simColor = simulateCVD(color, currentCVD);
+                const score = calcAPCA(color, bg).toFixed(1);
+                const level = getAPCALevel(score);
+                const badgeClass = `apca-${level.toLowerCase()}`;
+                
+                html += `
+                    <div class="color-row">
+                        <div class="color-swatch" style="background: ${simColor}" onclick="copyColor('${color}')"></div>
+                        <div class="color-info">
+                            <div class="color-label">${name}</div>
+                            <div class="color-meta">
+                                <div class="color-value" onclick="copyColor('${color}')">${color}</div>
+                                <div class="contrast-badge ${badgeClass}">${score} ${level}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
             
-            document.getElementById('statesPalette').innerHTML = `
-                ${colorRow('Hover', p.primaryHover, p.background)}
-                ${colorRow('Active', p.primaryActive, p.background)}
-                ${colorRow('Disabled', p.primaryDisabled, p.background)}
-            `;
-            
-            document.getElementById('basePalette').innerHTML = `
-                ${colorRow('Background', p.background, p.textPrimary)}
-                ${colorRow('Surface', p.surface, p.textPrimary)}
-                ${colorRow('Border', p.border, p.background)}
-            `;
-            
-            document.getElementById('alertsPalette').innerHTML = `
-                ${colorRow('Success', p.success, p.successBg)}
-                ${colorRow('Warning', p.warning, p.warningBg)}
-                ${colorRow('Error', p.error, p.errorBg)}
-                ${colorRow('Info', p.info, p.infoBg)}
-            `;
+            document.getElementById('colorList').innerHTML = html;
+            renderContrastMatrix();
         }
         
-        function colorRow(name, color, contrastWith) {
-            const ratio = getContrastRatio(color, contrastWith).toFixed(2);
-            const level = getContrastLevel(ratio);
-            const badgeClass = level === 'AAA' ? 'contrast-aaa' : level === 'AA' ? 'contrast-aa' : 'contrast-fail';
+        function renderContrastMatrix() {
+            const colors = Object.values(currentPalette);
+            let html = '<div class="matrix-grid">';
             
-            return `
-                <div class="color-row">
-                    <div class="color-swatch" style="background: ${color}" onclick="copyColor('${color}')"></div>
-                    <div class="color-info">
-                        <div class="color-label">${name}</div>
-                        <div class="color-meta">
-                            <div class="color-value" onclick="copyColor('${color}')">${color}</div>
-                            <div class="contrast-badge ${badgeClass}">${ratio}:1</div>
-                        </div>
+            colors.forEach((color1, i) => {
+                colors.forEach((color2, j) => {
+                    if (i === j) {
+                        html += `<div class="matrix-cell" style="background: ${simulateCVD(color1, currentCVD)};"></div>`;
+                    } else {
+                        const score = calcAPCA(color1, color2);
+                        const level = getAPCALevel(score);
+                        const bg = level === 'FAIL' ? '#dc3545' : level === 'PASS' ? '#ffc107' : '#28a745';
+                        html += `<div class="matrix-cell" style="background: ${bg}; color: white;" title="${score.toFixed(0)}">${score.toFixed(0)}</div>`;
+                    }
+                });
+            });
+            
+            html += '</div>';
+            document.getElementById('contrastMatrix').innerHTML = html;
+        }
+        
+        function renderPreviews() {
+            const p = currentPalette;
+            
+            // Web preview
+            document.getElementById('webPreview').innerHTML = `
+                <div class="ui-preview" style="background: ${p.background}; color: ${p.textPrimary};">
+                    <div class="ui-nav" style="background: ${simulateCVD(p.primary, currentCVD)}; color: ${getTextColor(p.primary)};">
+                        <div style="font-weight: bold;">App Header</div>
+                        <div style="font-size: 13px;">Home • Products • About</div>
+                    </div>
+                    <div class="ui-content" style="background: ${p.surface}; border: 1px solid ${p.border};">
+                        <h4>Контент</h4>
+                        <p style="color: ${p.textSecondary};">Описание с вторичным текстом.</p>
+                    </div>
+                    <div class="ui-buttons">
+                        <button class="ui-btn" style="background: ${simulateCVD(p.primary, currentCVD)}; color: ${getTextColor(p.primary)};">Primary</button>
+                        <button class="ui-btn" style="background: ${simulateCVD(p.secondary, currentCVD)}; color: ${getTextColor(p.secondary)};">Secondary</button>
+                        <button class="ui-btn" style="background: ${simulateCVD(p.accent, currentCVD)}; color: ${getTextColor(p.accent)};">Accent</button>
+                    </div>
+                    <div class="ui-alerts">
+                        <div class="ui-alert" style="background: ${adjustLightness(p.success, 40)}; color: ${adjustLightness(p.success, -40)}; border-left-color: ${p.success};">✓ Success</div>
+                        <div class="ui-alert" style="background: ${adjustLightness(p.warning, 40)}; color: ${adjustLightness(p.warning, -60)}; border-left-color: ${p.warning};">⚠ Warning</div>
+                        <div class="ui-alert" style="background: ${adjustLightness(p.error, 40)}; color: ${adjustLightness(p.error, -40)}; border-left-color: ${p.error};">✕ Error</div>
                     </div>
                 </div>
             `;
+            
+            // Game preview
+            document.getElementById('gamePreview').innerHTML = `
+                <div style="padding: 20px; background: ${p.background}; color: ${p.textPrimary};">
+                    <div style="padding: 20px; background: ${p.surface}; border: 2px solid ${p.border}; border-radius: 8px; margin-bottom: 20px;">
+                        <h4>Health Bar</h4>
+                        <div style="height: 30px; background: ${adjustLightness(p.background, 10)}; border: 2px solid ${p.border}; border-radius: 6px; overflow: hidden;">
+                            <div style="width: 75%; height: 100%; background: linear-gradient(90deg, ${p.success}, ${adjustLightness(p.success, 15)});"></div>
+                        </div>
+                    </div>
+                    <div style="padding: 20px; background: ${p.surface}; border: 2px solid ${p.border}; border-radius: 8px;">
+                        <h4>Game Menu</h4>
+                        <div style="padding: 12px; margin: 8px 0; background: ${simulateCVD(p.primary, currentCVD)}; color: ${getTextColor(p.primary)}; border-radius: 6px;">▶ Start Game</div>
+                        <div style="padding: 12px; margin: 8px 0; background: ${adjustLightness(p.background, 10)}; border-radius: 6px;">⚙ Settings</div>
+                        <div style="padding: 12px; margin: 8px 0; background: ${adjustLightness(p.background, 10)}; border-radius: 6px;">📊 Leaderboard</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function generateRamps() {
+            const baseColor = document.getElementById('primaryColor').value;
+            const oklch = hexToOKLCH(baseColor);
+            const ramps = [];
+            
+            // Generate 50-900 scale
+            for (let i = 50; i <= 900; i += 50) {
+                const targetL = 100 - (i / 10);
+                const rampColor = oklchToHex(targetL, oklch.C * (1 - i / 1000), oklch.H);
+                ramps.push({ weight: i, color: rampColor });
+            }
+            
+            let html = '<div style="padding: 20px; background: ' + currentPalette.background + ';">';
+            html += '<h4>OKLCH Tone Ramps (50-900)</h4>';
+            html += '<div class="ramp-preview">';
+            ramps.forEach(r => {
+                html += `<div class="ramp-swatch" style="background: ${r.color};" onclick="copyColor('${r.color}')" title="${r.color}"><div class="ramp-label">${r.weight}</div></div>`;
+            });
+            html += '</div>';
+            html += '<p style="color: #888; font-size: 12px; margin-top: 10px;">Клик для копирования цвета</p>';
+            html += '</div>';
+            
+            document.getElementById('rampsPreview').innerHTML = html;
         }
         
         function copyColor(color) {
             navigator.clipboard.writeText(color);
-        }
-        
-        function renderWebPreview() {
-            const p = currentPalette;
-            const primaryText = getTextColor(p.primary, currentMode === 'light');
-            
-            document.getElementById('webPreview').innerHTML = `
-                <div class="ui-preview" style="background: ${p.background};">
-                    <div class="ui-nav" style="background: ${p.primary}; color: ${primaryText};">
-                        <div class="ui-nav-title">Application</div>
-                        <div class="ui-nav-links">Home • Products • About</div>
-                    </div>
-                    
-                    <div class="ui-content" style="background: ${p.surface}; color: ${p.textPrimary}; border: 1px solid ${p.border};">
-                        <h4 class="ui-heading">Заголовок контента</h4>
-                        <p class="ui-text" style="color: ${p.textSecondary};">Описание с вторичным текстом для читаемости.</p>
-                        <input class="ui-input" placeholder="Введите текст..." style="background: ${p.background}; color: ${p.textPrimary}; border-color: ${p.border};">
-                    </div>
-                    
-                    <div class="ui-buttons">
-                        <button class="ui-btn" style="background: ${p.primary}; color: ${primaryText};">Primary</button>
-                        <button class="ui-btn" style="background: ${p.secondary}; color: ${getTextColor(p.secondary, currentMode === 'light')};">Secondary</button>
-                        <button class="ui-btn" style="background: ${p.accent}; color: ${getTextColor(p.accent, currentMode === 'light')};">Accent</button>
-                    </div>
-                    
-                    <div class="ui-alerts">
-                        <div class="ui-alert" style="background: ${p.successBg}; color: ${p.successText}; border-left-color: ${p.success};">✓ Успешно выполнено</div>
-                        <div class="ui-alert" style="background: ${p.infoBg}; color: ${p.infoText}; border-left-color: ${p.info};">ℹ Информация</div>
-                        <div class="ui-alert" style="background: ${p.warningBg}; color: ${p.warningText}; border-left-color: ${p.warning};">⚠ Предупреждение</div>
-                        <div class="ui-alert" style="background: ${p.errorBg}; color: ${p.errorText}; border-left-color: ${p.error};">✕ Ошибка</div>
-                    </div>
-                    
-                    <div class="ui-cards">
-                        <div class="ui-card" style="background: ${p.surface}; color: ${p.textPrimary}; border-color: ${p.border};">
-                            <h5>Card 1</h5>
-                            <p style="color: ${p.textSecondary}; font-size: 12px;">Карточка на surface</p>
-                        </div>
-                        <div class="ui-card" style="background: ${p.backgroundAlt}; color: ${p.textPrimary}; border-color: ${p.border};">
-                            <h5>Card 2</h5>
-                            <p style="color: ${p.textSecondary}; font-size: 12px;">Альтернативный фон</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function renderGamePreview() {
-            const p = currentPalette;
-            
-            document.getElementById('gamePreview').innerHTML = `
-                <div class="game-preview" style="background: ${p.background}; color: ${p.textPrimary};">
-                    <div class="game-hud" style="background: ${p.surface}; border: 2px solid ${p.border};">
-                        <h4 style="margin: 0 0 10px 0;">Health Bar</h4>
-                        <div class="health-bar" style="background: ${p.backgroundAlt}; border-color: ${p.border};">
-                            <div class="health-fill" style="width: 75%; background: linear-gradient(90deg, ${p.success}, ${adjustLightness(p.success, 15)});"></div>
-                        </div>
-                    </div>
-                    
-                    <div class="game-menu" style="background: ${p.surface}; border: 2px solid ${p.border};">
-                        <h4 style="margin: 0 0 15px 0;">Game Menu</h4>
-                        <div class="menu-item" style="background: ${p.primary}; color: ${getTextColor(p.primary, currentMode === 'light')};">▶ Start Game</div>
-                        <div class="menu-item" style="background: ${p.backgroundAlt}; color: ${p.textPrimary};">⚙ Settings</div>
-                        <div class="menu-item" style="background: ${p.backgroundAlt}; color: ${p.textPrimary};">📊 Leaderboard</div>
-                        <div class="menu-item" style="background: ${p.errorBg}; color: ${p.errorText};">✕ Exit</div>
-                    </div>
-                </div>
-            `;
-        }
-        
-        function renderGradientPreview() {
-            const p = currentPalette;
-            
-            document.getElementById('gradientPreview').innerHTML = `
-                <div style="padding: 20px; background: ${p.background}; color: ${p.textPrimary};">
-                    <h4>Градиенты</h4>
-                    <div class="gradient-preview" style="background: linear-gradient(90deg, ${p.primary}, ${p.secondary});"></div>
-                    <div class="gradient-preview" style="background: linear-gradient(135deg, ${p.primary}, ${p.accent});"></div>
-                    <div class="gradient-preview" style="background: linear-gradient(90deg, ${p.success}, ${p.info});"></div>
-                    <div class="gradient-preview" style="background: radial-gradient(circle, ${p.primary}, ${p.background});"></div>
-                </div>
-            `;
         }
         
         function exportPalette(format) {
@@ -690,49 +774,39 @@
             
             switch(format) {
                 case 'css':
-                    output = `/* ${currentMode} - ${currentScheme} */\n:root {\n`;
+                    output = `:root {\n`;
                     for (let [key, value] of Object.entries(p)) {
                         output += `  --${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};\n`;
                     }
                     output += '}';
                     break;
-                    
                 case 'scss':
-                    output = `// ${currentMode} - ${currentScheme}\n`;
                     for (let [key, value] of Object.entries(p)) {
                         output += `$${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value};\n`;
                     }
                     break;
-                    
                 case 'json':
                     output = JSON.stringify(p, null, 2);
                     break;
-                    
                 case 'tailwind':
-                    output = `module.exports = {\n  theme: {\n    extend: {\n      colors: {\n`;
+                    output = `colors: {\n`;
                     for (let [key, value] of Object.entries(p)) {
-                        output += `        ${key}: '${value}',\n`;
+                        output += `  ${key}: '${value}',\n`;
                     }
-                    output += '      }\n    }\n  }\n}';
+                    output += '}';
                     break;
-                    
                 case 'unity':
-                    output = `// Unity C# Color Palette\n`;
                     for (let [key, value] of Object.entries(p)) {
                         const rgb = hexToRgb(value);
                         output += `public static Color ${key} = new Color(${(rgb.r/255).toFixed(3)}f, ${(rgb.g/255).toFixed(3)}f, ${(rgb.b/255).toFixed(3)}f);\n`;
                     }
                     break;
-                    
                 case 'godot':
-                    output = `# Godot Color Palette\n`;
                     for (let [key, value] of Object.entries(p)) {
                         output += `var ${key} = Color("${value}")\n`;
                     }
                     break;
-                    
                 case 'unreal':
-                    output = `// Unreal Engine Color Palette\n`;
                     for (let [key, value] of Object.entries(p)) {
                         const rgb = hexToRgb(value);
                         output += `FLinearColor ${key}(${(rgb.r/255).toFixed(3)}f, ${(rgb.g/255).toFixed(3)}f, ${(rgb.b/255).toFixed(3)}f, 1.0f);\n`;
@@ -744,8 +818,71 @@
             alert(`Экспортировано: ${format.toUpperCase()}`);
         }
         
+        // Event listeners
+        document.getElementById('primaryColor').addEventListener('input', e => {
+            document.getElementById('primaryHex').value = e.target.value.toUpperCase();
+            generateTheme(e.target.value);
+        });
+        
+        document.getElementById('primaryHex').addEventListener('input', e => {
+            const val = e.target.value.toUpperCase();
+            if (/^#[0-9A-F]{6}$/i.test(val)) {
+                document.getElementById('primaryColor').value = val;
+                generateTheme(val);
+            }
+        });
+        
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentMode = btn.dataset.mode;
+                generateTheme(document.getElementById('primaryColor').value);
+            });
+        });
+        
+        document.querySelectorAll('.scheme-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.scheme-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentScheme = btn.dataset.scheme;
+                generateTheme(document.getElementById('primaryColor').value);
+            });
+        });
+        
+        document.querySelectorAll('.space-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.space-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentColorSpace = btn.dataset.space;
+                generateTheme(document.getElementById('primaryColor').value);
+            });
+        });
+        
+        document.querySelectorAll('.cvd-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.cvd-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentCVD = btn.dataset.cvd;
+                renderPalette();
+                renderPreviews();
+            });
+        });
+        
+        document.querySelectorAll('.preview-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.preview-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                const previewType = tab.dataset.preview;
+                document.querySelectorAll('.preview-mode').forEach(p => p.classList.remove('active'));
+                document.getElementById(previewType + 'Preview').classList.add('active');
+                if (previewType === 'ramps') generateRamps();
+            });
+        });
+        
+        // Init
         generateTheme('#007ACC');
-        renderPresets();
+        generateRamps();
     </script>
 </body>
 </html>
