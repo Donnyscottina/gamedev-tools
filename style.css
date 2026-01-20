@@ -99,16 +99,19 @@ body {
 
 /* Main Content Grid */
 main {
-    max-width: 1000px;
+    max-width: 1200px; /* Increased max-width */
     margin: 40px auto;
     padding: 20px;
     flex: 1;
+    width: 100%; /* Ensure it takes full width */
+    box-sizing: border-box;
 }
 
 .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    display: grid !important; /* Force grid layout */
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)) !important; /* Force columns */
     gap: 30px;
+    width: 100%;
 }
 
 .card {
@@ -121,6 +124,7 @@ main {
     overflow: hidden;
     display: flex;
     flex-direction: column;
+    height: 100%; /* Full height */
 }
 
 .card:hover {
@@ -131,7 +135,7 @@ main {
 
 .image-wrapper {
     width: 100%;
-    height: 180px;
+    height: 200px; /* Increased height */
     background: #000;
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -178,9 +182,9 @@ main {
 .footer-content {
     max-width: 1200px;
     margin: 0 auto;
-    display: flex; /* Changed from grid to flex for better control */
+    display: flex; 
     flex-wrap: wrap;
-    gap: 60px; /* Big gap between columns */
+    gap: 60px;
 }
 
 .footer-col {
@@ -189,7 +193,7 @@ main {
 }
 
 .footer-col h4 {
-    color: #fff !important; /* Force white */
+    color: #fff !important;
     font-family: var(--font-main);
     font-weight: bold;
     font-size: 16px;
@@ -206,7 +210,7 @@ main {
 }
 
 .footer-links {
-    list-style: none !important; /* Kill bullets */
+    list-style: none !important;
     padding: 0 !important;
     margin: 0 !important;
 }
@@ -216,9 +220,8 @@ main {
     padding-left: 0 !important;
 }
 
-/* Target A tags specifically with high specificity */
 .footer-links li a {
-    color: #bbb !important; /* Force light grey */
+    color: #bbb !important; 
     text-decoration: none !important;
     font-size: 14px;
     display: block;
@@ -226,12 +229,12 @@ main {
 }
 
 .footer-links li a:hover { 
-    color: #9cff8a !important; /* Green on hover */
+    color: #9cff8a !important; 
     transform: translateX(5px);
 }
 
 .footer-links li a:visited {
-    color: #bbb !important; /* Prevent purple visited links */
+    color: #bbb !important; 
 }
 
 .footer-bottom {
@@ -246,8 +249,9 @@ main {
 
 @media (max-width: 768px) {
     .mobile-menu-btn { display: flex; }
-    .main-nav { display: none; } /* Mobile menu handling remains same */
+    .main-nav { display: none; }
     .footer-content { flex-direction: column; gap: 30px; }
+    .grid { grid-template-columns: 1fr !important; } /* Single column on mobile */
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
