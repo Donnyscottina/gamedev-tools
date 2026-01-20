@@ -1,22 +1,5 @@
 document.addEventListener("DOMContentLoaded", () => {
-    // 1. Вставка хедера (если его нет)
-    if (!document.querySelector("header")) {
-        const headerHTML = `
-        <header>
-            <h1><a href="index.html">GAMEDEV TOOLS</a></h1>
-            <p>DONNYSCOTTINA HUB</p>
-        </header>`;
-        document.body.insertAdjacentHTML("afterbegin", headerHTML);
-    }
-
-    // 2. Вставка футера (если его нет)
-    if (!document.querySelector("footer")) {
-        const footerHTML = `
-        <footer>
-            © 2026 DONNYSCOTTINA INC. ALL RIGHTS RESERVED.
-        </footer>`;
-        document.body.insertAdjacentHTML("beforeend", footerHTML);
-    }
+    // Analytics Only - Header/Footer are now handled by header.js and footer.js
 
     // 3. Яндекс.Метрика
     (function(m,e,t,r,i,k,a){
