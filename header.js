@@ -12,6 +12,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 <span class="logo-text">GameDev Tools</span>
             </a>
             <nav class="main-nav">
+                <a href="/gamedev-tools/blog.html">Блог</a>
                 <a href="/gamedev-tools/palette-reducer.html">Palette Reducer</a>
                 <a href="/gamedev-tools/paletteremapper.html">Remapper</a>
                 <a href="/gamedev-tools/ui-theme-generator.html">UI Theme</a>
