@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Блог GameDev Tools: Оптимизация графики, Пиксель-арт и Технологии</title>
+    <meta name="description" content="Полезные статьи для инди-разработчиков: как упаковать спрайты, создать пиксель-арт в браузере и стилизовать игры под ретро консоли.">
+    <link rel="icon" type="image/x-icon" href="/gamedev-tools/favicon.ico">
+    <link href="style.css" rel="stylesheet">
+    <script src="header.js" defer></script>
+    <script src="footer.js" defer></script>
+    
+    <!-- Schema.org Markup for SEO -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "GameDev Tools Blog",
+      "description": "Советы и инструменты для разработки игр",
+      "blogPost": [
+        {
+          "@type": "BlogPosting",
+          "headline": "Как ускорить игру и снизить Draw Calls",
+          "description": "Гид по использованию Sprite Sheets для оптимизации производительности игр.",
+          "url": "https://donnyscottina.github.io/gamedev-tools/blog.html#optimization"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Пиксель-арт без установки софта",
+          "description": "Обзор браузерного редактора пиксель-арта для инди-разработчиков.",
+          "url": "https://donnyscottina.github.io/gamedev-tools/blog.html#pixelart"
+        },
+        {
+          "@type": "BlogPosting",
+          "headline": "Магия ретро-цветов",
+          "description": "Как стилизовать современные игры под GameBoy и NES с помощью палитр.",
+          "url": "https://donnyscottina.github.io/gamedev-tools/blog.html#palettes"
+        }
+      ]
+    }
+    </script>
+
+    <style>
+        .blog-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+            color: var(--text);
+            padding-bottom: 80px;
+        }
+
+        /* Typography */
+        h1.main-title {
+            text-align: center;
+            font-size: 32px;
+            color: var(--accent);
+            margin-bottom: 60px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 20px;
+        }
+
+        article {
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 30px;
+            margin-bottom: 50px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+
+        article:hover {
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+
+        h2 {
+            font-size: 24px;
+            color: #fff;
+            margin-top: 0;
+            margin-bottom: 10px;
+            line-height: 1.3;
+        }
+        
+        h3 {
+            font-size: 18px;
+            color: var(--accent);
+            margin-top: 25px;
+            margin-bottom: 10px;
+        }
+
+        p, li {
+            font-size: 16px;
+            line-height: 1.6;
+            color: #ccc;
+            margin-bottom: 15px;
+        }
+
+        ul {
+            padding-left: 20px;
+            margin-bottom: 20px;
+        }
+
+        li {
+            margin-bottom: 8px;
+        }
+
+        .cta-button {
+            display: inline-block;
+            background: var(--accent);
+            color: var(--bg);
+            padding: 12px 25px;
+            border-radius: 4px;
+            text-decoration: none;
+            font-weight: bold;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            margin-top: 20px;
+            transition: all 0.2s;
+            box-shadow: 0 4px 0 rgba(0,0,0,0.3);
+        }
+
+        .cta-button:hover {
+            background: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 rgba(0,0,0,0.3);
+        }
+
+        .cta-button:active {
+            transform: translateY(2px);
+            box-shadow: 0 0 0 rgba(0,0,0,0.3);
+        }
+
+        .meta-tag {
+            display: inline-block;
+            background: rgba(255,255,255,0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        /* Table of Contents */
+        .toc {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 40px;
+            border: 1px solid var(--border);
+        }
+        .toc h3 { margin-top: 0; font-size: 14px; text-transform: uppercase; color: var(--muted); }
+        .toc ul { list-style: none; padding: 0; margin: 0; }
+        .toc li { margin: 10px 0; }
+        .toc a { color: var(--accent); text-decoration: none; border-bottom: 1px dashed transparent; }
+        .toc a:hover { border-bottom-color: var(--accent); }
+
+        @media (max-width: 600px) {
+            h1.main-title { font-size: 24px; }
+            article { padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="blog-container">
+        <h1 class="main-title">Блог разработчика</h1>
+        
+        <div class="toc">
+            <h3>Содержание</h3>
+            <ul>
+                <li><a href="#optimization">1. Как ускорить игру и снизить Draw Calls</a></li>
+                <li><a href="#pixelart">2. Пиксель-арт без установки софта</a></li>
+                <li><a href="#palettes">3. Магия ретро-цветов и стилизация</a></li>
+            </ul>
+        </div>
+
+        <!-- Article 1 -->
+        <article id="optimization">
+            <span class="meta-tag">Оптимизация / Tech Art</span>
+            <h2>🚀 Как ускорить игру и снизить Draw Calls: Гид по упаковке спрайтов</h2>
+            
+            <p>Одна из самых частых причин падения FPS в 2D-играх — слишком большое количество вызовов отрисовки (Draw Calls). Когда движок (будь то Unity, Godot или Phaser) загружает сотни отдельных картинок для анимации персонажа, видеокарта тратит ресурсы впустую.</p>
+            
+            <h3>Что такое Sprite Sheet?</h3>
+            <p>Это одно большое изображение, содержащее множество мелких спрайтов. Вместо загрузки 50 файлов для анимации бега, вы загружаете всего один текстурный атлас.</p>
+
+            <h3>Проблема ручной сборки</h3>
+            <p>Собирать атласы вручную в Photoshop — долго и чревато ошибками. Сдвиг на 1 пиксель может испортить анимацию, а "воздух" (пустое место) между спрайтами увеличивает потребление памяти.</p>
+
+            <h3>Решение: Онлайн Sprite Sheet Packer</h3>
+            <p>Мой инструмент автоматизирует этот процесс прямо в браузере:</p>
+            <ul>
+                <li><strong>Умная упаковка (Smart Bin Packing):</strong> Алгоритм автоматически находит идеальное место для каждого спрайта.</li>
+                <li><strong>Экспорт JSON:</strong> Получаете готовый файл данных для вашего движка.</li>
+                <li><strong>Pixel Art Friendly:</strong> Сохраняет четкость пикселей без сглаживания.</li>
+            </ul>
+
+            <a href="spritesheet.html" class="cta-button">Открыть Sprite Packer &rarr;</a>
+        </article>
+
+        <!-- Article 2 -->
+        <article id="pixelart">
+            <span class="meta-tag">Арт / Инструменты</span>
+            <h2>🎨 Пиксель-арт без установки софта: Полный цикл создания анимации</h2>
+            
+            <p>Начинающие художники часто тратят часы на поиск и установку "идеального" софта. Aseprite платный, Photoshop избыточен. Но для создания качественного пиксель-арта для Game Jam или инди-проекта достаточно браузера.</p>
+
+            <h3>Функционал веб-редактора</h3>
+            <p><strong>Pixel Art Editor Pro</strong> в моем наборе утилит закрывает 90% потребностей инди-разработчика. Это не просто "рисовалка", а полноценный редактор с поддержкой таймлайна.</p>
+
+            <h3>Как это работает?</h3>
+            <ul>
+                <li><strong>Слои (Layers):</strong> Рисуйте тело персонажа и экипировку на разных слоях.</li>
+                <li><strong>Onion Skin:</strong> Режим "луковой шелухи" для создания плавной анимации.</li>
+                <li><strong>Горячие клавиши:</strong> B (Brush), E (Eraser) — всё как в привычном софте.</li>
+            </ul>
+
+            <p>Главное преимущество — вы сразу получаете готовый Sprite Sheet. Нарисовали → Скачали → Закинули в движок.</p>
+
+            <a href="pixelart.html" class="cta-button">Начать рисовать &rarr;</a>
+        </article>
+
+        <!-- Article 3 -->
+        <article id="palettes">
+            <span class="meta-tag">Стилизация / Пост-процессинг</span>
+            <h2>🕹️ Магия ретро-цветов: Как стилизовать игру под GameBoy или NES</h2>
+            
+            <p>Вы нарисовали ассеты, но они выглядят "слишком современно"? Или вы купили пак ассетов, цвета которого не сочетаются с вашей игрой? Вам нужен <strong>Ремаппинг палитры</strong>.</p>
+
+            <h3>Зачем ограничивать палитру?</h3>
+            <p>Ограниченная цветовая гамма (например, 4 цвета GameBoy) — это мощный художественный прием, который делает картинку целостной и узнаваемой.</p>
+
+            <h3>Multi-Palette Studio</h3>
+            <p>Этот инструмент позволяет перекрашивать спрайты на лету, используя математические алгоритмы сравнения цветов (LAB vs RGB):</p>
+            <ul>
+                <li><strong>Пресеты классики:</strong> GameBoy, Pico-8, NES, Sepia.</li>
+                <li><strong>Дизеринг:</strong> Добавьте "шумный" градиент для ретро-вайба.</li>
+                <li><strong>Пакетная обработка:</strong> Обработайте 50 спрайтов за одну секунду.</li>
+            </ul>
+
+            <a href="paletteremapper.html" class="cta-button">Стилизовать графику &rarr;</a>
+        </article>
+
+    </div>
+
+</body>
+</html>
