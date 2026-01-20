@@ -15,7 +15,10 @@
     <meta property="og:url" content="https://donnyscottina.github.io/gamedev-tools/sfx.html">
     
     <link rel="canonical" href="https://donnyscottina.github.io/gamedev-tools/sfx.html">
+    <link rel="icon" type="image/x-icon" href="/gamedev-tools/favicon.ico">
     <link href="style.css" rel="stylesheet">
+    <script src="header.js" defer></script>
+    <script src="footer.js" defer></script>
     <style>
         .container { text-align: center; max-width: 400px; margin-top: 20px; }
         .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
@@ -24,12 +27,11 @@
         .btn.play { background: var(--accent); color: var(--bg); border: none; width: 100%; margin-bottom: 10px; padding: 10px; font-size: 16px; }
         .wave-view { width: 100%; height: 80px; background: #000; margin-bottom: 20px; border-radius: 4px; position: relative; overflow: hidden; border: 1px solid var(--border); }
         canvas { width: 100%; height: 100%; }
-        a.back { display: none; } /* Handled by global.js */
+        a.back { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
-        <!-- Back link handled by header -->
         <h2>🔊 Retro SFX</h2>
         
         <div class="wave-view">
@@ -59,7 +61,6 @@
         let analyser = ctx.createAnalyser();
         analyser.fftSize = 2048;
         
-        // Визуализация
         function draw() {
             requestAnimationFrame(draw);
             const bufferLength = analyser.frequencyBinCount;
@@ -69,7 +70,7 @@
             cCtx.fillStyle = 'rgb(0, 0, 0)';
             cCtx.fillRect(0, 0, canvas.width, canvas.height);
             cCtx.lineWidth = 2;
-            cCtx.strokeStyle = '#9cff8a'; // accent color
+            cCtx.strokeStyle = '#9cff8a';
             cCtx.beginPath();
             
             const sliceWidth = canvas.width * 1.0 / bufferLength;
@@ -112,7 +113,6 @@
                 osc.type = 'square';
                 osc.frequency.setValueAtTime(1200, now);
                 osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-                // Noise emulation via rapid freq modulation
                 for(let i=0; i<10; i++) {
                     osc.frequency.setValueAtTime(Math.random()*1000 + 200, now + i*0.02);
                 }
@@ -143,7 +143,6 @@
                 osc.stop(now + 0.4);
             }
             else {
-                // Fallback / Powerup
                 osc.type = 'triangle';
                 osc.frequency.setValueAtTime(300, now);
                 osc.frequency.linearRampToValueAtTime(600, now + 0.1);
