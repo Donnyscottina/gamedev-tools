@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <title>Color Reducer</title>
+    <link rel="icon" type="image/x-icon" href="/gamedev-tools/favicon.ico">
     <link href="style.css" rel="stylesheet">
+    <script src="header.js" defer></script>
+    <script src="footer.js" defer></script>
     <style>
         body {
             height: 100vh;
@@ -53,8 +56,6 @@
     </style>
 </head>
 <body>
-    
-    <!-- Header injected -->
 
     <div class="main-container">
         <div class="col-left">
@@ -99,9 +100,8 @@
 
     <script>
         let originalImg = null;
-        let palette = []; // [{r,g,b}, ...]
+        let palette = [];
 
-        // Setup Drag & Drop
         const dropZone = document.getElementById('dropZone');
         const fileInput = document.getElementById('fileInput');
         
@@ -132,38 +132,33 @@
         const ctx = canvas.getContext('2d');
 
         function drawImage(img) {
-            // Ограничиваем размер для превью, чтобы не вис браузер на 4K
             let w = img.width, h = img.height;
             if(w > 800) { h = Math.round(h * (800/w)); w = 800; }
             canvas.width = w; canvas.height = h;
             ctx.drawImage(img, 0, 0, w, h);
         }
 
-        // --- Median Cut Algorithm Implementation ---
         function processImage() {
             if(!originalImg) return;
             const count = parseInt(document.getElementById('colorCount').value) || 16;
             const useDither = document.getElementById('dither').checked;
 
-            // 1. Get Pixels
             const w = canvas.width, h = canvas.height;
-            ctx.drawImage(originalImg, 0, 0, w, h); // Reset
+            ctx.drawImage(originalImg, 0, 0, w, h);
             const imgData = ctx.getImageData(0, 0, w, h);
             const data = imgData.data;
             
             const pixels = [];
             for(let i=0; i<data.length; i+=4) {
-                if(data[i+3] < 128) continue; // Ignore transparent
+                if(data[i+3] < 128) continue;
                 pixels.push({r: data[i], g: data[i+1], b: data[i+2]});
             }
 
             if(pixels.length === 0) return;
 
-            // 2. Build Palette using Median Cut
             palette = medianCut(pixels, count);
             renderPaletteStrip();
 
-            // 3. Remap Image
             for(let i=0; i<data.length; i+=4) {
                 if(data[i+3] < 10) continue;
                 
@@ -173,7 +168,6 @@
                 data[i] = best.r;
                 data[i+1] = best.g;
                 data[i+2] = best.b;
-                // alpha stays same
 
                 if(useDither) {
                     const er = cur.r - best.r;
@@ -194,8 +188,7 @@
 
                 for(let i=0; i<buckets.length; i++) {
                     const bucket = buckets[i];
-                    if(bucket.length > 1 && newBuckets.length + (buckets.length - i) < count + 5) { // Optimization
-                        // Find range
+                    if(bucket.length > 1 && newBuckets.length + (buckets.length - i) < count + 5) {
                         let rMin=255, rMax=0, gMin=255, gMax=0, bMin=255, bMax=0;
                         for(let p of bucket) {
                             rMin = Math.min(rMin, p.r); rMax = Math.max(rMax, p.r);
@@ -210,7 +203,6 @@
                             continue;
                         }
 
-                        // Sort by max channel
                         if(rR === maxRange) bucket.sort((a,b) => a.r - b.r);
                         else if(gR === maxRange) bucket.sort((a,b) => a.g - b.g);
                         else bucket.sort((a,b) => a.b - b.b);
@@ -224,12 +216,11 @@
                     }
                 }
                 
-                if(!splittable && newBuckets.length === buckets.length) break; // Cannot split anymore
+                if(!splittable && newBuckets.length === buckets.length) break;
                 buckets = newBuckets;
                 if(buckets.length >= count) break;
             }
 
-            // Average colors
             return buckets.map(bucket => {
                 let r=0, g=0, b=0;
                 for(let p of bucket) { r+=p.r; g+=p.g; b+=p.b; }
@@ -251,7 +242,6 @@
         }
 
         function distributeError(data, i, er, eg, eb, w) {
-            // Floyd-Steinberg
             const add = (idx, f) => {
                 if(idx < data.length) {
                     data[idx] = Math.max(0, Math.min(255, data[idx] + er*f));
@@ -281,7 +271,6 @@
 
         function downloadPalette() {
             if(palette.length === 0) return;
-            // Create a small canvas for palette
             const pc = document.createElement('canvas');
             pc.width = palette.length; pc.height = 1;
             const pctx = pc.getContext('2d');
