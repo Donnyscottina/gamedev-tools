@@ -3,16 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>8-Bit SFX Generator | Создание ретро звуков</title>
+    <title>8-Bit SFX Generator Pro | Создание ретро звуков</title>
     
-    <meta name="description" content="Бесплатный онлайн генератор 8-битных звуковых эффектов (SFX) для игр. Создавайте звуки монет, выстрелов, прыжков и взрывов в стиле ретро.">
-    <meta name="keywords" content="8-bit sfx generator, chiptune sound maker, bfxr online, генератор звуков для игр, ретро звуки, sfx maker">
-    <meta name="author" content="DonnyScottina">
-
-    <meta property="og:title" content="8-Bit SFX Generator | Ретро звуки для игр">
-    <meta property="og:description" content="Создавайте ретро звуки для игр прямо в браузере.">
-    <meta property="og:image" content="https://donnyscottina.github.io/gamedev-tools/sound.webp">
-    <meta property="og:url" content="https://donnyscottina.github.io/gamedev-tools/sfx.html">
+    <meta name="description" content="Профессиональный генератор 8-битных звуковых эффектов с ручными настройками, экспортом в WAV и библиотекой пресетов.">
+    <meta name="keywords" content="8-bit sfx generator, chiptune sound maker, bfxr online, генератор звуков для игр, ретро звуки, sfx maker, wav export">
     
     <link rel="canonical" href="https://donnyscottina.github.io/gamedev-tools/sfx.html">
     <link rel="icon" type="image/x-icon" href="/gamedev-tools/favicon.ico">
@@ -20,47 +14,281 @@
     <script src="header.js" defer></script>
     <script src="footer.js" defer></script>
     <style>
-        .container { text-align: center; max-width: 400px; margin-top: 20px; }
-        .categories { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
-        .btn { background: var(--panel); color: var(--text); border: 2px solid var(--border); padding: 15px; cursor: pointer; border-radius: 5px; font-weight: bold; transition: 0.2s; width: auto; font-family: inherit;}
-        .btn:hover { background: var(--highlight); border-color: var(--accent); }
-        .btn.play { background: var(--accent); color: var(--bg); border: none; width: 100%; margin-bottom: 10px; padding: 10px; font-size: 16px; }
-        .wave-view { width: 100%; height: 80px; background: #000; margin-bottom: 20px; border-radius: 4px; position: relative; overflow: hidden; border: 1px solid var(--border); }
+        body { padding-bottom: 0; }
+        .sfx-container { 
+            max-width: 900px; 
+            margin: 20px auto; 
+            padding: 20px;
+            background: var(--panel);
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+        .sfx-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+        }
+        
+        /* Left Panel - Waveform + Controls */
+        .wave-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .wave-view { 
+            width: 100%; 
+            height: 120px; 
+            background: #000; 
+            border-radius: 6px; 
+            border: 2px solid var(--border);
+            position: relative;
+        }
         canvas { width: 100%; height: 100%; }
-        a.back { display: none; }
+        
+        .controls-section {
+            background: rgba(0,0,0,0.2);
+            padding: 20px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+        .controls-section h3 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .control-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 60px;
+            gap: 10px;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .control-row label {
+            color: var(--muted);
+            font-size: 13px;
+        }
+        .control-row input[type="range"] {
+            width: 100%;
+            accent-color: var(--accent);
+        }
+        .control-row .value {
+            color: var(--text);
+            font-weight: bold;
+            font-size: 12px;
+            text-align: right;
+        }
+        
+        /* Right Panel - Presets */
+        .presets-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .presets-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .preset-btn {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 20px 10px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        .preset-btn .icon { font-size: 24px; }
+        .preset-btn:hover {
+            background: var(--highlight);
+            border-color: var(--accent);
+            transform: translateY(-2px);
+        }
+        
+        /* Action Buttons */
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 15px;
+            cursor: pointer;
+            border-radius: 6px;
+            font-weight: bold;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .btn:hover {
+            background: var(--highlight);
+            border-color: var(--accent);
+        }
+        .btn.primary {
+            background: var(--accent);
+            color: var(--bg);
+            border: none;
+            grid-column: span 3;
+            font-size: 16px;
+        }
+        .btn.primary:hover {
+            background: #b3ffa3;
+        }
+        
+        select {
+            background: var(--panel);
+            color: var(--text);
+            border: 2px solid var(--border);
+            padding: 8px;
+            border-radius: 4px;
+            font-size: 13px;
+            width: 100%;
+        }
+        
+        @media (max-width: 768px) {
+            .sfx-grid { grid-template-columns: 1fr; }
+            .control-row { grid-template-columns: 1fr 2fr 50px; }
+            .presets-grid { grid-template-columns: 1fr; }
+            .actions { grid-template-columns: 1fr; }
+            .btn.primary { grid-column: span 1; }
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>🔊 Retro SFX</h2>
+    <div class="sfx-container">
+        <h2 style="text-align: center; color: var(--accent); margin-top: 0;">🔊 8-Bit SFX Generator Pro</h2>
         
-        <div class="wave-view">
-            <canvas id="scope"></canvas>
-        </div>
-
-        <button class="btn play" onclick="playCurrent()">▶ Повторить</button>
-
-        <div class="categories">
-            <button class="btn" onclick="generate('coin')">🪙 Монетка</button>
-            <button class="btn" onclick="generate('shoot')">🔫 Выстрел</button>
-            <button class="btn" onclick="generate('jump')">🦘 Прыжок</button>
-            <button class="btn" onclick="generate('explosion')">💥 Взрыв</button>
-            <button class="btn" onclick="generate('powerup')">⚡ Power Up</button>
-            <button class="btn" onclick="generate('hit')">🤕 Удар</button>
+        <div class="sfx-grid">
+            <!-- Left: Waveform + Manual Controls -->
+            <div class="wave-panel">
+                <div class="wave-view">
+                    <canvas id="scope"></canvas>
+                </div>
+                
+                <div class="controls-section">
+                    <h3>⚙️ Параметры звука</h3>
+                    
+                    <div class="control-row">
+                        <label>Форма волны</label>
+                        <select id="waveType" onchange="updateSound()">
+                            <option value="square">Square (Квадрат)</option>
+                            <option value="sawtooth">Sawtooth (Пила)</option>
+                            <option value="sine">Sine (Синус)</option>
+                            <option value="triangle">Triangle (Треугольник)</option>
+                        </select>
+                        <span class="value"></span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Start Freq</label>
+                        <input type="range" id="startFreq" min="50" max="2000" value="440" oninput="updateSound()">
+                        <span class="value" id="startFreqVal">440Hz</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>End Freq</label>
+                        <input type="range" id="endFreq" min="10" max="2000" value="220" oninput="updateSound()">
+                        <span class="value" id="endFreqVal">220Hz</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Duration</label>
+                        <input type="range" id="duration" min="0.05" max="2" step="0.05" value="0.3" oninput="updateSound()">
+                        <span class="value" id="durationVal">0.3s</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Volume</label>
+                        <input type="range" id="volume" min="0.1" max="1" step="0.1" value="0.5" oninput="updateSound()">
+                        <span class="value" id="volumeVal">50%</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Attack</label>
+                        <input type="range" id="attack" min="0" max="0.5" step="0.01" value="0.01" oninput="updateSound()">
+                        <span class="value" id="attackVal">0.01s</span>
+                    </div>
+                    
+                    <div class="control-row">
+                        <label>Decay</label>
+                        <input type="range" id="decay" min="0" max="1" step="0.01" value="0.2" oninput="updateSound()">
+                        <span class="value" id="decayVal">0.2s</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Right: Presets Library -->
+            <div class="presets-panel">
+                <div class="presets-grid">
+                    <button class="preset-btn" onclick="loadPreset('coin')">
+                        <span class="icon">🪙</span>
+                        <span>Монетка</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('shoot')">
+                        <span class="icon">🔫</span>
+                        <span>Выстрел</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('jump')">
+                        <span class="icon">🦘</span>
+                        <span>Прыжок</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('explosion')">
+                        <span class="icon">💥</span>
+                        <span>Взрыв</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('powerup')">
+                        <span class="icon">⚡</span>
+                        <span>Power Up</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('hit')">
+                        <span class="icon">🤕</span>
+                        <span>Удар</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('laser')">
+                        <span class="icon">⚡</span>
+                        <span>Лазер</span>
+                    </button>
+                    <button class="preset-btn" onclick="loadPreset('select')">
+                        <span class="icon">👆</span>
+                        <span>Выбор UI</span>
+                    </button>
+                </div>
+            </div>
         </div>
         
-        <p style="font-size: 10px; color: var(--muted);">Пока без экспорта в WAV (браузеры блокируют энкодеры без библиотек), но можно записать системный звук.</p>
+        <!-- Action Buttons -->
+        <div class="actions">
+            <button class="btn" onclick="randomize()">🎲 Рандом</button>
+            <button class="btn" onclick="reset()">🔄 Сброс</button>
+            <button class="btn" onclick="exportWAV()">💾 Скачать WAV</button>
+            <button class="btn primary" onclick="playCurrent()">▶ Воспроизвести</button>
+        </div>
     </div>
-
-    <script src="global.js"></script>
 
     <script>
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const canvas = document.getElementById('scope');
         const cCtx = canvas.getContext('2d');
+        canvas.width = canvas.offsetWidth;
+        canvas.height = canvas.offsetHeight;
+        
         let analyser = ctx.createAnalyser();
         analyser.fftSize = 2048;
         
+        // Waveform visualizer
         function draw() {
             requestAnimationFrame(draw);
             const bufferLength = analyser.frequencyBinCount;
@@ -86,9 +314,42 @@
         }
         draw();
 
-        let lastParams = null;
+        // Presets library
+        const presets = {
+            coin: { wave: 'square', startFreq: 1200, endFreq: 2000, duration: 0.3, volume: 0.5, attack: 0.01, decay: 0.3 },
+            shoot: { wave: 'square', startFreq: 1200, endFreq: 100, duration: 0.2, volume: 0.6, attack: 0.01, decay: 0.2 },
+            jump: { wave: 'square', startFreq: 200, endFreq: 600, duration: 0.15, volume: 0.5, attack: 0.01, decay: 0.15 },
+            explosion: { wave: 'sawtooth', startFreq: 200, endFreq: 10, duration: 0.5, volume: 0.8, attack: 0.01, decay: 0.5 },
+            powerup: { wave: 'triangle', startFreq: 300, endFreq: 800, duration: 0.4, volume: 0.5, attack: 0.05, decay: 0.35 },
+            hit: { wave: 'sawtooth', startFreq: 150, endFreq: 50, duration: 0.15, volume: 0.7, attack: 0.01, decay: 0.14 },
+            laser: { wave: 'sawtooth', startFreq: 1500, endFreq: 500, duration: 0.25, volume: 0.6, attack: 0.01, decay: 0.24 },
+            select: { wave: 'sine', startFreq: 800, endFreq: 1200, duration: 0.1, volume: 0.4, attack: 0.01, decay: 0.09 }
+        };
 
-        function playSound(type) {
+        function loadPreset(name) {
+            const p = presets[name];
+            document.getElementById('waveType').value = p.wave;
+            document.getElementById('startFreq').value = p.startFreq;
+            document.getElementById('endFreq').value = p.endFreq;
+            document.getElementById('duration').value = p.duration;
+            document.getElementById('volume').value = p.volume;
+            document.getElementById('attack').value = p.attack;
+            document.getElementById('decay').value = p.decay;
+            updateSound();
+            playCurrent();
+        }
+
+        function updateSound() {
+            document.getElementById('startFreqVal').textContent = document.getElementById('startFreq').value + 'Hz';
+            document.getElementById('endFreqVal').textContent = document.getElementById('endFreq').value + 'Hz';
+            document.getElementById('durationVal').textContent = document.getElementById('duration').value + 's';
+            document.getElementById('volumeVal').textContent = Math.round(document.getElementById('volume').value * 100) + '%';
+            document.getElementById('attackVal').textContent = document.getElementById('attack').value + 's';
+            document.getElementById('decayVal').textContent = document.getElementById('decay').value + 's';
+        }
+        updateSound();
+
+        function playCurrent() {
             if (ctx.state === 'suspended') ctx.resume();
             
             const osc = ctx.createOscillator();
@@ -99,70 +360,123 @@
             analyser.connect(ctx.destination);
 
             const now = ctx.currentTime;
+            const waveType = document.getElementById('waveType').value;
+            const startFreq = parseFloat(document.getElementById('startFreq').value);
+            const endFreq = parseFloat(document.getElementById('endFreq').value);
+            const duration = parseFloat(document.getElementById('duration').value);
+            const volume = parseFloat(document.getElementById('volume').value);
+            const attack = parseFloat(document.getElementById('attack').value);
+            const decay = parseFloat(document.getElementById('decay').value);
             
-            if (type === 'coin') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1200, now);
-                osc.frequency.exponentialRampToValueAtTime(2000, now + 0.1);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.3);
-                osc.start(now);
-                osc.stop(now + 0.3);
-            } 
-            else if (type === 'shoot') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(1200, now);
-                osc.frequency.exponentialRampToValueAtTime(100, now + 0.2);
-                for(let i=0; i<10; i++) {
-                    osc.frequency.setValueAtTime(Math.random()*1000 + 200, now + i*0.02);
-                }
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.2);
-                osc.start(now);
-                osc.stop(now + 0.2);
-            }
-            else if (type === 'jump') {
-                osc.type = 'square';
-                osc.frequency.setValueAtTime(200, now);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.15);
-                osc.start(now);
-                osc.stop(now + 0.15);
-            }
-            else if (type === 'explosion') {
-                osc.type = 'sawtooth';
-                osc.frequency.setValueAtTime(100, now);
-                osc.frequency.exponentialRampToValueAtTime(10, now + 0.4);
-                 for(let i=0; i<20; i++) {
-                    osc.frequency.setValueAtTime(Math.random()*200, now + i*0.02);
-                }
-                gain.gain.setValueAtTime(1, now);
-                gain.gain.exponentialRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-            }
-            else {
-                osc.type = 'triangle';
-                osc.frequency.setValueAtTime(300, now);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.1);
-                osc.frequency.linearRampToValueAtTime(300, now + 0.2);
-                osc.frequency.linearRampToValueAtTime(600, now + 0.3);
-                gain.gain.setValueAtTime(0.5, now);
-                gain.gain.linearRampToValueAtTime(0.01, now + 0.4);
-                osc.start(now);
-                osc.stop(now + 0.4);
-            }
+            osc.type = waveType;
+            osc.frequency.setValueAtTime(startFreq, now);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, now + duration);
             
-            lastParams = type;
+            gain.gain.setValueAtTime(0, now);
+            gain.gain.linearRampToValueAtTime(volume, now + attack);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + duration);
+            
+            osc.start(now);
+            osc.stop(now + duration);
         }
 
-        function generate(type) {
-            playSound(type);
+        function randomize() {
+            const waves = ['square', 'sawtooth', 'sine', 'triangle'];
+            document.getElementById('waveType').value = waves[Math.floor(Math.random() * waves.length)];
+            document.getElementById('startFreq').value = Math.floor(Math.random() * 1500) + 100;
+            document.getElementById('endFreq').value = Math.floor(Math.random() * 1500) + 50;
+            document.getElementById('duration').value = (Math.random() * 1 + 0.1).toFixed(2);
+            document.getElementById('volume').value = (Math.random() * 0.5 + 0.3).toFixed(1);
+            document.getElementById('attack').value = (Math.random() * 0.1).toFixed(2);
+            document.getElementById('decay').value = (Math.random() * 0.5 + 0.1).toFixed(2);
+            updateSound();
+            playCurrent();
         }
 
-        function playCurrent() {
-            if(lastParams) playSound(lastParams);
+        function reset() {
+            loadPreset('coin');
+        }
+
+        // WAV Export using OfflineAudioContext
+        function exportWAV() {
+            const sampleRate = 44100;
+            const duration = parseFloat(document.getElementById('duration').value);
+            const offlineCtx = new OfflineAudioContext(1, sampleRate * duration, sampleRate);
+            
+            const osc = offlineCtx.createOscillator();
+            const gain = offlineCtx.createGain();
+            osc.connect(gain);
+            gain.connect(offlineCtx.destination);
+            
+            const waveType = document.getElementById('waveType').value;
+            const startFreq = parseFloat(document.getElementById('startFreq').value);
+            const endFreq = parseFloat(document.getElementById('endFreq').value);
+            const volume = parseFloat(document.getElementById('volume').value);
+            const attack = parseFloat(document.getElementById('attack').value);
+            
+            osc.type = waveType;
+            osc.frequency.setValueAtTime(startFreq, 0);
+            osc.frequency.exponentialRampToValueAtTime(endFreq, duration);
+            
+            gain.gain.setValueAtTime(0, 0);
+            gain.gain.linearRampToValueAtTime(volume, attack);
+            gain.gain.exponentialRampToValueAtTime(0.01, duration);
+            
+            osc.start(0);
+            osc.stop(duration);
+            
+            offlineCtx.startRendering().then(buffer => {
+                const wav = encodeWAV(buffer);
+                const blob = new Blob([wav], { type: 'audio/wav' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sfx_' + Date.now() + '.wav';
+                a.click();
+            });
+        }
+
+        function encodeWAV(buffer) {
+            const length = buffer.length * buffer.numberOfChannels * 2 + 44;
+            const arrayBuffer = new ArrayBuffer(length);
+            const view = new DataView(arrayBuffer);
+            const channels = [];
+            let offset = 0;
+            let pos = 0;
+            
+            // WAV header
+            const setUint32 = (data) => { view.setUint32(pos, data, true); pos += 4; };
+            const setUint16 = (data) => { view.setUint16(pos, data, true); pos += 2; };
+            
+            setUint32(0x46464952); // "RIFF"
+            setUint32(length - 8);
+            setUint32(0x45564157); // "WAVE"
+            setUint32(0x20746d66); // "fmt "
+            setUint32(16);
+            setUint16(1); // PCM
+            setUint16(buffer.numberOfChannels);
+            setUint32(buffer.sampleRate);
+            setUint32(buffer.sampleRate * 2 * buffer.numberOfChannels);
+            setUint16(buffer.numberOfChannels * 2);
+            setUint16(16);
+            setUint32(0x61746164); // "data"
+            setUint32(length - pos - 4);
+            
+            // Write audio data
+            for (let i = 0; i < buffer.numberOfChannels; i++)
+                channels.push(buffer.getChannelData(i));
+            
+            while (pos < length) {
+                for (let i = 0; i < buffer.numberOfChannels; i++) {
+                    let sample = Math.max(-1, Math.min(1, channels[i][offset]));
+                    sample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+                    view.setInt16(pos, sample, true);
+                    pos += 2;
+                }
+                offset++;
+            }
+            
+            return arrayBuffer;
         }
     </script>
 </body>
