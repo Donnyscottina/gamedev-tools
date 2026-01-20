@@ -3,8 +3,8 @@
     --panel: #1a1a1a;
     --border: #333;
     --accent: #9cff8a;
-    --text: #ffffff; /* Pure white for better contrast */
-    --muted: #aaaaaa; /* Lighter grey for descriptions */
+    --text: #ffffff;
+    --muted: #cccccc;
     --highlight: #2a2a2a;
     --error: #ff5555;
     --font-main: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -23,6 +23,9 @@ body {
     background-image: linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
     linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
     background-size: 20px 20px;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
 }
 
 /* Universal Header */
@@ -53,7 +56,7 @@ body {
 .logo-emoji { font-size: 24px; }
 .logo-text {
     font-family: var(--font-pixel);
-    font-size: 14px; /* Slightly larger for readability */
+    font-size: 14px;
     color: var(--accent);
     text-transform: uppercase;
 }
@@ -65,7 +68,7 @@ body {
 
 .main-nav a {
     text-decoration: none;
-    color: var(--muted); /* Increased contrast */
+    color: var(--muted);
     font-size: 14px;
     font-weight: 500;
     transition: color 0.2s;
@@ -96,21 +99,22 @@ body {
 
 /* Main Content Grid */
 main {
-    max-width: 1000px; /* Reduced width for better reading line length */
+    max-width: 1000px;
     margin: 40px auto;
     padding: 20px;
+    flex: 1; /* Pushes footer down */
 }
 
 .grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-    gap: 30px; /* More breathing room */
+    gap: 30px;
 }
 
 .card {
     background: var(--panel);
     border: 1px solid var(--border);
-    border-radius: 8px; /* Softer corners */
+    border-radius: 8px;
     text-decoration: none;
     color: inherit;
     transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
@@ -127,7 +131,7 @@ main {
 
 .image-wrapper {
     width: 100%;
-    height: 180px; /* Taller images */
+    height: 180px;
     background: #000;
     border-bottom: 1px solid var(--border);
     display: flex;
@@ -148,7 +152,7 @@ main {
 
 .title {
     font-family: var(--font-pixel);
-    font-size: 14px; /* Larger title */
+    font-size: 14px;
     color: var(--accent);
     margin: 20px 20px 10px 20px;
     text-transform: uppercase;
@@ -157,17 +161,17 @@ main {
 }
 
 .desc {
-    font-size: 15px; /* Significantly larger text */
-    color: #cccccc; /* Much lighter grey */
+    font-size: 15px;
+    color: var(--muted);
     margin: 0 20px 20px 20px;
-    line-height: 1.6; /* Better line height */
+    line-height: 1.6;
 }
 
-/* Footer */
+/* Footer Fix */
 .site-footer {
     background: var(--panel);
     border-top: 1px solid var(--border);
-    padding: 40px 20px;
+    padding: 60px 20px;
     margin-top: auto;
 }
 
@@ -175,46 +179,56 @@ main {
     max-width: 1200px;
     margin: 0 auto;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); /* Fixed width for better stacking */
     gap: 40px;
+    align-items: start;
 }
 
 .footer-col h4 {
-    color: var(--accent);
-    font-family: var(--font-pixel);
-    font-size: 12px;
+    color: var(--text); /* White text for headers */
+    font-family: var(--font-main);
+    font-weight: bold;
+    font-size: 16px;
+    margin-top: 0;
     margin-bottom: 20px;
 }
 
 .footer-col p {
     font-size: 14px;
     color: var(--muted);
+    line-height: 1.6;
 }
 
 .footer-links {
     list-style: none;
     padding: 0;
+    margin: 0;
 }
 
-.footer-links li { margin-bottom: 10px; }
+.footer-links li { 
+    margin-bottom: 12px;
+}
 
 .footer-links a {
-    color: var(--text);
+    color: var(--muted); /* Light grey instead of purple/blue default */
     text-decoration: none;
     font-size: 14px;
-    opacity: 0.7;
-    transition: opacity 0.2s;
+    transition: color 0.2s;
+    display: block;
 }
 
-.footer-links a:hover { opacity: 1; color: var(--accent); }
+.footer-links a:hover { 
+    color: var(--accent); 
+    padding-left: 5px; /* Tiny animation */
+}
 
 .footer-bottom {
     max-width: 1200px;
     margin: 40px auto 0;
     padding-top: 20px;
-    border-top: 1px solid #333;
+    border-top: 1px solid var(--border);
     text-align: center;
-    font-size: 12px;
+    font-size: 13px;
     color: #666;
 }
 
@@ -235,6 +249,7 @@ main {
     }
     .main-nav.mobile-open { display: flex; }
     .grid { grid-template-columns: 1fr; }
+    .footer-content { grid-template-columns: 1fr; }
 }
 
 /* Scrollbar */
