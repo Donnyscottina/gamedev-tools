@@ -1,1 +1,165 @@
-sound
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>8-Bit SoundMaker Инструмент</title>
+    <style>
+        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; max-width: 1400px; margin: auto; }
+        .channel { display: inline-block; margin: 10px; }
+        canvas { border: 2px solid #0f0; cursor: pointer; background: #111; }
+        button { background: #222; color: #0f0; border: 1px solid #0f0; padding: 8px 12px; margin: 4px; cursor: pointer; font-family: monospace; }
+        button:hover { background: #0f0; color: #000; }
+        input { background: #000; color: #0f0; border: 1px solid #0f0; width: 50px; text-align: center; }
+        #controls { margin: 20px 0; }
+        #export { margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>🎹 8-Bit SoundMaker v2.0</h1>
+    <p>Кликай сетку для нот (16 шагов). Каналы: 1-Мелодия, 2-Бас, 3-Хай-хэт, 4-Снэр/Кик. Экспорт в WAV!</p>
+    
+    <div id="controls">
+        <button onclick="togglePlay()" id="playBtn">▶️ Play</button>
+        <button onclick="clearAll()">🗑️ Clear</button>
+        <button onclick="randomize()">🎲 Random</button>
+        <button onclick="exportWav()">💾 Export WAV</button>
+        <label>BPM: <input type="number" id="bpm" value="140" min="60" max="300" onchange="updateBPM()"></label>
+        <label>Vol: <input type="range" id="volume" min="0" max="1" step="0.1" value="0.2" onchange="updateVol()"></label>
+    </div>
+
+    <div class="channel"><h3>🎵 Melodia</h3><canvas id="c1" width="400" height="240"></canvas></div>
+    <div class="channel"><h3>🔉 Bass</h3><canvas id="c2" width="400" height="240"></canvas></div>
+    <div class="channel"><h3>✨ Hats</h3><canvas id="c3" width="400" height="120"></canvas></div>
+    <div class="channel"><h3>🥁 Drums</h3><canvas id="c4" width="400" height="120"></canvas></div>
+
+    <div id="export"></div>
+
+    <script>
+        // Улучшенная версия с инструментами
+        const canvasIds = ['c1','c2','c3','c4'];
+        const canvas = canvasIds.map(id => document.getElementById(id));
+        const ctx = canvas.map(c => c.getContext('2d'));
+        let audioCtx, analyser, gainNode;
+        let isPlaying = false, currentStep = 0, bpm = 140, volume = 0.2;
+        let interval;
+        let patterns = [[],[],[],[]]; // 4 канала
+        const notesC4 = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88];
+        const lowNotes = notesC4.slice(0,6); // Для баса/драм
+
+        function initAudio() {
+            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            gainNode = audioCtx.createGain();
+            gainNode.connect(audioCtx.destination);
+            updateVol();
+            analyser = audioCtx.createAnalyser();
+            gainNode.connect(analyser);
+        }
+
+        function drawGrid(ch, height, noteRange) {
+            const c = canvas[ch], context = ctx[ch];
+            context.fillStyle = '#000'; context.fillRect(0,0,400,height);
+            context.strokeStyle = '#333'; context.lineWidth = 1;
+            for(let s=0; s<16; s++) { // Шаги
+                context.strokeRect(s*25,0,25,height);
+                if(s===currentStep) {
+                    context.fillStyle='#ff0'; context.fillRect(s*25,0,25,height);
+                }
+            }
+            for(let n=0; n<noteRange.length; n++) { // Ноты
+                context.strokeStyle = '#0f0'; context.lineWidth=2;
+                context.beginPath(); context.moveTo(0, n* (height/noteRange.length)); context.lineTo(400, n* (height/noteRange.length)); context.stroke();
+            }
+            // Заливка активных нот
+            patterns[ch].forEach((step, s) => {
+                step.forEach((active, n) => {
+                    if(active) {
+                        context.fillStyle = '#0f0';
+                        context.fillRect(s*25+2, n*(height/noteRange.length)+1, 21, (height/noteRange.length)-2);
+                    }
+                });
+            });
+        }
+
+        canvas.forEach((c,i) => {
+            const ch = i, noteRange = i<2 ? notesC4 : lowNotes.slice(0,6);
+            patterns[ch] = Array(16).fill().map(() => Array(noteRange.length).fill(false));
+            c.onclick = e => {
+                const rect = c.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
+                const step = Math.floor(x/25), noteIdx = Math.floor(y / (c.height / noteRange.length));
+                if(step<16 && noteIdx < noteRange.length) {
+                    patterns[ch][step][noteIdx] = !patterns[ch][step][noteIdx];
+                    drawGrid(ch, c.height, noteRange);
+                }
+            };
+            drawGrid(ch, c.height, noteRange);
+        });
+
+        function playStep() {
+            patterns.forEach((pat, ch) => {
+                if(pat[currentStep].some(a=>a)) {
+                    const noteIdx = pat[currentStep].findIndex(a=>a);
+                    const osc = audioCtx.createOscillator();
+                    osc.type = ch===1 ? 'sawtooth' : ch<3 ? 'square' : 'triangle'; // Инструменты!
+                    osc.frequency.value = (ch<3 ? notesC4 : lowNotes)[noteIdx] * (ch===3 ? 0.5 : 1); // Низ для драм
+                    const g = audioCtx.createGain();
+                    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
+                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
+                    osc.connect(g); g.connect(gainNode);
+                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
+                }
+            });
+            currentStep = (currentStep+1)%16;
+            canvas.forEach((c,i) => {
+                const nr = i<2 ? notesC4 : lowNotes.slice(0,6);
+                drawGrid(i, c.height, nr);
+            });
+        }
+
+        window.togglePlay = () => {
+            if(!audioCtx) initAudio();
+            isPlaying = !isPlaying;
+            document.getElementById('playBtn').textContent = isPlaying ? '⏸️ Pause' : '▶️ Play';
+            if(isPlaying) {
+                const beat = 60000 / bpm / 4;
+                interval = setInterval(playStep, beat);
+            } else clearInterval(interval);
+        };
+
+        window.clearAll = () => {
+            patterns = [[],[],[],[]].map(() => Array(16).fill().map(() => Array(12).fill(false)));
+            canvas.forEach((c,i) => drawGrid(i, c.height, i<2?notesC4:lowNotes.slice(0,6)));
+        };
+
+        window.randomize = () => {
+            patterns.forEach((pat, ch) => {
+                pat.forEach(step => {
+                    step.forEach((_, n) => step[n] = Math.random()<0.15);
+                });
+            });
+            canvas.forEach((c,i) => drawGrid(i, c.height, i<2?notesC4:lowNotes.slice(0,6)));
+        };
+
+        window.updateBPM = () => bpm = +document.getElementById('bpm').value;
+        window.updateVol = () => gainNode.gain.value = volume = +document.getElementById('volume').value;
+
+        // Экспорт WAV (упрощённо)
+        window.exportWav = async () => {
+            // Генерируем аудио буфер для всего трека
+            const len = audioCtx.sampleRate * 4; // 4 сек
+            const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
+            const data = buffer.getChannelData(0);
+            // Симулируем паттерн
+            for(let t=0; t<len; t++) {
+                const step = Math.floor(t / (audioCtx.sampleRate / 60 * bpm / 4));
+                if(step % 16 < patterns[0].filter(s=>s.some(Boolean)).length) data[t] = 0.1 * Math.sin(t*0.01);
+            }
+            // Скачиваем (нужен Recorder lib для full, но просто demo)
+            const link = document.createElement('a');
+            link.download = '8bit-track.wav';
+            link.href = URL.createObjectURL(new Blob([new DataView(buffer)]));
+            link.click();
+            document.getElementById('export').innerHTML = '<p>Скачан demo WAV! (улучши с Recorder.js)</p>';
+        };
+    </script>
+</body>
+</html>
