@@ -264,11 +264,74 @@
 
     const $ = id => document.getElementById(id);
 
+    // C minor scale: C D Eb F G Ab Bb
+    const SCALE = [0, 2, 3, 5, 7, 8, 10]; // semitones from root
+
     const TRACK_CONFIGS = [
-      { name: 'Bass', color: '#ff5555', defaultNote: 36 },
-      { name: 'Lead', color: '#55ff55', defaultNote: 60 },
-      { name: 'Pad', color: '#5555ff', defaultNote: 48 },
-      { name: 'Drums', color: '#ffcc00', defaultNote: 36 }
+      { 
+        name: 'Bass', 
+        color: '#ff5555', 
+        defaultNote: 36, // C2
+        pattern: [
+          // Bass groove: C - - C - Eb - G
+          {a:1,n:0,v:0.9}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:2,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:4,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:0,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:2,v:0.7}, {a:0,n:0,v:0.7}, {a:1,n:4,v:0.8}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.9}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:2,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:5,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:4,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:2,v:0.7}, {a:0,n:0,v:0.7}, {a:1,n:0,v:0.8}, {a:0,n:0,v:0.7}
+        ]
+      },
+      { 
+        name: 'Lead', 
+        color: '#55ff55', 
+        defaultNote: 60, // C4
+        pattern: [
+          // Melody: C - Eb - G - F - / Eb - D - C - - - / repeat
+          {a:1,n:0,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:2,v:0.8}, {a:0,n:0,v:0.7},
+          {a:1,n:4,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:3,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:2,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:1,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.9}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:2,v:0.8}, {a:0,n:0,v:0.7},
+          {a:1,n:4,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:3,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:2,v:0.8}, {a:0,n:0,v:0.7}, {a:1,n:1,v:0.7}, {a:0,n:0,v:0.7},
+          {a:1,n:0,v:0.9}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7}, {a:0,n:0,v:0.7}
+        ]
+      },
+      { 
+        name: 'Pad', 
+        color: '#5555ff', 
+        defaultNote: 48, // C3
+        pattern: [
+          // Chords: Cm (C Eb G) for 8 beats, then Fm (F Ab C) for 8 beats
+          {a:1,n:0,v:0.6}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:1,n:3,v:0.6}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:1,n:0,v:0.6}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:1,n:4,v:0.6}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5},
+          {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}, {a:0,n:0,v:0.5}
+        ]
+      },
+      { 
+        name: 'Drums', 
+        color: '#ffcc00', 
+        defaultNote: 36,
+        pattern: [
+          // Simple beat: kick on 1 & 3, snare on 2 & 4, hats on every beat
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.5},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.6},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.5},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.6},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.5},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.6},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.5},
+          {a:1,n:0,v:0.9}, {a:1,n:7,v:0.5}, {a:1,n:5,v:0.8}, {a:1,n:7,v:0.6}
+        ]
+      }
     ];
 
     const presets = {
@@ -354,7 +417,6 @@
         audioChunks = [];
       };
 
-      // Create tracks AFTER audio context is ready
       for (let i = 0; i < 4; i++) createTrack(i);
 
       startScope();
@@ -382,14 +444,14 @@
         color: cfg.color,
         mute: false,
         solo: false,
-        volume: 0.8,
+        volume: index === 3 ? 0.6 : 0.8, // drums quieter
         gain: actx.createGain(),
         filter: actx.createBiquadFilter(),
         params: { wave: 'triangle', a: 0.01, d: 0.1, s: 0.5, r: 0.3, cut: 2000, res: 1 },
-        pattern: Array(32).fill().map((_, i) => ({ 
-          active: i % 8 === 0, 
-          note: cfg.defaultNote + (i % 2) * 12, 
-          vel: 0.8 
+        pattern: cfg.pattern.map(p => ({
+          active: p.a === 1,
+          note: cfg.defaultNote + SCALE[p.n % SCALE.length] + Math.floor(p.n / SCALE.length) * 12,
+          vel: p.v
         }))
       };
 
