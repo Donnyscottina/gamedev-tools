@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Magic Lens Sofa</title>
+  <style>
+    body {
+      margin: 0;
+      height: 100vh;
+      background: #111;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: sans-serif;
+      color: #fff;
+    }
+
+    h1 { margin-bottom: 10px; font-weight: 300; }
+    p { color: #888; margin-bottom: 20px; }
+
+    .viewer {
+      position: relative;
+      width: 1000px;
+      max-width: 90vw;
+      /* Aspect ratio keeper */
+      aspect-ratio: 3/2; 
+      background: #000;
+      border-radius: 4px;
+      overflow: hidden;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      cursor: crosshair;
+    }
+
+    .layer {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      pointer-events: none; /* Let JS handle mouse on container */
+    }
+
+    /* Bottom layer: Closed Sofa (1.jpg) */
+    .base {
+      z-index: 1;
+    }
+
+    /* Top layer: Open Sofa (2.jpg) */
+    /* Hidden by default using a mask size of 0 */
+    .reveal {
+      z-index: 2;
+      /* The magic: Radial gradient mask */
+      -webkit-mask-image: radial-gradient(circle 150px at var(--x) var(--y), black 0%, transparent 100%);
+      mask-image: radial-gradient(circle 150px at var(--x) var(--y), black 0%, transparent 100%);
+      opacity: 0; /* Hidden until mouse enters */
+      transition: opacity 0.2s;
+    }
+
+    /* When active (mouse inside), show the layer (masked) */
+    .viewer:hover .reveal {
+      opacity: 1;
+    }
+
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 15px;
+      align-items: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Эффект "Рентген" (Magic Lens)</h1>
+  <p>Води мышкой, чтобы просветить диван насквозь. Никаких настроек зон.</p>
+
+  <div class="viewer" id="viewer">
+    <!-- 1.jpg: Closed State -->
+    <img src="1.jpg" class="layer base" alt="Closed">
+    
+    <!-- 2.jpg: Open State (Revealed by mask) -->
+    <img src="2.jpg" class="layer reveal" id="topLayer" alt="Open">
+  </div>
+
+  <div class="controls">
+    <label>Размер линзы:</label>
+    <input type="range" min="50" max="400" value="150" oninput="updateSize(this.value)">
+  </div>
+
+  <script>
+    const viewer = document.getElementById('viewer');
+    const topLayer = document.getElementById('topLayer');
+    
+    let lensSize = 150;
+
+    // Update mask position on mouse move
+    viewer.addEventListener('mousemove', (e) => {
+      const rect = viewer.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const y = e.clientY - rect.top;
+      
+      // Update CSS variables for the mask position
+      topLayer.style.setProperty('--x', x + 'px');
+      topLayer.style.setProperty('--y', y + 'px');
+    });
+
+    function updateSize(val) {
+      lensSize = val;
+      // Update the mask size in the style rule
+      topLayer.style.maskImage = `radial-gradient(circle ${val}px at var(--x) var(--y), black 0%, transparent 100%)`;
+      topLayer.style.webkitMaskImage = `radial-gradient(circle ${val}px at var(--x) var(--y), black 0%, transparent 100%)`;
+    }
+  </script>
+</body>
+</html>
