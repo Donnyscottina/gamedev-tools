@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Звуковой дизайн - Блог GameDev Tools</title>
+    <link href="style.css" rel="stylesheet">
+    <link href="blog-style.css" rel="stylesheet">
+    <script src="header.js" defer></script>
+    <script src="footer.js" defer></script>
+</head>
+<body>
+    <div class="blog-container">
+        <a href="blog.html" class="back-link">← Назад ко всем статьям</a>
+
+        <article>
+            <span class="meta-tag">Звук • SFX • Ретро</span>
+            <h1>Звуковой дизайн для Инди-разработчиков: 8-bit магия</h1>
+            
+            <p>Звук — это 50% атмосферы игры. Но что делать, если вы программист, а не звукорежиссер, и у вас нет дорогого микрофона? Ответ: процедурная генерация.</p>
+            
+            <h3>Как работают генераторы SFX?</h3>
+            <p>Инструменты вроде Bfxr или нашего <strong>8-Bit SFX Generator</strong> используют математические осцилляторы (синусоида, квадрат, пила) для создания звуков. Вы меняете параметры "атаки" (attack), "затухания" (decay) и "частоты" (frequency), чтобы получить звук прыжка или взрыва.</p>
+            
+            <h3>Типы звуков, которые вам нужны:</h3>
+            <ul>
+                <li><strong>Pickup / Coin:</strong> Высокие частоты, быстрый питч вверх. Ассоциируется с наградой.</li>
+                <li><strong>Hit / Hurt:</strong> Низкие частоты, шум (noise), резкое падение питча.</li>
+                <li><strong>Jump:</strong> Плавный подъем частоты (slide up).</li>
+            </ul>
+
+            <div class="cta-section">
+                <p>Попробуйте наш генератор звуков прямо в браузере:</p>
+                <a href="sfx.html" class="cta-button">Создать звуки (SFX) &rarr;</a>
+            </div>
+        </article>
+    </div>
+</body>
+</html>

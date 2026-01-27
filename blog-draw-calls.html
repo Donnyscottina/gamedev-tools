@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Оптимизация Draw Calls - Блог GameDev Tools</title>
+    <link href="style.css" rel="stylesheet">
+    <link href="blog-style.css" rel="stylesheet">
+    <script src="header.js" defer></script>
+    <script src="footer.js" defer></script>
+</head>
+<body>
+    <div class="blog-container">
+        <a href="blog.html" class="back-link">← Назад ко всем статьям</a>
+        
+        <article>
+            <span class="meta-tag">Производительность • Unity • Godot</span>
+            <h1>Гайд: Как уменьшить Draw Calls и повысить FPS в 2D играх</h1>
+            
+            <p>Если ваша 2D-игра начинает тормозить на мобильных устройствах или в браузере, первым делом стоит проверить <strong>Draw Calls</strong> (вызовы отрисовки). Это одна из самых распространенных проблем производительности, о которой часто забывают начинающие разработчики.</p>
+            
+            <h3>Что такое Draw Call и почему это важно?</h3>
+            <p>Каждый раз, когда игровой движок (Unity, Godot, Phaser, Defold) хочет нарисовать спрайт на экране, он отправляет команду видеокарте. Этот процесс накладный. Если у вас на уровне 100 монет, 50 врагов и сложный фон, и каждый объект — это отдельная картинка, процессор захлебнется, отправляя 200+ команд каждый кадр.</p>
+
+            <div class="highlight-box">
+                <strong>Правило большого пальца:</strong> Для мобильных игр старайтесь держать количество Draw Calls ниже 50-80. Для ПК — ниже 500-1000.
+            </div>
+
+            <h3>Решение: Texture Atlases (Sprite Sheets)</h3>
+            <p>Видеокарты любят "оптом". Если вы склеите все 100 монет и 50 врагов в одну большую картинку (Атлас), движок сможет нарисовать их всех за <strong>1 Draw Call</strong> (используя технику Batching).</p>
+
+            <div class="cta-section">
+                <p>Готовы оптимизировать игру?</p>
+                <a href="spritesheet.html" class="cta-button">Запустить Sprite Packer &rarr;</a>
+            </div>
+        </article>
+    </div>
+</body>
+</html>
