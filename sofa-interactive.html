@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Интерактивный Диван</title>
+  <title>Интерактивный Диван | Smart Masking</title>
   <style>
     body {
       background: #f4f4f4;
@@ -16,7 +16,6 @@
       margin: 0;
     }
 
-    /* Main Container */
     .product-wrapper {
       position: relative;
       max-width: 1200px;
@@ -27,71 +26,78 @@
       background: #fff;
     }
 
-    /* Aspect Ratio Box to prevent layout shifts */
     .image-container {
       position: relative;
       width: 100%;
       height: 0;
-      padding-bottom: 66.66%; /* Adjust based on your image ratio (e.g. 3:2 = 66.66%) */
+      padding-bottom: 66.66%; /* 3:2 Aspect Ratio */
     }
 
     /* Images */
     .layer {
       position: absolute;
       top: 0; left: 0;
-      width: 100%;
-      height: 100%;
+      width: 100%; height: 100%;
       object-fit: cover;
-      pointer-events: none; /* Mouse goes through images to triggers */
+      pointer-events: none;
       transition: opacity 0.3s ease;
-      opacity: 0;
     }
 
     .layer.base {
-      opacity: 1;
-      z-index: 1;
+      z-index: 1; /* Always visible at bottom */
     }
 
-    .layer.active {
-      opacity: 1;
+    /* Masked Layers: Hidden by default, revealed on hover */
+    .layer.masked {
+      opacity: 0;
       z-index: 2;
     }
 
-    /* Interaction Zones */
+    .layer.masked.active {
+      opacity: 1;
+    }
+
+    /* 
+       CLIP-PATHS
+       These cut out only the specific part of 2.jpg we want to show.
+       Adjust percentages to match your photo exactly.
+       Format: polygon(top-left, top-right, bottom-right, bottom-left)
+    */
+    
+    #layer-bar {
+      /* Right area for the Bar */
+      clip-path: polygon(75% 0, 100% 0, 100% 100%, 75% 100%);
+    }
+
+    #layer-bed {
+      /* Bottom-Center area for Bed */
+      clip-path: polygon(15% 40%, 85% 40%, 85% 100%, 15% 100%);
+    }
+
+    #layer-storage {
+      /* Left area for Storage box */
+      clip-path: polygon(0 0, 25% 0, 25% 100%, 0 100%);
+    }
+
+    /* Triggers */
     .triggers-layer {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 10;
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10;
     }
 
     .trigger {
-      position: absolute;
-      cursor: pointer;
-      border: 1px dashed transparent;
+      position: absolute; cursor: pointer;
     }
 
-    /* Debug Mode */
+    /* Debug Styles */
     body.debug .trigger {
       background: rgba(255, 0, 0, 0.2);
-      border-color: red;
+      border: 1px dashed red;
     }
-    body.debug .trigger::after {
-      content: attr(data-label);
-      position: absolute;
-      top: -20px; left: 0;
-      background: red; color: white;
-      font-size: 10px; padding: 2px 4px;
-      white-space: nowrap;
-    }
-
-    .controls { margin-top: 15px; }
-    button { padding: 8px 16px; cursor: pointer; }
-
-    /* Preloader for 2.jpg to avoid flicker */
-    body::after {
-      position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
-      content: url('2.jpg');
+    
+    /* Show clip-path areas in debug mode too */
+    body.debug .layer.masked {
+      opacity: 0.3 !important; /* Ghost view of hidden parts */
+      background: rgba(0,255,0,0.2);
     }
   </style>
 </head>
@@ -100,57 +106,44 @@
   <div class="product-wrapper">
     <div class="image-container">
       
-      <!-- 1.jpg: BASE IMAGE (Closed state) -->
-      <img src="1.jpg" class="layer base" alt="Диван закрыт">
+      <!-- 1.jpg: BASE (Closed) -->
+      <img src="1.jpg" class="layer base" alt="Base">
 
-      <!-- 2.jpg: ACTIVE IMAGE (Open/Function state) -->
-      <!-- We reuse 2.jpg for different triggers if it shows all functions open -->
-      <img src="2.jpg" class="layer" id="layer-bar" alt="Бар открыт">
-      <img src="2.jpg" class="layer" id="layer-bed" alt="Кровать разложена">
-      <img src="2.jpg" class="layer" id="layer-storage" alt="Ящик открыт">
+      <!-- 2.jpg: PARTS (Open) - Same image, but clipped differently via CSS -->
+      <img src="2.jpg" class="layer masked" id="layer-bar">
+      <img src="2.jpg" class="layer masked" id="layer-bed">
+      <img src="2.jpg" class="layer masked" id="layer-storage">
 
-      <!-- TRIGGERS (Invisible clickable zones) -->
+      <!-- TRIGGERS -->
       <div class="triggers-layer">
         
-        <!-- Right Arm (Bar) - ~15% width, positioned right -->
+        <!-- Bar Trigger (Right Arm) -->
         <div class="trigger" 
-             style="top: 25%; left: 80%; width: 15%; height: 40%;" 
-             data-target="layer-bar" 
-             data-label="Бар"></div>
+             style="top: 20%; left: 75%; width: 25%; height: 60%;" 
+             data-target="layer-bar"></div>
 
-        <!-- Center (Bed) -->
+        <!-- Bed Trigger (Center) -->
         <div class="trigger" 
-             style="top: 40%; left: 20%; width: 60%; height: 40%;" 
-             data-target="layer-bed" 
-             data-label="Спальное место"></div>
+             style="top: 40%; left: 20%; width: 60%; height: 50%;" 
+             data-target="layer-bed"></div>
 
-        <!-- Left Arm (Storage) -->
+        <!-- Storage Trigger (Left Arm) -->
         <div class="trigger" 
-             style="top: 25%; left: 5%; width: 15%; height: 40%;" 
-             data-target="layer-storage" 
-             data-label="Ящик"></div>
+             style="top: 20%; left: 0%; width: 25%; height: 60%;" 
+             data-target="layer-storage"></div>
 
       </div>
     </div>
   </div>
 
   <div class="controls">
-    <button onclick="document.body.classList.toggle('debug')">🛠 Показать зоны (Debug)</button>
+    <button onclick="document.body.classList.toggle('debug')">🛠 Debug Masks</button>
   </div>
 
   <script>
-    const triggers = document.querySelectorAll('.trigger');
-
-    triggers.forEach(trigger => {
-      trigger.addEventListener('mouseenter', () => {
-        const id = trigger.dataset.target;
-        document.getElementById(id).classList.add('active');
-      });
-
-      trigger.addEventListener('mouseleave', () => {
-        const id = trigger.dataset.target;
-        document.getElementById(id).classList.remove('active');
-      });
+    document.querySelectorAll('.trigger').forEach(t => {
+      t.onmouseenter = () => document.getElementById(t.dataset.target).classList.add('active');
+      t.onmouseleave = () => document.getElementById(t.dataset.target).classList.remove('active');
     });
   </script>
 </body>
