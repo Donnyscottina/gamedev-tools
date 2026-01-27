@@ -3,11 +3,11 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Интерактивный Диван | Demo</title>
+  <title>Интерактивный Диван</title>
   <style>
     body {
-      background: #f0f0f0;
-      font-family: 'Helvetica Neue', sans-serif;
+      background: #f4f4f4;
+      font-family: sans-serif;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -16,265 +16,142 @@
       margin: 0;
     }
 
-    h1 { margin-bottom: 20px; color: #333; }
-    p.instruction { color: #666; margin-bottom: 30px; max-width: 600px; text-align: center; }
-
     /* Main Container */
-    .product-viewer {
+    .product-wrapper {
       position: relative;
-      width: 800px; /* Base width of your photos */
-      height: 500px; /* Base height of your photos */
-      background: #fff;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.1);
-      border-radius: 8px;
+      max-width: 1200px;
+      width: 90%;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      border-radius: 4px;
       overflow: hidden;
-      user-select: none;
+      background: #fff;
     }
 
-    /* Layers */
+    /* Aspect Ratio Box to prevent layout shifts */
+    .image-container {
+      position: relative;
+      width: 100%;
+      height: 0;
+      padding-bottom: 66.66%; /* Adjust based on your image ratio (e.g. 3:2 = 66.66%) */
+    }
+
+    /* Images */
     .layer {
       position: absolute;
       top: 0; left: 0;
-      width: 100%; height: 100%;
+      width: 100%;
+      height: 100%;
       object-fit: cover;
-      pointer-events: none; /* Let mouse pass through to triggers */
+      pointer-events: none; /* Mouse goes through images to triggers */
+      transition: opacity 0.3s ease;
       opacity: 0;
-      transition: opacity 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
     }
 
     .layer.base {
-      opacity: 1; /* Always visible base */
+      opacity: 1;
       z-index: 1;
     }
 
     .layer.active {
-      opacity: 1; /* Revealed on hover */
-      z-index: 3;
+      opacity: 1;
+      z-index: 2;
     }
 
-    /* Interaction Zones (Triggers) */
-    .triggers-container {
+    /* Interaction Zones */
+    .triggers-layer {
       position: absolute;
       top: 0; left: 0;
       width: 100%; height: 100%;
-      z-index: 10; /* Topmost layer for mouse interaction */
+      z-index: 10;
     }
 
     .trigger {
       position: absolute;
-      border: 2px dashed rgba(255, 0, 0, 0); /* Invisible by default */
       cursor: pointer;
-      transition: background 0.2s, border-color 0.2s;
-    }
-    
-    /* Visual feedback on hover */
-    .trigger:hover {
-      background: rgba(255, 255, 255, 0.1);
-      border-color: rgba(255, 255, 255, 0.5);
-      box-shadow: 0 0 20px rgba(0,0,0,0.2);
+      border: 1px dashed transparent;
     }
 
-    /* Tooltip */
-    .tooltip {
-      position: absolute;
-      background: rgba(0,0,0,0.8);
-      color: #fff;
-      padding: 6px 12px;
-      border-radius: 4px;
-      font-size: 12px;
-      pointer-events: none;
-      opacity: 0;
-      transform: translateY(10px);
-      transition: all 0.2s;
-      z-index: 20;
-    }
-    .trigger:hover + .tooltip {
-      opacity: 1;
-      transform: translateY(0);
-    }
-
-    /* Debug Mode Styles */
+    /* Debug Mode */
     body.debug .trigger {
-      border-color: rgba(255, 0, 0, 0.5);
-      background: rgba(255, 0, 0, 0.1);
+      background: rgba(255, 0, 0, 0.2);
+      border-color: red;
     }
     body.debug .trigger::after {
       content: attr(data-label);
       position: absolute;
-      top: 0; left: 0;
+      top: -20px; left: 0;
       background: red; color: white;
-      font-size: 10px; padding: 2px;
+      font-size: 10px; padding: 2px 4px;
+      white-space: nowrap;
     }
 
-    .controls {
-      margin-top: 20px;
-      display: flex;
-      gap: 10px;
-    }
-    
-    button {
-      padding: 8px 16px;
-      cursor: pointer;
-      border: 1px solid #ccc;
-      background: #fff;
-      border-radius: 4px;
-    }
-    button:hover { background: #eee; }
+    .controls { margin-top: 15px; }
+    button { padding: 8px 16px; cursor: pointer; }
 
-    /* PLACEHOLDER STYLES (Remove when using real images) */
-    .placeholder-sofa {
-      width: 100%; height: 100%;
-      display: flex; align-items: flex-end; justify-content: center;
-      background: #e0e0e0;
+    /* Preloader for 2.jpg to avoid flicker */
+    body::after {
+      position: absolute; width: 0; height: 0; overflow: hidden; z-index: -1;
+      content: url('2.jpg');
     }
-    .shape-sofa {
-      width: 600px; height: 200px; background: #999;
-      border-radius: 10px 10px 0 0; position: relative;
-      margin-bottom: 50px;
-      display: flex;
-    }
-    .shape-arm { width: 80px; height: 250px; background: #888; position: absolute; bottom: 0; border-radius: 10px 10px 0 0; }
-    .shape-arm.left { left: -60px; }
-    .shape-arm.right { right: -60px; }
-    
-    /* Simulate open states with CSS for demo */
-    .layer-demo { position: absolute; display: none; }
-    .layer.active .layer-demo { display: block; }
-
-    /* Bar Open Simulation */
-    .bar-open {
-      position: absolute; bottom: 50px; right: -160px;
-      width: 150px; height: 200px; background: #555;
-      border: 2px solid #fff;
-      box-shadow: -10px 0 20px rgba(0,0,0,0.3);
-      display: flex; align-items: center; justify-content: center; color: #fff;
-      animation: slideOut 0.5s ease-out;
-    }
-    @keyframes slideOut { from { transform: translateX(-50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
-
-    /* Bed Open Simulation */
-    .bed-open {
-      position: absolute; bottom: -40px; left: 0;
-      width: 600px; height: 150px; background: #bbb;
-      border-top: 1px solid #fff;
-      display: flex; align-items: center; justify-content: center;
-      animation: unfold 0.6s ease-out;
-    }
-    @keyframes unfold { from { height: 0; opacity: 0; } to { height: 150px; opacity: 1; } }
   </style>
 </head>
 <body>
 
-  <h1>Интерактивный Диван v1.0</h1>
-  <p class="instruction">Наведите курсор на элементы дивана, чтобы увидеть их функции.</p>
-
-  <div class="product-viewer" id="viewer">
-    <!-- 
-      HOW TO USE WITH REAL IMAGES:
-      1. Replace 'div.placeholder-sofa' with <img src="1.jpg" class="layer base">
-      2. Add overlay images: <img src="bar_open.jpg" class="layer" id="img-bar">
-    -->
-    
-    <!-- Base Layer (Closed State) -->
-    <div class="layer base">
-      <div class="placeholder-sofa">
-        <div class="shape-sofa">
-          <div class="shape-arm left"></div>
-          <div class="shape-arm right"></div>
-          <div style="margin: auto; color: #fff;">Базовое состояние</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Active Layers (Hidden by default) -->
-    
-    <!-- Layer: Bar Open -->
-    <div class="layer" id="layer-bar">
-      <!-- Just for demo: simulating image -->
-      <div class="placeholder-sofa">
-        <div class="shape-sofa">
-          <div class="shape-arm left"></div>
-          <div class="shape-arm right">
-            <div class="layer-demo bar-open">🍺 БАР</div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Bed Open -->
-    <div class="layer" id="layer-bed">
-      <div class="placeholder-sofa">
-        <div class="shape-sofa">
-          <div class="shape-arm left"></div>
-          <div class="shape-arm right"></div>
-          <div class="layer-demo bed-open">🛏️ СПАЛЬНОЕ МЕСТО</div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Layer: Storage Left -->
-    <div class="layer" id="layer-storage">
-      <div class="placeholder-sofa">
-        <div class="shape-sofa">
-          <div class="shape-arm left" style="background: #666; border: 2px solid #fff;">
-             <div class="layer-demo" style="color:#fff; text-align:center; padding-top:20px;">📦 ЯЩИК</div>
-          </div>
-          <div class="shape-arm right"></div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Triggers (Interaction Zones) -->
-    <!-- Adjust top/left/width/height % to match your photos -->
-    <div class="triggers-container">
+  <div class="product-wrapper">
+    <div class="image-container">
       
-      <!-- Right Arm (Bar) -->
-      <div class="trigger" 
-           style="top: 30%; left: 82%; width: 12%; height: 50%;" 
-           data-target="layer-bar"
-           data-label="Бар в подлокотнике">
-      </div>
+      <!-- 1.jpg: BASE IMAGE (Closed state) -->
+      <img src="1.jpg" class="layer base" alt="Диван закрыт">
 
-      <!-- Center (Bed) -->
-      <div class="trigger" 
-           style="top: 40%; left: 15%; width: 65%; height: 40%;" 
-           data-target="layer-bed"
-           data-label="Раскладное место">
-      </div>
+      <!-- 2.jpg: ACTIVE IMAGE (Open/Function state) -->
+      <!-- We reuse 2.jpg for different triggers if it shows all functions open -->
+      <img src="2.jpg" class="layer" id="layer-bar" alt="Бар открыт">
+      <img src="2.jpg" class="layer" id="layer-bed" alt="Кровать разложена">
+      <img src="2.jpg" class="layer" id="layer-storage" alt="Ящик открыт">
 
-      <!-- Left Arm (Storage) -->
-      <div class="trigger" 
-           style="top: 30%; left: 6%; width: 12%; height: 50%;" 
-           data-target="layer-storage"
-           data-label="Бельевой ящик">
-      </div>
+      <!-- TRIGGERS (Invisible clickable zones) -->
+      <div class="triggers-layer">
+        
+        <!-- Right Arm (Bar) - ~15% width, positioned right -->
+        <div class="trigger" 
+             style="top: 25%; left: 80%; width: 15%; height: 40%;" 
+             data-target="layer-bar" 
+             data-label="Бар"></div>
 
+        <!-- Center (Bed) -->
+        <div class="trigger" 
+             style="top: 40%; left: 20%; width: 60%; height: 40%;" 
+             data-target="layer-bed" 
+             data-label="Спальное место"></div>
+
+        <!-- Left Arm (Storage) -->
+        <div class="trigger" 
+             style="top: 25%; left: 5%; width: 15%; height: 40%;" 
+             data-target="layer-storage" 
+             data-label="Ящик"></div>
+
+      </div>
     </div>
   </div>
 
   <div class="controls">
-    <button onclick="document.body.classList.toggle('debug')">🛠 Режим настройки (показать зоны)</button>
+    <button onclick="document.body.classList.toggle('debug')">🛠 Показать зоны (Debug)</button>
   </div>
 
   <script>
     const triggers = document.querySelectorAll('.trigger');
-    const viewer = document.getElementById('viewer');
 
     triggers.forEach(trigger => {
       trigger.addEventListener('mouseenter', () => {
-        const targetId = trigger.dataset.target;
-        const targetLayer = document.getElementById(targetId);
-        if (targetLayer) targetLayer.classList.add('active');
+        const id = trigger.dataset.target;
+        document.getElementById(id).classList.add('active');
       });
 
       trigger.addEventListener('mouseleave', () => {
-        const targetId = trigger.dataset.target;
-        const targetLayer = document.getElementById(targetId);
-        if (targetLayer) targetLayer.classList.remove('active');
+        const id = trigger.dataset.target;
+        document.getElementById(id).classList.remove('active');
       });
     });
-
-    // Optional: Preload images logic would go here
   </script>
 </body>
 </html>
