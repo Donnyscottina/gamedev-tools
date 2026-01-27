@@ -3,171 +3,326 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SoundMaker Pro</title>
+  <title>SoundMaker DAW</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    :root { --knob-size: 40px; --seq-step-size: 32px; }
-    body { overflow-y: auto; background-color: #111; }
-
-    .app-grid {
-      display: grid;
-      grid-template-columns: 280px 1fr 280px;
-      gap: 12px;
-      padding: 12px;
-      max-width: 1400px;
-      margin: 0 auto;
-      height: calc(100vh - 70px);
+    :root {
+      --track-h: 60px;
+      --knob-size: 50px;
     }
-    @media (max-width: 1100px) { .app-grid { grid-template-columns: 1fr; height: auto; } }
 
-    .panel {
+    body {
+      background: #0a0a0a;
+      overflow-x: hidden;
+      padding-bottom: 40px;
+    }
+
+    .daw-container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Transport Bar */
+    .transport {
+      background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    }
+
+    .transport-controls {
+      display: flex;
+      gap: 10px;
+    }
+
+    .btn {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #ddd;
+      padding: 10px 18px;
+      font-size: 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-family: inherit;
+      text-transform: uppercase;
+      font-weight: 600;
+      transition: all 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .btn:hover { background: #333; border-color: #666; transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn.primary { background: var(--accent); color: #000; border-color: var(--accent); }
+    .btn.primary:hover { filter: brightness(1.15); }
+    .btn.active { background: #ff5555; color: #fff; animation: pulse 1.2s infinite; }
+
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.75; } }
+
+    .bpm-control {
+      display: flex;
+      align-items: center;
+      gap: 8px;
       background: #1a1a1a;
+      padding: 8px 14px;
+      border-radius: 6px;
+      border: 1px solid #333;
+    }
+    .bpm-control label { font-size: 11px; color: #888; text-transform: uppercase; }
+    .bpm-control input {
+      width: 60px;
+      background: #000;
+      border: 1px solid #444;
+      color: var(--accent);
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .time-display {
+      font-family: 'Courier New', monospace;
+      font-size: 18px;
+      color: var(--accent);
+      background: #000;
+      padding: 8px 16px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      min-width: 100px;
+      text-align: center;
+    }
+
+    /* Tracks */
+    .tracks-area {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .track {
+      background: linear-gradient(135deg, #1a1a1a 0%, #1e1e1e 100%);
+      border: 1px solid #333;
+      border-radius: 8px;
+      overflow: hidden;
+      transition: all 0.2s;
+    }
+    .track:hover { border-color: #444; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+
+    .track-header {
+      display: flex;
+      align-items: center;
+      padding: 12px 16px;
+      background: #222;
+      border-bottom: 1px solid #333;
+      gap: 12px;
+    }
+
+    .track-mute, .track-solo {
+      width: 32px;
+      height: 32px;
+      border: 1px solid #444;
+      background: #2a2a2a;
+      color: #aaa;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 10px;
+      font-weight: bold;
+      transition: all 0.15s;
+    }
+    .track-mute:hover, .track-solo:hover { background: #333; }
+    .track-mute.active { background: #ff5555; color: #fff; border-color: #ff5555; }
+    .track-solo.active { background: #ffcc00; color: #000; border-color: #ffcc00; }
+
+    .track-name {
+      flex: 1;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .track-vol {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .track-vol label { font-size: 10px; color: #888; }
+    .track-vol input[type=range] {
+      width: 100px;
+      accent-color: var(--accent);
+    }
+    .track-vol-val { font-size: 11px; color: var(--accent); min-width: 35px; text-align: right; }
+
+    .track-body {
+      display: flex;
+      gap: 16px;
+      padding: 16px;
+    }
+
+    .synth-panel {
+      flex: 0 0 300px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .param-group {
+      background: #0a0a0a;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 10px;
+    }
+    .param-group-title {
+      font-size: 10px;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 8px;
+      border-bottom: 1px solid #222;
+      padding-bottom: 4px;
+    }
+
+    .param-row {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .param {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      flex: 1;
+      min-width: 70px;
+    }
+    .param label { font-size: 9px; color: #888; text-transform: uppercase; }
+    .param select, .param input {
+      width: 100%;
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 6px;
+      border-radius: 4px;
+      font-size: 11px;
+    }
+    .param input[type=range] { accent-color: var(--accent); }
+
+    /* Sequencer Grid */
+    .sequencer {
+      flex: 1;
+      background: #0a0a0a;
       border: 1px solid #333;
       border-radius: 6px;
       padding: 12px;
+      overflow-x: auto;
+    }
+
+    .seq-grid {
+      display: grid;
+      grid-template-columns: repeat(32, 28px);
+      gap: 2px;
+    }
+
+    .seq-step {
+      width: 28px;
+      height: 40px;
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.1s;
+      position: relative;
+    }
+    .seq-step:hover { background: #252525; border-color: #555; }
+    .seq-step.active { background: var(--accent); border-color: var(--accent); box-shadow: 0 0 8px var(--accent); }
+    .seq-step.playing { border: 2px solid #fff; animation: playhead 0.1s; }
+
+    @keyframes playhead { 0% { transform: scale(1); } 50% { transform: scale(1.1); } 100% { transform: scale(1); } }
+
+    .seq-step-note {
+      position: absolute;
+      bottom: 2px;
+      left: 0;
+      right: 0;
+      font-size: 7px;
+      color: #666;
+      text-align: center;
+    }
+    .seq-step.active .seq-step-note { color: #000; font-weight: bold; }
+
+    /* Master Section */
+    .master-section {
+      background: linear-gradient(135deg, #1a1a1a 0%, #222 100%);
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .master-scope {
+      flex: 1;
       display: flex;
       flex-direction: column;
       gap: 10px;
     }
 
-    .panel-head {
-      font-family: 'Press Start 2P', monospace;
-      font-size: 10px;
-      color: var(--accent);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 8px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      border-bottom: 1px solid #333;
-      padding-bottom: 6px;
-    }
-
-    .knob-row { display: flex; flex-wrap: wrap; gap: 12px; justify-content: space-around; }
-    .knob-group { display: flex; flex-direction: column; align-items: center; gap: 4px; width: 45px; }
-    .knob-group label { font-size: 9px; color: #888; text-transform: uppercase; }
-
-    input[type=range].v-fader {
-      -webkit-appearance: slider-vertical;
-      width: 24px;
-      height: 100px;
-      accent-color: var(--accent);
-    }
-
-    input[type=range] {
-      width: 100%;
-      height: 4px;
-      background: #333;
-      border-radius: 2px;
-      -webkit-appearance: none;
-    }
-    input[type=range]::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 12px;
-      height: 12px;
-      background: var(--accent);
-      border-radius: 50%;
-      cursor: pointer;
-      margin-top: -4px;
-    }
-    input[type=range]::-webkit-slider-runnable-track { width: 100%; height: 4px; background: #444; }
-
-    .btn {
-      background: #222;
-      border: 1px solid #444;
-      color: #ddd;
-      padding: 6px 12px;
-      font-size: 11px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-family: inherit;
-      text-transform: uppercase;
-      transition: all 0.1s;
-    }
-    .btn:hover { background: #333; border-color: #666; }
-    .btn:active { transform: translateY(1px); }
-    .btn.primary { background: rgba(156,255,138,0.1); color: var(--accent); border-color: var(--accent); }
-    .btn.rec { color: #ff5555; border-color: #ff5555; }
-    .btn.rec.recording { background: #ff5555; color: #fff; animation: pulse 1s infinite; }
-    @keyframes pulse { 0%{opacity:1} 50%{opacity:0.7} 100%{opacity:1} }
-
     canvas.scope {
       width: 100%;
       height: 120px;
-      background: #111;
+      background: #000;
       border: 1px solid #333;
-      border-radius: 4px;
+      border-radius: 6px;
     }
 
-    .seq-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; }
-
-    .step-col {
+    .master-controls {
+      flex: 0 0 250px;
       display: flex;
       flex-direction: column;
-      gap: 2px;
-      background: #222;
-      padding: 4px;
-      border-radius: 4px;
-      border: 1px solid transparent;
-      user-select: none;
+      gap: 12px;
     }
-    .step-col.active { border-color: #555; background: #2a2a2a; }
 
-    .step-btn {
-      height: 24px;
+    .fx-rack {
+      background: #0a0a0a;
       border: 1px solid #333;
-      background: #151515;
-      cursor: pointer;
-      border-radius: 2px;
-    }
-    .step-btn.on { background: var(--accent); box-shadow: 0 0 5px var(--accent); border-color: transparent; }
-
-    .step-param { height: 4px; background: #333; margin-top: 2px; position: relative; }
-    .step-param-val { height: 100%; background: #666; width: 50%; }
-
-    select {
-      background: #222;
-      color: #fff;
-      border: 1px solid #444;
-      padding: 4px;
-      font-size: 11px;
-      border-radius: 4px;
-      width: 100%;
+      border-radius: 6px;
+      padding: 12px;
     }
 
-    .key {
-      position: relative;
-      display: inline-block;
-      background: #eee;
-      border: 1px solid #ccc;
-      border-radius: 0 0 4px 4px;
-      width: 30px;
-      height: 140px;
-      margin: 0 1px;
-      cursor: pointer;
-    }
-    .key:active, .key.pressed { background: #ccc; background-image: linear-gradient(to bottom, #ccc, #aaa); }
-
-    .key.black {
-      background: #222;
-      border-color: #000;
-      height: 84px;
-      width: 20px;
-      position: absolute;
-      z-index: 2;
-      top: 0;
-    }
-    .key.black:active, .key.black.pressed { background: #444; }
-
-    .preset-list { display: flex; gap: 4px; flex-wrap: wrap; margin-bottom: 8px; }
-
-    .status-bar {
-      font-size: 10px;
-      color: #666;
+    .export-section {
       display: flex;
-      justify-content: space-between;
-      margin-top: 4px;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    select, input[type=number] {
+      background: #1a1a1a;
+      border: 1px solid #444;
+      color: #fff;
+      padding: 8px;
+      border-radius: 4px;
+      font-size: 12px;
+    }
+
+    /* Presets */
+    .preset-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .preset-btn {
+      padding: 6px 12px;
+      font-size: 11px;
     }
   </style>
 </head>
@@ -176,157 +331,105 @@
     <div class="header-container">
       <a href="index.html" class="logo">
         <span class="logo-emoji">🎹</span>
-        <span class="logo-text">SoundMaker Pro</span>
+        <span class="logo-text">SoundMaker DAW</span>
       </a>
       <div class="main-nav">
         <a href="index.html">← Back to Hub</a>
-        <a href="#" id="btnInitAudio" style="color:var(--accent)">🔇 CLICK TO START AUDIO</a>
+        <a href="#" id="btnInit" style="color:var(--accent)">🔊 CLICK TO START</a>
       </div>
     </div>
   </header>
 
-  <div class="app-grid">
-    <div class="panel">
-      <div class="panel-head">OSCILLATOR</div>
-      <div class="knob-row">
-        <div class="knob-group" style="width:100%">
-          <label>Waveform</label>
-          <select id="oscWave">
-            <option value="sine">Sine</option>
-            <option value="square">Square</option>
-            <option value="sawtooth">Saw</option>
-            <option value="triangle" selected>Triangle</option>
-          </select>
-        </div>
+  <div class="daw-container">
+    <!-- Transport -->
+    <div class="transport">
+      <div class="transport-controls">
+        <button id="btnPlay" class="btn primary">▶ PLAY</button>
+        <button id="btnStop" class="btn">■ STOP</button>
+        <button id="btnRec" class="btn">● REC</button>
       </div>
-
-      <div class="panel-head" style="margin-top:10px">ENVELOPE (ADSR)</div>
-      <div class="knob-row">
-        <div class="knob-group"><input type="range" class="v-fader" id="envA" min="0.005" max="1" step="0.005" value="0.01"><label>A</label></div>
-        <div class="knob-group"><input type="range" class="v-fader" id="envD" min="0.01" max="1" step="0.01" value="0.1"><label>D</label></div>
-        <div class="knob-group"><input type="range" class="v-fader" id="envS" min="0" max="1" step="0.01" value="0.5"><label>S</label></div>
-        <div class="knob-group"><input type="range" class="v-fader" id="envR" min="0.01" max="2" step="0.01" value="0.3"><label>R</label></div>
+      <div class="bpm-control">
+        <label>BPM</label>
+        <input type="number" id="bpmInput" value="120" min="40" max="240" />
       </div>
-
-      <div class="panel-head" style="margin-top:10px">FILTER</div>
-      <div class="knob-row">
-        <div class="knob-group" style="width:100%; margin-bottom: 6px;">
-          <input type="range" id="filterCut" min="100" max="10000" step="10" value="3000">
-          <label>Cutoff Hz</label>
-        </div>
-        <div class="knob-group" style="width:100%">
-          <input type="range" id="filterRes" min="0" max="20" step="0.5" value="1">
-          <label>Resonance</label>
-        </div>
-      </div>
-
-      <div class="panel-head" style="margin-top:10px">FX: DELAY</div>
-      <div class="knob-row">
-        <div class="knob-group"><label>Time</label><input type="range" id="delayTime" min="0" max="0.5" step="0.01" value="0.2"></div>
-        <div class="knob-group"><label>Fdbk</label><input type="range" id="delayFb" min="0" max="0.8" step="0.01" value="0.3"></div>
-        <div class="knob-group"><label>Mix</label><input type="range" id="delayMix" min="0" max="0.5" step="0.01" value="0.2"></div>
+      <div class="time-display" id="timeDisplay">00:00:00</div>
+      <div style="flex:1"></div>
+      <div class="preset-bar">
+        <button class="btn preset-btn" onclick="loadPreset('bass')">Bass</button>
+        <button class="btn preset-btn" onclick="loadPreset('lead')">Lead</button>
+        <button class="btn preset-btn" onclick="loadPreset('pad')">Pad</button>
+        <button class="btn preset-btn" onclick="loadPreset('pluck')">Pluck</button>
+        <button class="btn preset-btn" onclick="randomizeAll()">🎲 Random</button>
       </div>
     </div>
 
-    <div class="panel" style="justify-content: space-between;">
-      <div>
-        <div class="panel-head">
-          <span>MASTER OUTPUT</span>
-          <span id="vuMeter" style="color:var(--accent); font-size:9px">▯▯▯▯▯</span>
-        </div>
-        <canvas id="scope" class="scope" width="600" height="120"></canvas>
+    <!-- Tracks -->
+    <div class="tracks-area" id="tracksArea"></div>
 
-        <div style="display:flex; gap:10px; margin-top:12px; align-items:flex-end">
-          <div style="flex:1">
-            <label style="font-size:10px; color:#888; display:block; margin-bottom:4px">MASTER VOL</label>
-            <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.4">
+    <!-- Master Section -->
+    <div class="master-section">
+      <div class="master-scope">
+        <h3 style="margin:0; font-size:12px; color:#888; text-transform:uppercase">Master Output</h3>
+        <canvas id="scopeCanvas" class="scope" width="800" height="120"></canvas>
+        <div style="display:flex; gap:12px; align-items:center">
+          <label style="font-size:11px; color:#888">MASTER VOLUME</label>
+          <input type="range" id="masterVol" min="0" max="1" step="0.01" value="0.5" style="flex:1" />
+          <span id="masterVolVal" style="font-size:12px; color:var(--accent); min-width:40px">50%</span>
+        </div>
+      </div>
+
+      <div class="master-controls">
+        <div class="fx-rack">
+          <div class="param-group-title">Master FX</div>
+          <div class="param-row">
+            <div class="param">
+              <label>Delay</label>
+              <input type="range" id="fxDelay" min="0" max="0.5" step="0.01" value="0" />
+            </div>
+            <div class="param">
+              <label>Reverb</label>
+              <input type="range" id="fxReverb" min="0" max="1" step="0.01" value="0" />
+            </div>
           </div>
-          <button id="btnRec" class="btn rec" style="width:110px">● REC</button>
         </div>
-      </div>
 
-      <div id="pianoContainer" style="position:relative; height:140px; margin-top:10px; overflow:hidden;">
-        <!-- Piano generated by JS -->
-      </div>
-    </div>
-
-    <div class="panel">
-      <div class="panel-head">PRESETS</div>
-      <div class="preset-list">
-        <button class="btn" onclick="loadPreset('bass')">Bass</button>
-        <button class="btn" onclick="loadPreset('lead')">Lead</button>
-        <button class="btn" onclick="loadPreset('pad')">Pad</button>
-        <button class="btn" onclick="loadPreset('sfx')">SFX</button>
-        <button class="btn" onclick="loadPreset('init')">Init</button>
-        <button class="btn" onclick="randomizePatch()">🎲 Rand</button>
-      </div>
-
-      <div class="panel-head" style="margin-top:10px">SEQUENCER</div>
-      <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
-        <button id="btnPlay" class="btn primary" style="flex:1">▶ PLAY</button>
-        <button id="btnStop" class="btn" style="width:40px">■</button>
-        <div style="display:flex; flex-direction:column; width:70px;">
-           <label style="font-size:9px;color:#888">BPM</label>
-           <input type="number" id="bpmNum" value="120" min="40" max="240" style="background:#222; border:1px solid #444; color:#fff; width:100%">
+        <div class="export-section">
+          <div class="param-group-title">Export</div>
+          <button class="btn" onclick="exportWAV()">💾 Export WAV</button>
+          <button class="btn" onclick="exportJSON()">📄 Save Project</button>
+          <button class="btn" onclick="document.getElementById('loadProject').click()">📂 Load Project</button>
+          <input type="file" id="loadProject" accept=".json" style="display:none" />
         </div>
-      </div>
-
-      <div id="sequencerGrid" class="seq-grid"></div>
-
-      <div style="margin-top:12px; border-top:1px solid #333; padding-top:8px">
-        <label style="font-size:10px; color:#888">Selected step note</label>
-        <select id="stepNoteSelect"></select>
-        <div style="display:flex; gap:10px; margin-top:8px">
-           <div style="flex:1"><label style="font-size:9px;color:#888">VEL</label><input type="range" id="stepVel" min="0.1" max="1" step="0.1"></div>
-           <div style="flex:1"><label style="font-size:9px;color:#888">DUR</label><input type="range" id="stepDur" min="0.1" max="1" step="0.1"></div>
-        </div>
-      </div>
-
-      <div class="status-bar">
-        <span>Space: Play/Stop</span>
-        <span id="recStatus">Ready</span>
       </div>
     </div>
   </div>
 
   <script>
     let actx = null;
-    let masterGain = null;
-    let analyzer = null;
-    let dest = null;
-    let recorder = null;
-    let audioChunks = [];
-
-    let activeVoices = {}; // midi -> {osc, gain}
-
-    let filterNode = null;
-    let delayNode = null;
-    let delayFb = null;
-    let delayDry = null;
-    let delayWet = null;
-
-    let params = {
-      wave: 'triangle',
-      a: 0.01, d: 0.1, s: 0.5, r: 0.3,
-      cut: 3000, res: 1,
-      dTime: 0.2, dFb: 0.3, dMix: 0.2,
-      vol: 0.4
-    };
-
+    let masterGain, analyzer, compressor;
+    let delayNode, delayFb, reverbNode;
+    let tracks = [];
     let isPlaying = false;
     let currentStep = 0;
-    let nextStepTime = 0;
-    let seqTimerID = null;
     let bpm = 120;
-    let steps = Array(16).fill().map((_, i) => ({
-      active: i % 4 === 0,
-      note: 60,
-      vel: 0.8,
-      dur: 0.5
-    }));
-    let selectedStepIndex = 0;
+    let startTime = 0;
+    let recorder, audioChunks = [];
 
-    const $ = (id) => document.getElementById(id);
+    const $ = id => document.getElementById(id);
+
+    const TRACK_CONFIGS = [
+      { name: 'Bass', color: '#ff5555', defaultNote: 36 },
+      { name: 'Lead', color: '#55ff55', defaultNote: 60 },
+      { name: 'Pad', color: '#5555ff', defaultNote: 48 },
+      { name: 'Drums', color: '#ffcc00', defaultNote: 36 }
+    ];
+
+    const presets = {
+      bass: { wave: 'sawtooth', a: 0.01, d: 0.2, s: 0.3, r: 0.15, cut: 600, res: 8 },
+      lead: { wave: 'square', a: 0.01, d: 0.1, s: 0.7, r: 0.2, cut: 2500, res: 3 },
+      pad: { wave: 'sine', a: 0.5, d: 0.8, s: 0.8, r: 1.5, cut: 1200, res: 0 },
+      pluck: { wave: 'triangle', a: 0.001, d: 0.15, s: 0, r: 0.1, cut: 3500, res: 2 }
+    };
 
     async function initAudio() {
       if (actx) return;
@@ -334,329 +437,294 @@
       await actx.resume();
 
       masterGain = actx.createGain();
-      masterGain.gain.value = params.vol;
+      masterGain.gain.value = 0.5;
+
+      compressor = actx.createDynamicsCompressor();
+      compressor.threshold.value = -24;
+      compressor.knee.value = 30;
+      compressor.ratio.value = 12;
 
       analyzer = actx.createAnalyser();
       analyzer.fftSize = 2048;
 
-      filterNode = actx.createBiquadFilter();
-      filterNode.type = 'lowpass';
-
-      delayNode = actx.createDelay(2.0);
+      delayNode = actx.createDelay(1.0);
       delayFb = actx.createGain();
-      delayDry = actx.createGain();
-      delayWet = actx.createGain();
-
-      filterNode.connect(delayDry);
-      filterNode.connect(delayNode);
-
       delayNode.connect(delayFb);
       delayFb.connect(delayNode);
+
+      reverbNode = actx.createConvolver();
+      createReverb();
+
+      const delayDry = actx.createGain();
+      const delayWet = actx.createGain();
+      const reverbDry = actx.createGain();
+      const reverbWet = actx.createGain();
+
+      masterGain.connect(delayDry);
+      masterGain.connect(delayNode);
       delayNode.connect(delayWet);
+      delayDry.connect(reverbDry);
+      delayWet.connect(reverbDry);
+      reverbDry.connect(compressor);
+      reverbDry.connect(reverbNode);
+      reverbNode.connect(reverbWet);
+      reverbWet.connect(compressor);
+      compressor.connect(analyzer);
+      analyzer.connect(actx.destination);
 
-      const efxSum = actx.createGain();
-      delayDry.connect(efxSum);
-      delayWet.connect(efxSum);
+      $('fxDelay').oninput = e => {
+        const v = parseFloat(e.target.value);
+        delayNode.delayTime.value = v;
+        delayFb.gain.value = v > 0 ? 0.4 : 0;
+        delayWet.gain.value = v > 0 ? 0.3 : 0;
+        delayDry.gain.value = 1 - (v > 0 ? 0.3 : 0);
+      };
 
-      efxSum.connect(analyzer);
-      analyzer.connect(masterGain);
-      masterGain.connect(actx.destination);
+      $('fxReverb').oninput = e => {
+        const v = parseFloat(e.target.value);
+        reverbWet.gain.value = v * 0.5;
+        reverbDry.gain.value = 1 - v * 0.5;
+      };
 
-      dest = actx.createMediaStreamDestination();
-      masterGain.connect(dest);
-
+      const dest = actx.createMediaStreamDestination();
+      compressor.connect(dest);
       recorder = new MediaRecorder(dest.stream);
-      recorder.ondataavailable = (e) => audioChunks.push(e.data);
-      recorder.onstop = saveRecording;
+      recorder.ondataavailable = e => audioChunks.push(e.data);
+      recorder.onstop = () => {
+        const blob = new Blob(audioChunks, { type: 'audio/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `soundmaker_${Date.now()}.webm`;
+        a.click();
+        URL.revokeObjectURL(url);
+        audioChunks = [];
+      };
 
-      updateParams();
       startScope();
-
-      $('btnInitAudio').textContent = 'AUDIO ON ✅';
-      $('btnInitAudio').style.color = '#fff';
+      $('btnInit').textContent = 'AUDIO READY ✅';
+      $('btnInit').style.color = '#fff';
     }
 
-    function m2f(m) { return 440 * Math.pow(2, (m - 69) / 12); }
+    function createReverb() {
+      const len = actx.sampleRate * 2;
+      const buf = actx.createBuffer(2, len, actx.sampleRate);
+      for (let ch = 0; ch < 2; ch++) {
+        const data = buf.getChannelData(ch);
+        for (let i = 0; i < len; i++) {
+          data[i] = (Math.random() * 2 - 1) * Math.exp(-i / (len * 0.3));
+        }
+      }
+      reverbNode.buffer = buf;
+    }
 
-    function noteOn(midi, vel = 1, dur = 0) {
-      if (!actx) initAudio();
-      if (actx.state === 'suspended') actx.resume();
+    function createTrack(index) {
+      const cfg = TRACK_CONFIGS[index];
+      const track = {
+        id: index,
+        name: cfg.name,
+        color: cfg.color,
+        mute: false,
+        solo: false,
+        volume: 0.8,
+        gain: actx.createGain(),
+        filter: actx.createBiquadFilter(),
+        params: { wave: 'triangle', a: 0.01, d: 0.1, s: 0.5, r: 0.3, cut: 2000, res: 1 },
+        pattern: Array(32).fill().map((_, i) => ({ active: i % 8 === 0, note: cfg.defaultNote + (i % 2) * 12, vel: 0.8 })),
+        voices: {}
+      };
 
-      if (activeVoices[midi]) noteOff(midi, true);
+      track.gain.gain.value = track.volume;
+      track.filter.type = 'lowpass';
+      track.filter.frequency.value = track.params.cut;
+      track.filter.Q.value = track.params.res;
+      track.filter.connect(track.gain);
+      track.gain.connect(masterGain);
 
+      tracks.push(track);
+      renderTrack(track);
+    }
+
+    function renderTrack(track) {
+      const el = document.createElement('div');
+      el.className = 'track';
+      el.innerHTML = `
+        <div class="track-header">
+          <button class="track-mute" data-track="${track.id}">M</button>
+          <button class="track-solo" data-track="${track.id}">S</button>
+          <div class="track-name">${track.name}</div>
+          <div class="track-vol">
+            <label>Vol</label>
+            <input type="range" min="0" max="1" step="0.01" value="${track.volume}" data-track="${track.id}" class="track-vol-slider" />
+            <span class="track-vol-val">${Math.round(track.volume * 100)}%</span>
+          </div>
+        </div>
+        <div class="track-body">
+          <div class="synth-panel">
+            <div class="param-group">
+              <div class="param-group-title">Oscillator</div>
+              <div class="param-row">
+                <div class="param">
+                  <label>Wave</label>
+                  <select class="synth-wave" data-track="${track.id}">
+                    <option value="sine">Sine</option>
+                    <option value="square">Square</option>
+                    <option value="sawtooth">Saw</option>
+                    <option value="triangle" selected>Tri</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            <div class="param-group">
+              <div class="param-group-title">Envelope</div>
+              <div class="param-row">
+                <div class="param"><label>A</label><input type="range" min="0.001" max="1" step="0.001" value="0.01" class="synth-a" data-track="${track.id}" /></div>
+                <div class="param"><label>D</label><input type="range" min="0.01" max="1" step="0.01" value="0.1" class="synth-d" data-track="${track.id}" /></div>
+                <div class="param"><label>S</label><input type="range" min="0" max="1" step="0.01" value="0.5" class="synth-s" data-track="${track.id}" /></div>
+                <div class="param"><label>R</label><input type="range" min="0.01" max="2" step="0.01" value="0.3" class="synth-r" data-track="${track.id}" /></div>
+              </div>
+            </div>
+            <div class="param-group">
+              <div class="param-group-title">Filter</div>
+              <div class="param-row">
+                <div class="param"><label>Cutoff</label><input type="range" min="100" max="10000" step="10" value="2000" class="synth-cut" data-track="${track.id}" /></div>
+                <div class="param"><label>Res</label><input type="range" min="0" max="20" step="0.5" value="1" class="synth-res" data-track="${track.id}" /></div>
+              </div>
+            </div>
+          </div>
+          <div class="sequencer">
+            <div class="seq-grid" id="seq-${track.id}"></div>
+          </div>
+        </div>
+      `;
+
+      $('tracksArea').appendChild(el);
+      renderSequencer(track);
+      bindTrackEvents(track, el);
+    }
+
+    function renderSequencer(track) {
+      const grid = $(`seq-${track.id}`);
+      grid.innerHTML = '';
+      track.pattern.forEach((step, i) => {
+        const btn = document.createElement('div');
+        btn.className = 'seq-step' + (step.active ? ' active' : '');
+        btn.dataset.track = track.id;
+        btn.dataset.step = i;
+        btn.onclick = () => toggleStep(track.id, i);
+        const note = midiToNote(step.note);
+        btn.innerHTML = `<div class="seq-step-note">${note}</div>`;
+        grid.appendChild(btn);
+      });
+    }
+
+    function bindTrackEvents(track, el) {
+      el.querySelector('.track-mute').onclick = () => {
+        track.mute = !track.mute;
+        el.querySelector('.track-mute').classList.toggle('active', track.mute);
+      };
+
+      el.querySelector('.track-solo').onclick = () => {
+        track.solo = !track.solo;
+        el.querySelector('.track-solo').classList.toggle('active', track.solo);
+        const anySolo = tracks.some(t => t.solo);
+        tracks.forEach(t => {
+          if (anySolo) t.gain.gain.value = t.solo ? t.volume : 0;
+          else t.gain.gain.value = t.mute ? 0 : t.volume;
+        });
+      };
+
+      el.querySelector('.track-vol-slider').oninput = e => {
+        track.volume = parseFloat(e.target.value);
+        track.gain.gain.value = track.volume;
+        el.querySelector('.track-vol-val').textContent = Math.round(track.volume * 100) + '%';
+      };
+
+      ['wave', 'a', 'd', 's', 'r', 'cut', 'res'].forEach(param => {
+        const inp = el.querySelector(`.synth-${param}`);
+        if (!inp) return;
+        inp.oninput = () => {
+          track.params[param] = param === 'wave' ? inp.value : parseFloat(inp.value);
+          if (param === 'cut') track.filter.frequency.setTargetAtTime(track.params.cut, actx.currentTime, 0.05);
+          if (param === 'res') track.filter.Q.setTargetAtTime(track.params.res, actx.currentTime, 0.05);
+        };
+      });
+    }
+
+    function toggleStep(trackId, stepId) {
+      const track = tracks[trackId];
+      track.pattern[stepId].active = !track.pattern[stepId].active;
+      renderSequencer(track);
+    }
+
+    function playStep(stepIndex) {
+      tracks.forEach(track => {
+        const step = track.pattern[stepIndex];
+        if (step.active && !track.mute) {
+          const dur = (60 / bpm) / 8;
+          playNote(track, step.note, step.vel, dur);
+        }
+        const btn = document.querySelector(`[data-track="${track.id}"][data-step="${stepIndex}"]`);
+        if (btn) {
+          btn.classList.add('playing');
+          setTimeout(() => btn.classList.remove('playing'), 100);
+        }
+      });
+    }
+
+    function playNote(track, midi, vel, dur) {
+      if (!actx) return;
       const t = actx.currentTime;
       const osc = actx.createOscillator();
       const gain = actx.createGain();
 
-      osc.type = params.wave;
-      osc.frequency.setValueAtTime(m2f(midi), t);
+      osc.type = track.params.wave;
+      osc.frequency.value = 440 * Math.pow(2, (midi - 69) / 12);
 
+      const p = track.params;
       gain.gain.setValueAtTime(0.0001, t);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, vel), t + params.a);
-      gain.gain.exponentialRampToValueAtTime(Math.max(0.001, vel * params.s), t + params.a + params.d);
+      gain.gain.exponentialRampToValueAtTime(vel, t + p.a);
+      gain.gain.exponentialRampToValueAtTime(vel * p.s, t + p.a + p.d);
+      gain.gain.setValueAtTime(gain.gain.value, t + dur);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur + p.r);
 
       osc.connect(gain);
-      gain.connect(filterNode);
-
+      gain.connect(track.filter);
       osc.start(t);
-
-      activeVoices[midi] = { osc, gain };
-      highlightKey(midi, true);
-
-      if (dur > 0) {
-        const releaseStart = t + dur;
-        gain.gain.setValueAtTime(gain.gain.value, releaseStart);
-        gain.gain.exponentialRampToValueAtTime(0.001, releaseStart + params.r);
-        osc.stop(releaseStart + params.r + 0.05);
-
-        setTimeout(() => highlightKey(midi, false), dur * 1000);
-        setTimeout(() => {
-          if (activeVoices[midi] && activeVoices[midi].osc === osc) delete activeVoices[midi];
-        }, (dur + params.r + 0.1) * 1000);
-      }
-    }
-
-    function noteOff(midi, force = false) {
-      const v = activeVoices[midi];
-      if (!v) return;
-      const { osc, gain } = v;
-      const t = actx.currentTime;
-
-      gain.gain.cancelScheduledValues(t);
-      gain.gain.setValueAtTime(Math.max(0.001, gain.gain.value), t);
-      const rel = force ? 0.01 : params.r;
-      gain.gain.exponentialRampToValueAtTime(0.001, t + rel);
-      osc.stop(t + rel + 0.05);
-
-      delete activeVoices[midi];
-      highlightKey(midi, false);
-    }
-
-    function updateParams() {
-      if (!actx) return;
-      params.wave = $('oscWave').value;
-      params.a = parseFloat($('envA').value);
-      params.d = parseFloat($('envD').value);
-      params.s = parseFloat($('envS').value);
-      params.r = parseFloat($('envR').value);
-
-      params.cut = parseFloat($('filterCut').value);
-      params.res = parseFloat($('filterRes').value);
-      filterNode.frequency.setTargetAtTime(params.cut, actx.currentTime, 0.05);
-      filterNode.Q.setTargetAtTime(params.res, actx.currentTime, 0.05);
-
-      params.dTime = parseFloat($('delayTime').value);
-      params.dFb = parseFloat($('delayFb').value);
-      params.dMix = parseFloat($('delayMix').value);
-      delayNode.delayTime.setTargetAtTime(params.dTime, actx.currentTime, 0.05);
-      delayFb.gain.setTargetAtTime(params.dFb, actx.currentTime, 0.05);
-      delayWet.gain.setTargetAtTime(params.dMix, actx.currentTime, 0.05);
-      delayDry.gain.setTargetAtTime(1 - params.dMix, actx.currentTime, 0.05);
-
-      params.vol = parseFloat($('masterVol').value);
-      masterGain.gain.setTargetAtTime(params.vol, actx.currentTime, 0.05);
-    }
-
-    function nextNote() {
-      const secondsPerBeat = 60.0 / bpm;
-      nextStepTime += 0.25 * secondsPerBeat;
-      currentStep = (currentStep + 1) % 16;
-    }
-
-    function scheduleNote(stepNumber) {
-      requestAnimationFrame(() => {
-        document.querySelectorAll('.step-col').forEach((el, i) => el.classList.toggle('active', i === stepNumber));
-      });
-
-      const s = steps[stepNumber];
-      if (s.active) {
-        const secondsPer16th = (60.0 / bpm) / 4;
-        const duration = Math.max(0.02, s.dur * secondsPer16th * 2);
-        noteOn(s.note, s.vel, duration);
-      }
+      osc.stop(t + dur + p.r + 0.05);
     }
 
     function scheduler() {
       if (!isPlaying) return;
-      const lookahead = 25.0;
-      const scheduleAheadTime = 0.1;
+      const stepDuration = (60 / bpm) / 8;
+      const elapsed = actx.currentTime - startTime;
+      const expectedStep = Math.floor(elapsed / stepDuration);
 
-      while (nextStepTime < actx.currentTime + scheduleAheadTime) {
-        scheduleNote(currentStep);
-        nextNote();
+      while (currentStep <= expectedStep) {
+        playStep(currentStep % 32);
+        currentStep++;
       }
-      seqTimerID = window.setTimeout(scheduler, lookahead);
+
+      requestAnimationFrame(scheduler);
     }
 
     function togglePlay() {
       if (!actx) initAudio();
       isPlaying = !isPlaying;
-
       if (isPlaying) {
+        startTime = actx.currentTime;
         currentStep = 0;
-        nextStepTime = actx.currentTime;
         scheduler();
         $('btnPlay').textContent = '⏸ PAUSE';
       } else {
-        window.clearTimeout(seqTimerID);
         $('btnPlay').textContent = '▶ PLAY';
-        Object.keys(activeVoices).forEach(k => noteOff(parseInt(k, 10), true));
       }
     }
 
     function stopAll() {
       isPlaying = false;
-      window.clearTimeout(seqTimerID);
+      currentStep = 0;
       $('btnPlay').textContent = '▶ PLAY';
-      Object.keys(activeVoices).forEach(k => noteOff(parseInt(k, 10), true));
-    }
-
-    function buildPiano() {
-      const container = $('pianoContainer');
-      container.innerHTML = '';
-
-      const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-      const startMidi = 48; // C3
-      const endMidi = 72; // C5
-
-      // Build white keys first in a row
-      const whiteRow = document.createElement('div');
-      whiteRow.style.position = 'relative';
-      whiteRow.style.height = '140px';
-      whiteRow.style.whiteSpace = 'nowrap';
-      container.appendChild(whiteRow);
-
-      const whitePositions = new Map();
-      let whiteIndex = 0;
-
-      for (let m = startMidi; m <= endMidi; m++) {
-        const n = noteNames[m % 12];
-        const isBlack = n.includes('#');
-        if (!isBlack) {
-          const k = document.createElement('div');
-          k.className = 'key';
-          k.dataset.midi = String(m);
-          k.style.left = '0px';
-          k.onmousedown = (e) => { e.preventDefault(); noteOn(m); };
-          k.onmouseup = () => noteOff(m);
-          k.onmouseleave = () => noteOff(m);
-          whiteRow.appendChild(k);
-          whitePositions.set(m, whiteIndex);
-          whiteIndex++;
-        }
-      }
-
-      // Now overlay black keys
-      for (let m = startMidi; m <= endMidi; m++) {
-        const n = noteNames[m % 12];
-        const isBlack = n.includes('#');
-        if (isBlack) {
-          // Find previous white key
-          let prev = m - 1;
-          while (prev >= startMidi) {
-            const pn = noteNames[prev % 12];
-            if (!pn.includes('#')) break;
-            prev--;
-          }
-          if (!whitePositions.has(prev)) continue;
-
-          const pos = whitePositions.get(prev);
-          const k = document.createElement('div');
-          k.className = 'key black';
-          k.dataset.midi = String(m);
-          k.style.left = (pos * 32 + 22) + 'px';
-          k.onmousedown = (e) => { e.preventDefault(); noteOn(m); };
-          k.onmouseup = () => noteOff(m);
-          k.onmouseleave = () => noteOff(m);
-          whiteRow.appendChild(k);
-        }
-      }
-    }
-
-    function highlightKey(midi, on) {
-      const k = document.querySelector(`.key[data-midi="${midi}"]`);
-      if (k) k.classList.toggle('pressed', on);
-    }
-
-    function buildSequencerGrid() {
-      const grid = $('sequencerGrid');
-      grid.innerHTML = '';
-
-      steps.forEach((step, idx) => {
-        const col = document.createElement('div');
-        col.className = 'step-col';
-        if (idx === selectedStepIndex) col.style.borderColor = '#9cff8a';
-
-        const btn = document.createElement('button');
-        btn.className = 'step-btn' + (step.active ? ' on' : '');
-        btn.onclick = (e) => {
-          step.active = !step.active;
-          btn.className = 'step-btn' + (step.active ? ' on' : '');
-          selectStep(idx);
-          e.stopPropagation();
-        };
-
-        const velBar = document.createElement('div');
-        velBar.className = 'step-param';
-        const velFill = document.createElement('div');
-        velFill.className = 'step-param-val';
-        velFill.style.width = (step.vel * 100) + '%';
-        velBar.appendChild(velFill);
-
-        col.appendChild(btn);
-        col.appendChild(velBar);
-        col.onclick = () => selectStep(idx);
-
-        grid.appendChild(col);
-      });
-    }
-
-    function selectStep(idx) {
-      selectedStepIndex = idx;
-      Array.from($('sequencerGrid').children).forEach((c, i) => {
-        c.style.borderColor = (i === idx) ? '#9cff8a' : 'transparent';
-      });
-
-      const s = steps[idx];
-      $('stepNoteSelect').value = String(s.note);
-      $('stepVel').value = String(s.vel);
-      $('stepDur').value = String(s.dur);
-    }
-
-    function updateStepData() {
-      const s = steps[selectedStepIndex];
-      s.note = parseInt($('stepNoteSelect').value, 10);
-      s.vel = parseFloat($('stepVel').value);
-      s.dur = parseFloat($('stepDur').value);
-      buildSequencerGrid();
-      saveState();
-    }
-
-    function buildNoteSelect() {
-      const sel = $('stepNoteSelect');
-      const noteNames = ['C','C#','D','D#','E','F','F#','G','G#','A','A#','B'];
-      sel.innerHTML = '';
-      for (let m = 36; m < 84; m++) {
-        const oct = Math.floor(m / 12) - 1;
-        const n = noteNames[m % 12];
-        const opt = document.createElement('option');
-        opt.value = String(m);
-        opt.textContent = `${n}${oct}`;
-        sel.appendChild(opt);
-      }
-    }
-
-    function saveRecording() {
-      const blob = new Blob(audioChunks, { type: 'audio/webm' });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.style.display = 'none';
-      a.href = url;
-      a.download = `soundmaker_${Date.now()}.webm`;
-      document.body.appendChild(a);
-      a.click();
-      URL.revokeObjectURL(url);
-      $('recStatus').textContent = 'Saved';
     }
 
     function toggleRec() {
@@ -664,171 +732,110 @@
       if (recorder.state === 'inactive') {
         audioChunks = [];
         recorder.start();
-        $('btnRec').classList.add('recording');
-        $('btnRec').textContent = 'STOP';
-        $('recStatus').textContent = 'Recording…';
+        $('btnRec').classList.add('active');
+        $('btnRec').textContent = '⏹ STOP REC';
       } else {
         recorder.stop();
-        $('btnRec').classList.remove('recording');
+        $('btnRec').classList.remove('active');
         $('btnRec').textContent = '● REC';
-        $('recStatus').textContent = 'Processing…';
       }
     }
 
-    const presets = {
-      init: { wave:'triangle', a:0.01, d:0.1, s:0.5, r:0.3, cut:5000, res:1, dTime:0.2, dFb:0, dMix:0 },
-      bass: { wave:'sawtooth', a:0.01, d:0.2, s:0.2, r:0.1, cut:800, res:5, dTime:0.1, dFb:0.2, dMix:0.1 },
-      lead: { wave:'square', a:0.01, d:0.1, s:0.6, r:0.2, cut:2500, res:3, dTime:0.3, dFb:0.4, dMix:0.3 },
-      pad:  { wave:'sine', a:0.8, d:1, s:0.8, r:2.0, cut:1500, res:0, dTime:0.4, dFb:0.6, dMix:0.5 },
-      sfx:  { wave:'sawtooth', a:0.01, d:0.1, s:0.1, r:0.1, cut:9000, res:15, dTime:0.05, dFb:0.75, dMix:0.35 }
-    };
-
     function loadPreset(name) {
       const p = presets[name];
-      if (!p) return;
-      $('oscWave').value = p.wave;
-      $('envA').value = String(p.a);
-      $('envD').value = String(p.d);
-      $('envS').value = String(p.s);
-      $('envR').value = String(p.r);
-      $('filterCut').value = String(p.cut);
-      $('filterRes').value = String(p.res);
-      $('delayTime').value = String(p.dTime);
-      $('delayFb').value = String(p.dFb);
-      $('delayMix').value = String(p.dMix);
-      updateParams();
-      saveState();
+      if (!p || !tracks[0]) return;
+      const track = tracks[0];
+      document.querySelector('.synth-wave').value = p.wave;
+      document.querySelector('.synth-a').value = p.a;
+      document.querySelector('.synth-d').value = p.d;
+      document.querySelector('.synth-s').value = p.s;
+      document.querySelector('.synth-r').value = p.r;
+      document.querySelector('.synth-cut').value = p.cut;
+      document.querySelector('.synth-res').value = p.res;
+      ['wave', 'a', 'd', 's', 'r', 'cut', 'res'].forEach(k => {
+        track.params[k] = p[k];
+      });
+      if (actx) {
+        track.filter.frequency.value = p.cut;
+        track.filter.Q.value = p.res;
+      }
     }
 
-    function randomizePatch() {
-      const waves = ['sine','square','sawtooth','triangle'];
-      $('oscWave').value = waves[Math.floor(Math.random() * waves.length)];
-      $('envA').value = (Math.random() * 0.4 + 0.005).toFixed(3);
-      $('envD').value = (Math.random() * 1).toFixed(2);
-      $('envS').value = (Math.random()).toFixed(2);
-      $('envR').value = (Math.random() * 1.5 + 0.01).toFixed(2);
-      $('filterCut').value = String(Math.floor(200 + Math.random() * 9000));
-      $('filterRes').value = (Math.random() * 12).toFixed(1);
-      $('delayTime').value = (Math.random() * 0.45).toFixed(2);
-      $('delayFb').value = (Math.random() * 0.75).toFixed(2);
-      $('delayMix').value = (Math.random() * 0.45).toFixed(2);
-      updateParams();
-      saveState();
+    function randomizeAll() {
+      tracks.forEach(track => {
+        track.pattern.forEach((step, i) => {
+          step.active = Math.random() > 0.7;
+          step.note = 36 + Math.floor(Math.random() * 36);
+          step.vel = 0.5 + Math.random() * 0.5;
+        });
+        renderSequencer(track);
+      });
+    }
+
+    function exportWAV() {
+      alert('WAV Export: Use browser recording or install offline renderer (advanced).');
+    }
+
+    function exportJSON() {
+      const data = { bpm, tracks: tracks.map(t => ({ name: t.name, volume: t.volume, params: t.params, pattern: t.pattern })) };
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `project_${Date.now()}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function midiToNote(midi) {
+      const notes = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
+      return notes[midi % 12] + Math.floor(midi / 12 - 1);
     }
 
     function startScope() {
-      const canvas = $('scope');
+      const canvas = $('scopeCanvas');
       const ctx = canvas.getContext('2d');
-      const w = canvas.width;
-      const h = canvas.height;
+      const w = canvas.width, h = canvas.height;
       const data = new Uint8Array(analyzer.fftSize);
 
       function draw() {
         requestAnimationFrame(draw);
         analyzer.getByteTimeDomainData(data);
 
-        ctx.fillStyle = '#111';
+        ctx.fillStyle = '#000';
         ctx.fillRect(0, 0, w, h);
 
-        // waveform
         ctx.lineWidth = 2;
         ctx.strokeStyle = '#9cff8a';
         ctx.beginPath();
-        const step = w / (data.length - 1);
+        const step = w / data.length;
         for (let i = 0; i < data.length; i++) {
-          const v = data[i] / 255;
-          const y = v * h;
+          const y = (data[i] / 255) * h;
           const x = i * step;
-          if (i === 0) ctx.moveTo(x, y);
-          else ctx.lineTo(x, y);
+          i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
         }
         ctx.stroke();
-
-        // VU: compute peak
-        let peak = 0;
-        for (let i = 0; i < data.length; i++) peak = Math.max(peak, Math.abs(data[i] - 128) / 128);
-        let bars = '▯▯▯▯▯';
-        if (peak > 0.1) bars = '▮▯▯▯▯';
-        if (peak > 0.3) bars = '▮▮▯▯▯';
-        if (peak > 0.5) bars = '▮▮▮▯▯';
-        if (peak > 0.7) bars = '▮▮▮▮▯';
-        if (peak > 0.9) bars = '▮▮▮▮▮';
-        $('vuMeter').textContent = bars;
       }
       draw();
     }
 
-    function saveState() {
-      try {
-        const state = {
-          bpm,
-          params: {
-            wave: $('oscWave').value,
-            a: $('envA').value,
-            d: $('envD').value,
-            s: $('envS').value,
-            r: $('envR').value,
-            cut: $('filterCut').value,
-            res: $('filterRes').value,
-            dTime: $('delayTime').value,
-            dFb: $('delayFb').value,
-            dMix: $('delayMix').value,
-            vol: $('masterVol').value
-          },
-          steps
-        };
-        localStorage.setItem('soundmaker_state_v1', JSON.stringify(state));
-      } catch (_) {}
-    }
+    $('btnInit').onclick = () => initAudio();
+    $('btnPlay').onclick = togglePlay;
+    $('btnStop').onclick = stopAll;
+    $('btnRec').onclick = toggleRec;
+    $('bpmInput').oninput = e => bpm = parseInt(e.target.value) || 120;
+    $('masterVol').oninput = e => {
+      const v = parseFloat(e.target.value);
+      if (masterGain) masterGain.gain.value = v;
+      $('masterVolVal').textContent = Math.round(v * 100) + '%';
+    };
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem('soundmaker_state_v1');
-        if (!raw) return;
-        const s = JSON.parse(raw);
-        if (s?.bpm) { bpm = s.bpm; $('bpmNum').value = String(bpm); }
-        if (s?.params) {
-          $('oscWave').value = s.params.wave ?? $('oscWave').value;
-          $('envA').value = s.params.a ?? $('envA').value;
-          $('envD').value = s.params.d ?? $('envD').value;
-          $('envS').value = s.params.s ?? $('envS').value;
-          $('envR').value = s.params.r ?? $('envR').value;
-          $('filterCut').value = s.params.cut ?? $('filterCut').value;
-          $('filterRes').value = s.params.res ?? $('filterRes').value;
-          $('delayTime').value = s.params.dTime ?? $('delayTime').value;
-          $('delayFb').value = s.params.dFb ?? $('delayFb').value;
-          $('delayMix').value = s.params.dMix ?? $('delayMix').value;
-          $('masterVol').value = s.params.vol ?? $('masterVol').value;
-        }
-        if (Array.isArray(s?.steps) && s.steps.length === 16) steps = s.steps;
-      } catch (_) {}
-    }
+    window.addEventListener('load', () => {
+      for (let i = 0; i < 4; i++) createTrack(i);
+    });
 
-    window.addEventListener('DOMContentLoaded', () => {
-      buildPiano();
-      buildNoteSelect();
-      loadState();
-      buildSequencerGrid();
-      selectStep(0);
-
-      $('btnInitAudio').onclick = (e) => { e.preventDefault(); initAudio(); };
-      $('btnPlay').onclick = togglePlay;
-      $('btnStop').onclick = stopAll;
-      $('btnRec').onclick = toggleRec;
-
-      $('bpmNum').addEventListener('input', () => { bpm = parseInt($('bpmNum').value, 10) || 120; saveState(); });
-
-      ['oscWave','envA','envD','envS','envR','filterCut','filterRes','delayTime','delayFb','delayMix','masterVol'].forEach(id => {
-        $(id).addEventListener('input', () => { updateParams(); saveState(); });
-      });
-
-      ['stepNoteSelect','stepVel','stepDur'].forEach(id => {
-        $(id).addEventListener('input', updateStepData);
-      });
-
-      window.addEventListener('keydown', (e) => {
-        if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
-      });
+    window.addEventListener('keydown', e => {
+      if (e.code === 'Space') { e.preventDefault(); togglePlay(); }
     });
   </script>
 </body>
