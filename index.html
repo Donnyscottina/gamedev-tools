@@ -12,20 +12,24 @@
     header h1{margin:0;font-size:28px;letter-spacing:2px}
     header .sub{margin-top:6px;color:var(--muted,#7aa57a);font-size:12px;letter-spacing:1px}
 
-    .wrap{max-width:980px;margin:0 auto;padding:18px 14px 34px}
-    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+    .wrap{max-width:1100px;margin:0 auto;padding:18px 14px 34px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px}
 
-    .card{background:rgba(20,26,20,.85);border:1px solid rgba(125,170,125,.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:150px}
-    .card h2{margin:0;font-size:16px;letter-spacing:1px}
-    .card p{margin:0;color:rgba(215,255,211,.75);font-size:12px;line-height:1.5}
+    .card{background:rgba(20,26,20,.85);border:1px solid rgba(125,170,125,.25);border-radius:10px;padding:16px;display:flex;flex-direction:column;gap:12px;transition:transform .2s, border-color .2s}
+    .card:hover{transform:translateY(-2px);border-color:var(--accent,#9cff8a)}
+    .card h2{margin:0;font-size:16px;letter-spacing:1px;color:var(--accent,#9cff8a)}
+    .card p{margin:0;color:rgba(215,255,211,.75);font-size:13px;line-height:1.5;flex-grow:1}
 
     .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
-    a.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.7px}
-    a.btn.primary{background:var(--accent,#9cff8a);color:#0b0d0b;border:1px solid rgba(156,255,138,.35)}
-    a.btn.ghost{background:rgba(255,255,255,.04);color:var(--text,#d7ffd3);border:1px solid rgba(125,170,125,.25)}
-    a.btn:hover{filter:brightness(1.08)}
+    a.btn{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:6px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.5px;transition:all .2s}
+    a.btn.primary{background:var(--accent,#9cff8a);color:#0b0d0b;border:1px solid var(--accent,#9cff8a)}
+    a.btn.ghost{background:transparent;color:var(--text,#d7ffd3);border:1px solid rgba(125,170,125,.35)}
+    a.btn:hover{filter:brightness(1.1);transform:translateY(-1px)}
 
-    .footer{margin-top:18px;color:rgba(215,255,211,.5);font-size:11px;text-align:center}
+    .badge{display:inline-block;padding:2px 6px;border-radius:4px;background:rgba(156,255,138,.1);color:var(--accent,#9cff8a);font-size:10px;border:1px solid rgba(156,255,138,.2)}
+
+    .footer{margin-top:30px;color:rgba(215,255,211,.5);font-size:11px;text-align:center;border-top:1px solid rgba(125,170,125,.15);padding-top:15px}
+    .footer a{color:inherit}
   </style>
 </head>
 <body>
@@ -36,34 +40,93 @@
 
   <main class="wrap">
     <div class="grid">
+      
+      <!-- Pixel Art -->
       <section class="card">
-        <h2>Pixel Art</h2>
-        <p>Редактор пиксель-арта: слои, фреймы, onion skin, заливка, фигуры, выделение/копирование/вставка и зум.</p>
+        <h2>Pixel Art <span class="badge">Editor</span></h2>
+        <p>Полноценный редактор: слои, фреймы, анимация, инструменты рисования, зум, выделение и экспорт в спрайтшит.</p>
         <div class="row">
-          <a class="btn primary" href="pixelart.html">Open →</a>
-          <a class="btn ghost" href="pixelart.html#hotkeys">Hotkeys</a>
+          <a class="btn primary" href="pixelart.html">Open Tool</a>
         </div>
       </section>
 
+      <!-- SoundMaker -->
       <section class="card">
-        <h2>SoundMaker</h2>
-        <p>Синт + мини-секвенсор на WebAudio: ADSR, фильтр, delay, визуализация и клавиатура.</p>
+        <h2>SoundMaker <span class="badge">New</span></h2>
+        <p>Синтезатор звуковых эффектов и музыки: WebAudio, ADSR, фильтры, секвенсор и визуализация.</p>
         <div class="row">
-          <a class="btn primary" href="soundmaker.html">Open →</a>
-          <a class="btn ghost" href="soundmaker.html#tips">Tips</a>
+          <a class="btn primary" href="soundmaker.html">Open Tool</a>
         </div>
       </section>
 
+      <!-- SFX Generator -->
       <section class="card">
-        <h2>Coming soon</h2>
-        <p>Добавим ещё утилиты (tileset, palette maker, anim preview, etc.).</p>
+        <h2>SFX Generator</h2>
+        <p>Генератор звуковых эффектов в стиле 8-бит: взрывы, прыжки, лазеры и power-up'ы.</p>
         <div class="row">
-          <a class="btn ghost" href="#" onclick="alert('Soon™')">Notify me</a>
+          <a class="btn primary" href="sfx.html">Open Tool</a>
         </div>
       </section>
+
+      <!-- UI Theme Gen -->
+      <section class="card">
+        <h2>UI Theme Generator</h2>
+        <p>Быстрое создание цветовых схем и тем для пользовательского интерфейса игр.</p>
+        <div class="row">
+          <a class="btn primary" href="ui-theme-generator.html">Open Tool</a>
+        </div>
+      </section>
+
+      <!-- Palette Remapper -->
+      <section class="card">
+        <h2>Palette Remapper</h2>
+        <p>Инструмент для перекраски спрайтов: замена цветов, сдвиг оттенков и управление палитрой.</p>
+        <div class="row">
+          <a class="btn primary" href="paletteremapper.html">Open Tool</a>
+        </div>
+      </section>
+
+      <!-- Palette Reducer -->
+      <section class="card">
+        <h2>Palette Reducer</h2>
+        <p>Уменьшение количества цветов в изображении, создание ограниченных палитр.</p>
+        <div class="row">
+          <a class="btn primary" href="palette-reducer.html">Open Tool</a>
+        </div>
+      </section>
+
+      <!-- Palette Generator -->
+      <section class="card">
+        <h2>Palette Generator</h2>
+        <p>Генерация гармоничных палитр для пиксель-арта.</p>
+        <div class="row">
+          <a class="btn primary" href="palette.html">Open Tool</a>
+        </div>
+      </section>
+
+      <!-- Spritesheet Tool -->
+      <section class="card">
+        <h2>Spritesheet Tool</h2>
+        <p>Работа со спрайтшитами: нарезка, склейка, просмотр анимаций.</p>
+        <div class="row">
+          <a class="btn primary" href="spritesheet.html">Open Tool</a>
+        </div>
+      </section>
+
+      <!-- Blog -->
+      <section class="card" style="border-style: dashed;">
+        <h2>Blog & Updates</h2>
+        <p>Новости разработки, туториалы и заметки.</p>
+        <div class="row">
+          <a class="btn ghost" href="blog.html">Read Blog</a>
+        </div>
+      </section>
+
     </div>
 
-    <div class="footer">v0.1 — сделано для быстрого прототипинга</div>
+    <div class="footer">
+      <div>&copy; 2026 Donnyscottina Hub</div>
+    </div>
   </main>
 </body>
 </html>
