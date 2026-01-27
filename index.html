@@ -1,124 +1,69 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="google-site-verification" content="1Fv8E7IAofbwj681NIXI3Fp8M9W7w8k8U3Iyzrd4GyI" />
-    <title>GameDev Tools | Бесплатные онлайн инструменты для разработки игр</title>
-    
-    <!-- SEO Meta Tags -->
-    <meta name="description" content="Коллекция бесплатных онлайн инструментов для разработчиков игр: создание спрайтшитов, генератор 8-bit звуков, пиксель-арт редактор, работа с палитрами и конвертеры. Без регистрации.">
-    <meta name="keywords" content="gamedev tools, sprite packer, sfx generator, pixel art editor, palette reducer, инструменты для разработки игр, спрайтшит генератор, пиксель арт онлайн">
-    <meta name="author" content="DonnyScottina">
-    <meta name="robots" content="index, follow">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gamedev Tools — Hub</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;background:#0b0d0b;color:var(--text,#d7ffd3);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace}
+    header{padding:22px 16px 10px;text-align:center}
+    header h1{margin:0;font-size:28px;letter-spacing:2px}
+    header .sub{margin-top:6px;color:var(--muted,#7aa57a);font-size:12px;letter-spacing:1px}
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://donnyscottina.github.io/gamedev-tools/">
-    <meta property="og:title" content="GameDev Tools — Набор инструментов для инди-разработчиков">
-    <meta property="og:description" content="Бесплатные инструменты: упаковщик спрайтов, SFX генератор, Pixel Art редактор и многое другое.">
-    <meta property="og:image" content="https://donnyscottina.github.io/gamedev-tools/paint.webp">
+    .wrap{max-width:980px;margin:0 auto;padding:18px 14px 34px}
+    .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
 
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://donnyscottina.github.io/gamedev-tools/">
-    <meta property="twitter:title" content="GameDev Tools — Набор инструментов для инди-разработчиков">
-    <meta property="twitter:description" content="Бесплатные инструменты: упаковщик спрайтов, SFX генератор, Pixel Art редактор и многое другое.">
-    <meta property="twitter:image" content="https://donnyscottina.github.io/gamedev-tools/paint.webp">
+    .card{background:rgba(20,26,20,.85);border:1px solid rgba(125,170,125,.25);border-radius:10px;padding:14px;display:flex;flex-direction:column;gap:10px;min-height:150px}
+    .card h2{margin:0;font-size:16px;letter-spacing:1px}
+    .card p{margin:0;color:rgba(215,255,211,.75);font-size:12px;line-height:1.5}
 
-    <link rel="canonical" href="https://donnyscottina.github.io/gamedev-tools/">
-    <link rel="icon" type="image/x-icon" href="/gamedev-tools/favicon.ico">
-    <link href="style.css" rel="stylesheet">
-    <script src="header.js" defer></script>
-    <script src="footer.js" defer></script>
+    .row{display:flex;gap:10px;flex-wrap:wrap;margin-top:auto}
+    a.btn{display:inline-flex;align-items:center;gap:8px;padding:10px 12px;border-radius:8px;text-decoration:none;font-weight:700;font-size:12px;letter-spacing:.7px}
+    a.btn.primary{background:var(--accent,#9cff8a);color:#0b0d0b;border:1px solid rgba(156,255,138,.35)}
+    a.btn.ghost{background:rgba(255,255,255,.04);color:var(--text,#d7ffd3);border:1px solid rgba(125,170,125,.25)}
+    a.btn:hover{filter:brightness(1.08)}
+
+    .footer{margin-top:18px;color:rgba(215,255,211,.5);font-size:11px;text-align:center}
+  </style>
 </head>
-
 <body>
+  <header>
+    <h1>GAMEDEV TOOLS</h1>
+    <div class="sub">DONNYSCOTTINA HUB</div>
+  </header>
 
-<main>
-     <div class="grid">
-        <a href="spritesheet.html" class="card">
-            <div class="image-wrapper">
-                <img src="girl.webp" class="card-preview" alt="Sprite Packer Online">
-            </div>
-            <div class="title">Sprite Packer</div>
-            <div class="desc">
-                Сборка спрайтшитов и атласов из отдельных изображений.
-            </div>
-        </a>
+  <main class="wrap">
+    <div class="grid">
+      <section class="card">
+        <h2>Pixel Art</h2>
+        <p>Редактор пиксель-арта: слои, фреймы, onion skin, заливка, фигуры, выделение/копирование/вставка и зум.</p>
+        <div class="row">
+          <a class="btn primary" href="pixelart.html">Open →</a>
+          <a class="btn ghost" href="pixelart.html#hotkeys">Hotkeys</a>
+        </div>
+      </section>
 
-        <a href="palette.html" class="card">
-            <div class="image-wrapper">
-                <img src="palletextractor.webp" class="card-preview" alt="Palette Extractor">
-            </div>
-            <div class="title">Palette Extractor</div>
-            <div class="desc">
-                Быстрое извлечение цветовой палитры из любых изображений.
-            </div>
-        </a>
+      <section class="card">
+        <h2>SoundMaker</h2>
+        <p>Синт + мини-секвенсор на WebAudio: ADSR, фильтр, delay, визуализация и клавиатура.</p>
+        <div class="row">
+          <a class="btn primary" href="soundmaker.html">Open →</a>
+          <a class="btn ghost" href="soundmaker.html#tips">Tips</a>
+        </div>
+      </section>
 
-        <a href="pixelart.html" class="card">
-            <div class="image-wrapper">
-                <img src="paint.webp" class="card-preview" alt="Pixel Art Editor">
-            </div>
-            <div class="title">Pixel Art Editor</div>
-            <div class="desc">
-                Рисование пиксель-арта прямо в браузере.
-            </div>
-        </a>
-     
-        <a href="sfx.html" class="card">
-            <div class="image-wrapper">
-                <img src="sound.webp" class="card-preview" alt="8-Bit SFX Generator">
-            </div>
-            <div class="title">8-Bit SFX</div>
-            <div class="desc">
-                Генерация ретро-звуков для игр (Bfxr style).
-            </div>
-        </a>
-    
-        <a href="paletteremapper.html" class="card">
-            <div class="image-wrapper">
-                <img src="remaper.webp" class="card-preview" alt="Palette Remapper">
-            </div>
-            <div class="title">Palette Remapper</div>
-            <div class="desc">
-                Умное упрощение цветов и замена палитры спрайтов.
-            </div>
-        </a>
-        
-        <a href="palette-reducer.html" class="card">
-            <div class="image-wrapper">
-                <img src="PalletCleaner.webp" class="card-preview" alt="Palette Reducer">
-            </div>
-            <div class="title">Palette Reducer</div>
-            <div class="desc">
-                Сжатие количества цветов (Median Cut Algorithm).
-            </div>
-        </a>
-
-        <a href="https://qonveo.com/" class="card" target="_blank" rel="noopener noreferrer">
-            <div class="image-wrapper">
-                <img src="qonveo.webp" class="card-preview" alt="Qonveo Image Converter">
-            </div>
-            <div class="title">🔗 Image Converter</div>
-            <div class="desc">
-                Конвертация изображений (WebP, PNG, JPG). Быстро, безопасно, без регистрации.
-            </div>
-        </a>
-           <a href="https://donnyscottina.github.io/gamedev-tools/ui-theme-generator.html" class="card" target="_blank" rel="noopener noreferrer">
-            <div class="image-wrapper">
-                <img src="UIThemeGenerator.png" class="card-preview" alt="Qonveo Image Converter">
-            </div>
-            <div class="title">UI ThemeGenerator</div>
-            <div class="desc">
-                Генерирует сочетания цветов для интерфейсов.
-            </div>
-        </a>
+      <section class="card">
+        <h2>Coming soon</h2>
+        <p>Добавим ещё утилиты (tileset, palette maker, anim preview, etc.).</p>
+        <div class="row">
+          <a class="btn ghost" href="#" onclick="alert('Soon™')">Notify me</a>
+        </div>
+      </section>
     </div>
-</main>
 
-<script src="global.js"></script>
-
+    <div class="footer">v0.1 — сделано для быстрого прототипинга</div>
+  </main>
 </body>
 </html>

@@ -1,165 +1,508 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>8-Bit SoundMaker Инструмент</title>
-    <style>
-        body { font-family: monospace; background: #000; color: #0f0; padding: 20px; max-width: 1400px; margin: auto; }
-        .channel { display: inline-block; margin: 10px; }
-        canvas { border: 2px solid #0f0; cursor: pointer; background: #111; }
-        button { background: #222; color: #0f0; border: 1px solid #0f0; padding: 8px 12px; margin: 4px; cursor: pointer; font-family: monospace; }
-        button:hover { background: #0f0; color: #000; }
-        input { background: #000; color: #0f0; border: 1px solid #0f0; width: 50px; text-align: center; }
-        #controls { margin: 20px 0; }
-        #export { margin-top: 20px; }
-    </style>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>SoundMaker</title>
+  <link rel="stylesheet" href="style.css" />
+  <style>
+    *{box-sizing:border-box}
+    :root{
+      --bg:#0b0d0b;
+      --panel:rgba(20,26,20,.88);
+      --border:rgba(125,170,125,.25);
+      --text:#d7ffd3;
+      --muted:rgba(215,255,211,.55);
+      --accent:#9cff8a;
+      --warn:#ffcc66;
+    }
+    body{margin:0;min-height:100vh;background:var(--bg);color:var(--text);font-family:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono",monospace;overflow:hidden}
+
+    header{padding:18px 14px 10px;text-align:center;border-bottom:1px solid var(--border);background:linear-gradient(180deg,rgba(20,26,20,.92),rgba(20,26,20,.70))}
+    header h1{margin:0;font-size:24px;letter-spacing:2px}
+    header .sub{margin-top:6px;color:var(--muted);font-size:12px;letter-spacing:1px;display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap}
+    header a{color:var(--accent);text-decoration:none}
+
+    .layout{display:grid;grid-template-columns:320px 1fr 320px;gap:10px;padding:10px;height:calc(100vh - 68px)}
+    @media (max-width: 1100px){.layout{grid-template-columns:1fr;overflow:auto;height:auto} body{overflow:auto}}
+
+    .panel{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;min-height:120px}
+    .panel h2{margin:0 0 10px;font-size:12px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;align-items:center}
+
+    .row{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+    .btn{cursor:pointer;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);padding:10px 12px;font-weight:700;font-size:12px;letter-spacing:.6px}
+    .btn.primary{background:var(--accent);color:#0b0d0b;border-color:rgba(156,255,138,.35)}
+    .btn:active{transform:translateY(1px)}
+
+    .kv{display:grid;grid-template-columns:110px 1fr;gap:8px;align-items:center;margin-bottom:10px}
+    .kv label{font-size:11px;color:var(--muted)}
+    .kv input[type="range"], .kv select{width:100%}
+    input[type="range"]{accent-color:var(--accent)}
+    select{background:#101610;border:1px solid var(--border);color:var(--text);padding:8px;border-radius:8px}
+
+    .vis{height:200px;border-radius:10px;border:1px solid var(--border);background:#050705;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    canvas{image-rendering:pixelated}
+
+    .kbd{user-select:none;display:flex;gap:2px;align-items:flex-end;justify-content:center;flex-wrap:wrap}
+    .key{width:36px;height:140px;border-radius:6px;border:1px solid rgba(125,170,125,.35);background:rgba(255,255,255,.06);display:flex;align-items:flex-end;justify-content:center;padding:6px;font-size:10px;color:rgba(215,255,211,.75)}
+    .key.black{width:28px;height:95px;margin-left:-14px;margin-right:-14px;z-index:3;background:rgba(0,0,0,.6);border-color:rgba(125,170,125,.35)}
+    .key.active{background:rgba(156,255,138,.6);color:#0b0d0b}
+
+    .seq{display:grid;grid-template-columns:repeat(16,1fr);gap:6px}
+    .step{border:1px solid var(--border);border-radius:8px;background:rgba(255,255,255,.03);padding:8px;display:flex;flex-direction:column;gap:6px;min-height:72px}
+    .step .t{font-size:10px;color:var(--muted)}
+    .step button{padding:8px;border-radius:8px;border:1px solid var(--border);background:rgba(255,255,255,.03);color:var(--text);cursor:pointer;font-weight:800;font-size:11px}
+    .step button.on{background:rgba(156,255,138,.25);border-color:rgba(156,255,138,.5)}
+    .step select{padding:7px;border-radius:8px}
+    .step.playing{outline:2px solid rgba(156,255,138,.55)}
+
+    .tip{font-size:11px;color:rgba(215,255,211,.65);line-height:1.5}
+    .chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:999px;border:1px solid var(--border);background:rgba(255,255,255,.03);font-size:11px;color:rgba(215,255,211,.8)}
+    .warn{color:var(--warn)}
+  </style>
 </head>
 <body>
-    <h1>🎹 8-Bit SoundMaker v2.0</h1>
-    <p>Кликай сетку для нот (16 шагов). Каналы: 1-Мелодия, 2-Бас, 3-Хай-хэт, 4-Снэр/Кик. Экспорт в WAV!</p>
-    
-    <div id="controls">
-        <button onclick="togglePlay()" id="playBtn">▶️ Play</button>
-        <button onclick="clearAll()">🗑️ Clear</button>
-        <button onclick="randomize()">🎲 Random</button>
-        <button onclick="exportWav()">💾 Export WAV</button>
-        <label>BPM: <input type="number" id="bpm" value="140" min="60" max="300" onchange="updateBPM()"></label>
-        <label>Vol: <input type="range" id="volume" min="0" max="1" step="0.1" value="0.2" onchange="updateVol()"></label>
+  <header>
+    <h1>SOUNDMAKER</h1>
+    <div class="sub">
+      <span class="chip">WebAudio synth + sequencer</span>
+      <span class="chip">Ctrl + wheel: zoom (в PixelArt)</span>
+      <a class="chip" href="index.html">← На главную</a>
     </div>
+  </header>
 
-    <div class="channel"><h3>🎵 Melodia</h3><canvas id="c1" width="400" height="240"></canvas></div>
-    <div class="channel"><h3>🔉 Bass</h3><canvas id="c2" width="400" height="240"></canvas></div>
-    <div class="channel"><h3>✨ Hats</h3><canvas id="c3" width="400" height="120"></canvas></div>
-    <div class="channel"><h3>🥁 Drums</h3><canvas id="c4" width="400" height="120"></canvas></div>
+  <div class="layout">
+    <section class="panel">
+      <h2>Engine <span id="engineState" class="warn">Audio: OFF</span></h2>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn primary" id="btnEnable">Enable audio</button>
+        <button class="btn" id="btnPanic">Panic (stop)</button>
+      </div>
+      <div class="kv">
+        <label>Wave</label>
+        <select id="wave">
+          <option value="sine">sine</option>
+          <option value="triangle" selected>triangle</option>
+          <option value="sawtooth">sawtooth</option>
+          <option value="square">square</option>
+        </select>
 
-    <div id="export"></div>
+        <label>Volume</label>
+        <input id="vol" type="range" min="0" max="1" step="0.01" value="0.35" />
 
-    <script>
-        // Улучшенная версия с инструментами
-        const canvasIds = ['c1','c2','c3','c4'];
-        const canvas = canvasIds.map(id => document.getElementById(id));
-        const ctx = canvas.map(c => c.getContext('2d'));
-        let audioCtx, analyser, gainNode;
-        let isPlaying = false, currentStep = 0, bpm = 140, volume = 0.2;
-        let interval;
-        let patterns = [[],[],[],[]]; // 4 канала
-        const notesC4 = [261.63, 277.18, 293.66, 311.13, 329.63, 349.23, 369.99, 392.00, 415.30, 440.00, 466.16, 493.88];
-        const lowNotes = notesC4.slice(0,6); // Для баса/драм
+        <label>Attack</label>
+        <input id="a" type="range" min="0.001" max="1" step="0.001" value="0.01" />
 
-        function initAudio() {
-            audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            gainNode = audioCtx.createGain();
-            gainNode.connect(audioCtx.destination);
-            updateVol();
-            analyser = audioCtx.createAnalyser();
-            gainNode.connect(analyser);
+        <label>Decay</label>
+        <input id="d" type="range" min="0.001" max="1" step="0.001" value="0.12" />
+
+        <label>Sustain</label>
+        <input id="s" type="range" min="0" max="1" step="0.01" value="0.55" />
+
+        <label>Release</label>
+        <input id="r" type="range" min="0.001" max="2" step="0.001" value="0.2" />
+      </div>
+
+      <h2>Filter + Delay</h2>
+      <div class="kv">
+        <label>Cutoff</label>
+        <input id="cut" type="range" min="100" max="12000" step="1" value="4500" />
+
+        <label>Resonance</label>
+        <input id="q" type="range" min="0.1" max="18" step="0.1" value="1.2" />
+
+        <label>Delay time</label>
+        <input id="dt" type="range" min="0" max="0.65" step="0.01" value="0.18" />
+
+        <label>Feedback</label>
+        <input id="fb" type="range" min="0" max="0.92" step="0.01" value="0.28" />
+
+        <label>Mix</label>
+        <input id="mix" type="range" min="0" max="1" step="0.01" value="0.2" />
+      </div>
+
+      <div class="tip" id="tips">
+        <div style="margin-bottom:8px">Подсказки:</div>
+        <div>Клавиши: <span class="chip">A W S E D F T G Y H U J</span> (как мини-пиано).</div>
+        <div>Секвенсор: включай шаги и выбирай ноты — <span class="warn">Play</span> справа.</div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Visual</h2>
+      <div class="vis">
+        <canvas id="scope" width="900" height="220"></canvas>
+      </div>
+      <div style="height:10px"></div>
+      <h2>Keyboard</h2>
+      <div class="kbd" id="kbd"></div>
+    </section>
+
+    <section class="panel">
+      <h2>Sequencer</h2>
+      <div class="row" style="margin-bottom:10px">
+        <button class="btn primary" id="btnPlay">Play</button>
+        <button class="btn" id="btnStop">Stop</button>
+        <span class="chip">BPM <span id="bpmVal">120</span></span>
+        <input id="bpm" type="range" min="60" max="200" value="120" />
+      </div>
+      <div class="seq" id="seq"></div>
+      <div style="height:10px"></div>
+      <div class="tip">Сделано так, чтобы быстро наклепать чиптюн-луп для прототипа.</div>
+    </section>
+  </div>
+
+  <script>
+    // --- Audio core ---
+    let ac = null;
+    let master = null;
+    let analyser = null;
+    let filter = null;
+    let delay = null;
+    let feedback = null;
+    let wet = null;
+    let dry = null;
+
+    const active = new Map(); // note -> {osc, gain}
+
+    const $ = (id) => document.getElementById(id);
+
+    function hzFromMidi(m){ return 440 * Math.pow(2, (m - 69) / 12); }
+
+    function ensureAudio(){
+      if(ac) return;
+      ac = new (window.AudioContext || window.webkitAudioContext)();
+
+      master = ac.createGain();
+      master.gain.value = parseFloat($("vol").value);
+
+      analyser = ac.createAnalyser();
+      analyser.fftSize = 2048;
+
+      filter = ac.createBiquadFilter();
+      filter.type = 'lowpass';
+      filter.frequency.value = parseFloat($("cut").value);
+      filter.Q.value = parseFloat($("q").value);
+
+      delay = ac.createDelay(1.0);
+      delay.delayTime.value = parseFloat($("dt").value);
+
+      feedback = ac.createGain();
+      feedback.gain.value = parseFloat($("fb").value);
+
+      wet = ac.createGain();
+      dry = ac.createGain();
+      wet.gain.value = parseFloat($("mix").value);
+      dry.gain.value = 1 - wet.gain.value;
+
+      // Routing: source -> filter -> (dry + delay/wet) -> analyser -> master -> out
+      filter.connect(dry);
+      filter.connect(delay);
+      delay.connect(feedback);
+      feedback.connect(delay);
+      delay.connect(wet);
+
+      const sum = ac.createGain();
+      dry.connect(sum);
+      wet.connect(sum);
+      sum.connect(analyser);
+      analyser.connect(master);
+      master.connect(ac.destination);
+
+      $("engineState").textContent = 'Audio: ON';
+      $("engineState").classList.remove('warn');
+    }
+
+    function updateParams(){
+      if(!ac) return;
+      master.gain.value = parseFloat($("vol").value);
+      filter.frequency.value = parseFloat($("cut").value);
+      filter.Q.value = parseFloat($("q").value);
+      delay.delayTime.value = parseFloat($("dt").value);
+      feedback.gain.value = parseFloat($("fb").value);
+      wet.gain.value = parseFloat($("mix").value);
+      dry.gain.value = 1 - wet.gain.value;
+    }
+
+    function noteOn(midi, vel=1){
+      ensureAudio();
+      if(ac.state === 'suspended') ac.resume();
+
+      const key = String(midi);
+      if(active.has(key)) return;
+
+      const osc = ac.createOscillator();
+      osc.type = $("wave").value;
+      osc.frequency.value = hzFromMidi(midi);
+
+      const gain = ac.createGain();
+      const now = ac.currentTime;
+      const A = parseFloat($("a").value);
+      const D = parseFloat($("d").value);
+      const S = parseFloat($("s").value);
+
+      gain.gain.cancelScheduledValues(now);
+      gain.gain.setValueAtTime(0, now);
+      gain.gain.linearRampToValueAtTime(vel, now + A);
+      gain.gain.linearRampToValueAtTime(vel * S, now + A + D);
+
+      osc.connect(gain);
+      gain.connect(filter);
+      osc.start(now);
+
+      active.set(key, {osc, gain});
+    }
+
+    function noteOff(midi){
+      if(!ac) return;
+      const key = String(midi);
+      const node = active.get(key);
+      if(!node) return;
+
+      const now = ac.currentTime;
+      const R = parseFloat($("r").value);
+
+      node.gain.gain.cancelScheduledValues(now);
+      node.gain.gain.setValueAtTime(node.gain.gain.value, now);
+      node.gain.gain.linearRampToValueAtTime(0.0001, now + R);
+
+      node.osc.stop(now + R + 0.03);
+      active.delete(key);
+    }
+
+    function panic(){
+      if(!ac) return;
+      for(const k of Array.from(active.keys())) noteOff(parseInt(k,10));
+    }
+
+    // --- UI: keyboard ---
+    const white = ['C','D','E','F','G','A','B'];
+    const blackMap = { 'C#':1, 'D#':2, 'F#':4, 'G#':5, 'A#':6 };
+
+    const baseMidi = 60; // C4
+    const notes = [
+      {n:'C',  m:60, w:true}, {n:'C#', m:61, w:false},
+      {n:'D',  m:62, w:true}, {n:'D#', m:63, w:false},
+      {n:'E',  m:64, w:true},
+      {n:'F',  m:65, w:true}, {n:'F#', m:66, w:false},
+      {n:'G',  m:67, w:true}, {n:'G#', m:68, w:false},
+      {n:'A',  m:69, w:true}, {n:'A#', m:70, w:false},
+      {n:'B',  m:71, w:true},
+      {n:'C5', m:72, w:true}
+    ];
+
+    const keyMap = {
+      'a':60,'w':61,'s':62,'e':63,'d':64,'f':65,'t':66,'g':67,'y':68,'h':69,'u':70,'j':71,'k':72
+    };
+
+    const kbd = $("kbd");
+    const keyEls = new Map();
+
+    function buildKeyboard(){
+      kbd.innerHTML = '';
+      for(const o of notes){
+        const div = document.createElement('div');
+        div.className = 'key' + (o.w ? '' : ' black');
+        div.textContent = o.n;
+        div.dataset.m = String(o.m);
+
+        const onDown = (e) => { e.preventDefault(); div.classList.add('active'); noteOn(o.m, 1); };
+        const onUp = (e) => { e.preventDefault(); div.classList.remove('active'); noteOff(o.m); };
+
+        div.addEventListener('mousedown', onDown);
+        window.addEventListener('mouseup', onUp);
+        div.addEventListener('touchstart', onDown, {passive:false});
+        div.addEventListener('touchend', onUp, {passive:false});
+
+        kbd.appendChild(div);
+        keyEls.set(o.m, div);
+      }
+    }
+
+    // --- Sequencer ---
+    const seq = $("seq");
+    const seqNotes = ['C4','D4','E4','F4','G4','A4','B4','C5','D5','E5'];
+    const toMidi = (name) => {
+      const map = {C:0,D:2,E:4,F:5,G:7,A:9,B:11};
+      const m = /^([A-G])(#?)(\d)$/.exec(name);
+      const n = m[1];
+      const sharp = m[2] ? 1 : 0;
+      const oct = parseInt(m[3],10);
+      return 12*(oct+1) + map[n] + sharp;
+    };
+
+    const steps = [];
+    for(let i=0;i<16;i++) steps.push({on: i%4===0, note: seqNotes[(i/4)|0] || 'C4'});
+
+    function buildSequencer(){
+      seq.innerHTML = '';
+      for(let i=0;i<16;i++){
+        const box = document.createElement('div');
+        box.className = 'step';
+
+        const t = document.createElement('div');
+        t.className = 't';
+        t.textContent = String(i+1);
+
+        const btn = document.createElement('button');
+        btn.textContent = steps[i].on ? 'ON' : 'OFF';
+        btn.className = steps[i].on ? 'on' : '';
+        btn.onclick = () => {
+          steps[i].on = !steps[i].on;
+          btn.textContent = steps[i].on ? 'ON' : 'OFF';
+          btn.className = steps[i].on ? 'on' : '';
+        };
+
+        const sel = document.createElement('select');
+        for(const n of seqNotes){
+          const opt = document.createElement('option');
+          opt.value = n;
+          opt.textContent = n;
+          if(n === steps[i].note) opt.selected = true;
+          sel.appendChild(opt);
+        }
+        sel.onchange = () => steps[i].note = sel.value;
+
+        box.appendChild(t);
+        box.appendChild(btn);
+        box.appendChild(sel);
+        seq.appendChild(box);
+      }
+    }
+
+    let seqTimer = null;
+    let stepIdx = 0;
+
+    function bpmToMs(bpm){
+      // 16 steps = 1 bar of 4/4 with 16th notes
+      return (60000 / bpm) / 4;
+    }
+
+    function seqPlay(){
+      ensureAudio();
+      if(seqTimer) return;
+      stepIdx = 0;
+      const tick = () => {
+        const bpm = parseInt($("bpm").value,10);
+        $("bpmVal").textContent = String(bpm);
+
+        // highlight
+        [...seq.children].forEach((el, idx) => el.classList.toggle('playing', idx === stepIdx));
+
+        const st = steps[stepIdx];
+        if(st.on){
+          const m = toMidi(st.note.replace('4','4').replace('5','5'));
+          noteOn(m, 0.9);
+          // short gate
+          setTimeout(() => noteOff(m), Math.max(50, bpmToMs(bpm)*0.85));
         }
 
-        function drawGrid(ch, height, noteRange) {
-            const c = canvas[ch], context = ctx[ch];
-            context.fillStyle = '#000'; context.fillRect(0,0,400,height);
-            context.strokeStyle = '#333'; context.lineWidth = 1;
-            for(let s=0; s<16; s++) { // Шаги
-                context.strokeRect(s*25,0,25,height);
-                if(s===currentStep) {
-                    context.fillStyle='#ff0'; context.fillRect(s*25,0,25,height);
-                }
-            }
-            for(let n=0; n<noteRange.length; n++) { // Ноты
-                context.strokeStyle = '#0f0'; context.lineWidth=2;
-                context.beginPath(); context.moveTo(0, n* (height/noteRange.length)); context.lineTo(400, n* (height/noteRange.length)); context.stroke();
-            }
-            // Заливка активных нот
-            patterns[ch].forEach((step, s) => {
-                step.forEach((active, n) => {
-                    if(active) {
-                        context.fillStyle = '#0f0';
-                        context.fillRect(s*25+2, n*(height/noteRange.length)+1, 21, (height/noteRange.length)-2);
-                    }
-                });
-            });
-        }
+        stepIdx = (stepIdx + 1) % 16;
+        seqTimer = setTimeout(tick, bpmToMs(bpm));
+      };
+      tick();
+    }
 
-        canvas.forEach((c,i) => {
-            const ch = i, noteRange = i<2 ? notesC4 : lowNotes.slice(0,6);
-            patterns[ch] = Array(16).fill().map(() => Array(noteRange.length).fill(false));
-            c.onclick = e => {
-                const rect = c.getBoundingClientRect(), x = e.clientX - rect.left, y = e.clientY - rect.top;
-                const step = Math.floor(x/25), noteIdx = Math.floor(y / (c.height / noteRange.length));
-                if(step<16 && noteIdx < noteRange.length) {
-                    patterns[ch][step][noteIdx] = !patterns[ch][step][noteIdx];
-                    drawGrid(ch, c.height, noteRange);
-                }
-            };
-            drawGrid(ch, c.height, noteRange);
-        });
+    function seqStop(){
+      if(seqTimer){
+        clearTimeout(seqTimer);
+        seqTimer = null;
+      }
+      [...seq.children].forEach((el) => el.classList.remove('playing'));
+      panic();
+    }
 
-        function playStep() {
-            patterns.forEach((pat, ch) => {
-                if(pat[currentStep].some(a=>a)) {
-                    const noteIdx = pat[currentStep].findIndex(a=>a);
-                    const osc = audioCtx.createOscillator();
-                    osc.type = ch===1 ? 'sawtooth' : ch<3 ? 'square' : 'triangle'; // Инструменты!
-                    osc.frequency.value = (ch<3 ? notesC4 : lowNotes)[noteIdx] * (ch===3 ? 0.5 : 1); // Низ для драм
-                    const g = audioCtx.createGain();
-                    g.gain.setValueAtTime(0.3, audioCtx.currentTime);
-                    g.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.15);
-                    osc.connect(g); g.connect(gainNode);
-                    osc.start(); osc.stop(audioCtx.currentTime + 0.2);
-                }
-            });
-            currentStep = (currentStep+1)%16;
-            canvas.forEach((c,i) => {
-                const nr = i<2 ? notesC4 : lowNotes.slice(0,6);
-                drawGrid(i, c.height, nr);
-            });
-        }
+    // --- Visualizer ---
+    const scope = $("scope");
+    const sctx = scope.getContext('2d');
 
-        window.togglePlay = () => {
-            if(!audioCtx) initAudio();
-            isPlaying = !isPlaying;
-            document.getElementById('playBtn').textContent = isPlaying ? '⏸️ Pause' : '▶️ Play';
-            if(isPlaying) {
-                const beat = 60000 / bpm / 4;
-                interval = setInterval(playStep, beat);
-            } else clearInterval(interval);
-        };
+    function drawScope(){
+      requestAnimationFrame(drawScope);
+      if(!analyser){
+        sctx.clearRect(0,0,scope.width, scope.height);
+        sctx.fillStyle = 'rgba(156,255,138,0.12)';
+        sctx.fillRect(0,0,scope.width, scope.height);
+        sctx.fillStyle = 'rgba(215,255,211,0.55)';
+        sctx.font = '12px ui-monospace, monospace';
+        sctx.fillText('Enable audio to start visualizer', 18, 26);
+        return;
+      }
 
-        window.clearAll = () => {
-            patterns = [[],[],[],[]].map(() => Array(16).fill().map(() => Array(12).fill(false)));
-            canvas.forEach((c,i) => drawGrid(i, c.height, i<2?notesC4:lowNotes.slice(0,6)));
-        };
+      const w = scope.width;
+      const h = scope.height;
+      sctx.fillStyle = 'rgba(5,7,5,0.32)';
+      sctx.fillRect(0,0,w,h);
 
-        window.randomize = () => {
-            patterns.forEach((pat, ch) => {
-                pat.forEach(step => {
-                    step.forEach((_, n) => step[n] = Math.random()<0.15);
-                });
-            });
-            canvas.forEach((c,i) => drawGrid(i, c.height, i<2?notesC4:lowNotes.slice(0,6)));
-        };
+      const data = new Uint8Array(analyser.fftSize);
+      analyser.getByteTimeDomainData(data);
 
-        window.updateBPM = () => bpm = +document.getElementById('bpm').value;
-        window.updateVol = () => gainNode.gain.value = volume = +document.getElementById('volume').value;
+      // grid
+      sctx.strokeStyle = 'rgba(156,255,138,0.12)';
+      sctx.lineWidth = 1;
+      sctx.beginPath();
+      for(let x=0; x<=w; x+=w/10){ sctx.moveTo(x,0); sctx.lineTo(x,h); }
+      for(let y=0; y<=h; y+=h/6){ sctx.moveTo(0,y); sctx.lineTo(w,y); }
+      sctx.stroke();
 
-        // Экспорт WAV (упрощённо)
-        window.exportWav = async () => {
-            // Генерируем аудио буфер для всего трека
-            const len = audioCtx.sampleRate * 4; // 4 сек
-            const buffer = audioCtx.createBuffer(1, len, audioCtx.sampleRate);
-            const data = buffer.getChannelData(0);
-            // Симулируем паттерн
-            for(let t=0; t<len; t++) {
-                const step = Math.floor(t / (audioCtx.sampleRate / 60 * bpm / 4));
-                if(step % 16 < patterns[0].filter(s=>s.some(Boolean)).length) data[t] = 0.1 * Math.sin(t*0.01);
-            }
-            // Скачиваем (нужен Recorder lib для full, но просто demo)
-            const link = document.createElement('a');
-            link.download = '8bit-track.wav';
-            link.href = URL.createObjectURL(new Blob([new DataView(buffer)]));
-            link.click();
-            document.getElementById('export').innerHTML = '<p>Скачан demo WAV! (улучши с Recorder.js)</p>';
-        };
-    </script>
+      // wave
+      sctx.strokeStyle = 'rgba(156,255,138,0.95)';
+      sctx.lineWidth = 2;
+      sctx.beginPath();
+      for(let i=0;i<data.length;i++){
+        const v = data[i] / 255;
+        const y = v * h;
+        const x = (i / (data.length-1)) * w;
+        if(i===0) sctx.moveTo(x,y);
+        else sctx.lineTo(x,y);
+      }
+      sctx.stroke();
+    }
+
+    // --- Events ---
+    buildKeyboard();
+    buildSequencer();
+    drawScope();
+
+    $("btnEnable").onclick = () => { ensureAudio(); updateParams(); if(ac.state==='suspended') ac.resume(); };
+    $("btnPanic").onclick = () => panic();
+
+    for(const id of ['wave','vol','a','d','s','r','cut','q','dt','fb','mix']){
+      $(id).addEventListener('input', updateParams);
+    }
+
+    $("btnPlay").onclick = () => seqPlay();
+    $("btnStop").onclick = () => seqStop();
+    $("bpm").addEventListener('input', () => $("bpmVal").textContent = $("bpm").value);
+
+    const downKeys = new Set();
+    window.addEventListener('keydown', (e) => {
+      const k = e.key.toLowerCase();
+      if(!(k in keyMap)) return;
+      if(downKeys.has(k)) return;
+      downKeys.add(k);
+      const midi = keyMap[k];
+      const el = keyEls.get(midi);
+      if(el) el.classList.add('active');
+      noteOn(midi, 1);
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const k = e.key.toLowerCase();
+      if(!(k in keyMap)) return;
+      downKeys.delete(k);
+      const midi = keyMap[k];
+      const el = keyEls.get(midi);
+      if(el) el.classList.remove('active');
+      noteOff(midi);
+    });
+
+    // safety: stop on tab hide
+    document.addEventListener('visibilitychange', () => {
+      if(document.hidden) seqStop();
+    });
+
+    // Prevent stuck notes on mouse leaving window
+    window.addEventListener('blur', () => { seqStop(); downKeys.clear(); });
+  </script>
 </body>
 </html>
