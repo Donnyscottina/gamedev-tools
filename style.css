@@ -11,25 +11,7 @@
     --font-pixel: 'Press Start 2P', monospace;
 }
 
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-:root{
-  --bg:#0f1014;
-  --surface:#181a22;
-  --surface2:#1f2230;
-  --border:#2c2f3c;
-  --border2:#383c4f;
-  --text:#f3f4f7;
-  --muted:#7a7f95;
-
-  --do:#ff453a;
-  --schedule:#0a84ff;
-  --delegate:#ff9f0a;
-  --eliminate:#30d158;
-
-  --font-head:'Unbounded',sans-serif;
-  --font-body:'Noto Sans',sans-serif;
-}
 
 html,body{height:100%;overflow:hidden}
 body{
