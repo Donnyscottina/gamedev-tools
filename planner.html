@@ -26,8 +26,39 @@
 
   --font-head:'Unbounded',sans-serif;
   --font-body:'Noto Sans',sans-serif;
+}.custom-checkbox {
+  width: 18px;
+  height: 18px;
+  border: 2px solid var(--muted);
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-block;
+  transition: 0.2s;
+  box-sizing: border-box;
 }
-
+.custom-checkbox:hover {
+  border-color: var(--schedule);
+  background: rgba(10,132,255,0.2);
+}
+.tabs {
+  display: flex;
+  gap: 8px;
+}
+.tab-btn {
+  background: var(--surface2);
+  border: 1px solid var(--border2);
+  color: var(--text);
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.tab-btn.active {
+  background: var(--schedule);
+  border-color: var(--schedule);
+  color: white;
+}
 html,body{height:100%;overflow:hidden}
 body{
   font-family:var(--font-body);
@@ -199,12 +230,14 @@ header{
 </header>
 
 <div class="inbox-panel">
-  <div class="inbox-header">
-    <div class="inbox-title">
-      Inbox
-      <span id="inbox-count">0</span>
-    </div>
+ <div class="inbox-header">
+  <div class="top-actions">
+    <button class="tab-btn active" id="tab-inbox">Inbox</button>
+    <button class="tab-btn" id="tab-completed">Completed</button>
+    <span id="inbox-count">0</span>
   </div>
+  
+</div>
   <div class="capture-area">
     <textarea id="captureInput" placeholder="Новая задача... (Ctrl+Enter)"></textarea>
     <button class="add-btn" onclick="capture()">Добавить</button>
@@ -225,7 +258,20 @@ header{
 const STORAGE_KEY = "gtd_matrix_v6";
 
 let state = loadState();
+let activeTab = 'inbox'; // 'inbox' или 'completed'
+document.getElementById('tab-inbox').addEventListener('click', () => {
+  activeTab = 'inbox';
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('tab-inbox').classList.add('active');
+  render();
+});
 
+document.getElementById('tab-completed').addEventListener('click', () => {
+  activeTab = 'completed';
+  document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+  document.getElementById('tab-completed').classList.add('active');
+  render();
+});
 function loadState(){
   try{
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -274,31 +320,88 @@ function editTask(id){
   }
 }
 
-function makeCard(task){
-  const div=document.createElement("div");
-  div.className="card";
-  div.dataset.zone=task.zone;
-  div.draggable=true;
-  div.innerHTML=task.text+"<span class='card-del'>✕</span>";
-  div.ondblclick=()=>editTask(task.id);
-  div.querySelector(".card-del").onclick=(e)=>{e.stopPropagation();deleteTask(task.id)};
-  div.ondragstart=e=>e.dataTransfer.setData("id",task.id);
+function makeCard(task) {
+  const div = document.createElement("div");
+  div.className = "card";
+  div.dataset.zone = task.zone;
+  div.draggable = true;
+
+  const contentDiv = document.createElement("div");
+  contentDiv.style.display = "flex";
+  contentDiv.style.alignItems = "center";
+  contentDiv.style.gap = "8px";
+
+  // Кастомный чекбокс (только если задача не выполнена)
+  if (task.zone !== 'completed') {
+    const checkBox = document.createElement("span");
+    checkBox.className = "custom-checkbox";
+    checkBox.onclick = (e) => {
+      e.stopPropagation();
+      completeTask(task.id);
+    };
+    contentDiv.appendChild(checkBox);
+  }
+
+  const textSpan = document.createElement("span");
+  textSpan.textContent = task.text;
+  textSpan.style.flex = "1";
+  contentDiv.appendChild(textSpan);
+
+  const delSpan = document.createElement("span");
+  delSpan.className = "card-del";
+  delSpan.innerHTML = "✕";
+  delSpan.onclick = (e) => {
+    e.stopPropagation();
+    deleteTask(task.id);
+  };
+  contentDiv.appendChild(delSpan);
+
+  div.appendChild(contentDiv);
+  div.ondblclick = () => editTask(task.id);
+  div.ondragstart = e => e.dataTransfer.setData("id", task.id);
+
   return div;
 }
+  // Текст задачи
+ function completeTask(id) {
+  const task = state.tasks.find(t => t.id === id);
+  if (task) {
+    task.zone = 'completed';
+    save();
+    render();
+  }
+}
 
-function render(){
-  const zones=["inbox","do","schedule","delegate","eliminate"];
-  zones.forEach(z=>{
-    const el=document.getElementById(z);
-    if(!el)return;
-    el.innerHTML="";
-    const tasks=state.tasks.filter(t=>t.zone===z);
-    if(!tasks.length) el.innerHTML="<div class='empty'>Пусто</div>";
-    tasks.forEach(t=>el.appendChild(makeCard(t)));
-    const c=document.getElementById("count-"+z);
-    if(c)c.textContent=tasks.length;
+function render() {
+  const zones = ["do", "schedule", "delegate", "eliminate"];
+  zones.forEach(z => {
+    const el = document.getElementById(z);
+    if (!el) return;
+    el.innerHTML = "";
+    const tasks = state.tasks.filter(t => t.zone === z);
+    if (!tasks.length) el.innerHTML = "<div class='empty'>Пусто</div>";
+    tasks.forEach(t => el.appendChild(makeCard(t)));
+    document.getElementById("count-" + z).textContent = tasks.length;
   });
-  document.getElementById("inbox-count").textContent=state.tasks.filter(t=>t.zone==="inbox").length;
+
+  // Отрисовка левой панели в зависимости от activeTab
+  const inboxEl = document.getElementById("inbox");
+  inboxEl.innerHTML = "";
+  let tasksToShow = [];
+  if (activeTab === 'inbox') {
+    tasksToShow = state.tasks.filter(t => t.zone === 'inbox');
+  } else {
+    tasksToShow = state.tasks.filter(t => t.zone === 'completed');
+  }
+
+  if (tasksToShow.length === 0) {
+    inboxEl.innerHTML = "<div class='empty'>Пусто</div>";
+  } else {
+    tasksToShow.forEach(t => inboxEl.appendChild(makeCard(t)));
+  }
+
+  // Обновляем счётчик в левой панели (показываем количество в активной вкладке)
+  document.getElementById("inbox-count").textContent = tasksToShow.length;
 }
 
 document.addEventListener("dragover",e=>e.preventDefault());
